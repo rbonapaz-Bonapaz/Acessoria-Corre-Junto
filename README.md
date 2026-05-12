@@ -16,25 +16,25 @@ O app suporta **qualquer conta Google**.
 
 ## 🛠️ Configuração do Firebase (CRÍTICO PARA SINCRONIZAÇÃO)
 
-Se o botão **"Começar"** não aparece, é porque a Autenticação já está ativa. Siga estes passos para configurar o login:
+Se o erro de login persistir no celular, siga estes passos EXATOS no seu Console do Firebase:
 
 ### 1. Ativar o Provedor Google
-1. No menu à esquerda do [Console do Firebase](https://console.firebase.google.com/), clique em **Build** > **Authentication**.
-2. Clique na aba **Sign-in method** (no topo).
-3. Se não houver nenhum provedor, clique em **Add new provider** (Adicionar novo provedor).
+1. No menu à esquerda, clique em **Build** > **Authentication**.
+2. Clique na aba **Método de login** (no topo).
+3. Clique em **Adicionar novo provedor**.
 4. Escolha **Google**, ative a chave e selecione um e-mail de suporte. Clique em **Salvar**.
 
-### 2. Autorizar o Domínio (Resolve erro de Login)
-1. Ainda em **Authentication**, clique na aba **Settings** (Configurações) no topo.
-2. No menu lateral da esquerda (dentro de Authentication), clique em **Authorized domains** (Domínios autorizados).
-3. Clique em **Add domain** e adicione exatamente: `acessoria-corre-junto.vercel.app`.
+### 2. Autorizar o Domínio (Resolve o erro no Celular)
+1. Ainda em **Authentication**, clique na aba **Configurações** (no topo).
+2. No menu lateral da esquerda (dentro da área branca), clique em **Domínios autorizados**.
+3. Clique em **Adicionar domínio** e adicione exatamente: `acessoria-corre-junto.vercel.app`.
 
-### 3. Firestore Database
+### 3. Firestore Database (Onde ficam os dados)
 1. No menu principal à esquerda, clique em **Build** > **Firestore Database**.
-2. Se não houver um banco, clique em **Create Database**.
-3. Escolha uma localização (ex: `southamerica-east1` para o Brasil) e inicie em **Modo de Teste** (ou Modo Produção com as regras que o sistema gera automaticamente).
+2. Se não houver um banco, clique em **Criar banco de dados**.
+3. Escolha uma localização (ex: `southamerica-east1` para o Brasil) e inicie em **Modo de Teste**.
 
-**Nota:** Após estas ativações, o Google leva cerca de **2 a 5 minutos** para propagar as permissões de API. Se o erro persistir, aguarde um pouco e tente logar novamente.
+**Nota:** Após estas ativações, o Google leva cerca de **2 a 5 minutos** para propagar as permissões. Se o erro "Identity Toolkit API" aparecer, aguarde um pouco e tente logar novamente.
 
 ---
 *Desenvolvido para atletas que buscam transformar dados em performance.*

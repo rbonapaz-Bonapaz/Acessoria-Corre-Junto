@@ -111,14 +111,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           variant: "destructive", 
           duration: 20000,
           title: "API de Autenticação Necessária", 
-          description: "No Console do Firebase, vá em Authentication > Sign-in method e ative o 'Google'. Se já estiver ativo, aguarde 2 minutos para a API propagar." 
+          description: "No Console do Firebase, vá em Authentication > Método de login e ative o 'Google'. Se já estiver ativo, aguarde 2 minutos para a API propagar." 
         });
       } else if (error.code === 'auth/unauthorized-domain' || errorMsg.includes('unauthorized-domain')) {
         toast({ 
           variant: "destructive", 
-          duration: 10000,
+          duration: 15000,
           title: "Domínio Não Autorizado", 
-          description: "Adicione 'acessoria-corre-junto.vercel.app' nos Domínios Autorizados em Authentication > Settings." 
+          description: "No Firebase Console, vá em Authentication > Configurações > Domínios autorizados e adicione 'acessoria-corre-junto.vercel.app'." 
         });
       } else {
         toast({ 
@@ -150,9 +150,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <Sidebar collapsible="icon" className="border-r border-border/50">
           <SidebarHeader className="py-8 px-6">
             <div className="flex items-center gap-2">
-              <span className="font-headline font-black text-2xl tracking-tighter group-data-[collapsible=icon]:hidden italic">
-                <span className="text-white">CORRE</span>
-                <span className="text-primary">JUNTO</span>
+              <span className="font-headline font-black text-2xl tracking-tighter group-data-[collapsible=icon]:hidden italic text-white">
+                CORRE<span className="text-primary">JUNTO</span>
               </span>
             </div>
           </SidebarHeader>
