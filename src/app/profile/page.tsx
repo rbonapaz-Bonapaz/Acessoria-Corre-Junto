@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useContext, useState, useEffect, useRef } from 'react';
@@ -7,7 +8,7 @@ import { z } from 'zod';
 
 import { AppContext } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { fileToDataURI } from "@/lib/utils";
+import { fileToDataURI, cn } from "@/lib/utils";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 import { Button } from '@/components/ui/button';
@@ -137,6 +138,7 @@ const profileSchema = z.object({
   // Força
   strengthSplit: z.enum(['full_body', 'upper_lower', 'ppl']).optional(),
   strengthFrequency: z.coerce.number().optional(),
+  strengthDays: z.array(z.string()).optional(),
   strengthEquipment: z.array(z.string()).optional(),
   strengthFocus: z.array(z.string()).optional(),
   legDay: z.string().optional(),
@@ -176,6 +178,7 @@ export default function ProfilePage() {
         raceDistance: '10k',
         gender: 'male',
         strengthFrequency: 3,
+        strengthDays: ['Terça', 'Quinta', 'Sábado'],
         strengthEquipment: ['Academia Completa'],
         strengthFocus: ['Core / Estabilidade'],
         trainingHistory: 'Atleta em evolução buscando performance.'
@@ -199,6 +202,7 @@ export default function ProfilePage() {
             excludedFoods: p.dietPreferences?.excludedFoods || '',
             strengthSplit: p.strengthPreferences?.splitPreference || 'full_body',
             strengthFrequency: p.strengthPreferences?.frequency || 3,
+            strengthDays: p.strengthPreferences?.trainingDays || ['Terça', 'Quinta', 'Sábado'],
             strengthEquipment: p.strengthPreferences?.equipment || ['Academia Completa'],
             strengthFocus: p.strengthPreferences?.focusAreas || ['Core / Estabilidade'],
             legDay: p.strengthPreferences?.legDay || 'Quarta',
@@ -211,6 +215,7 @@ export default function ProfilePage() {
   }, [context?.isHydrated, context?.activeProfile, reset]);
 
   const watchTrainingDays = watch('trainingDays') || [];
+  const watchStrengthDays = watch('strengthDays') || [];
   const watchAvatarUrl = watch('avatarUrl');
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,7 +238,7 @@ export default function ProfilePage() {
         perfil: ['name', 'birthDate', 'gender', 'currentWeight', 'height', 'location', 'avatarUrl'],
         corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType'],
         alimentacao: ['aestheticGoal', 'trainingTiming', 'mealCount', 'supplements', 'allergies', 'preferredFoods', 'excludedFoods'],
-        musculacao: ['strengthSplit', 'strengthFrequency', 'strengthEquipment', 'strengthFocus', 'legDay', 'limitations', 'prBench', 'prSquat', 'prDeadlift']
+        musculacao: ['strengthSplit', 'strengthFrequency', 'strengthDays', 'strengthEquipment', 'strengthFocus', 'legDay', 'limitations', 'prBench', 'prSquat', 'prDeadlift']
     };
 
     const currentTabId = activeTab as TabID;
@@ -270,6 +275,7 @@ export default function ProfilePage() {
                 ...context.activeProfile?.strengthPreferences,
                 splitPreference: data.strengthSplit,
                 frequency: data.strengthFrequency,
+                trainingDays: data.strengthDays,
                 equipment: data.strengthEquipment,
                 focusAreas: data.strengthFocus,
                 legDay: data.legDay,
@@ -476,7 +482,7 @@ export default function ProfilePage() {
                                         <div className="space-y-4 border-t pt-6">
                                             <div className="flex items-center justify-between">
                                                 <FormLabel className="text-xs font-bold uppercase flex items-center gap-2">
-                                                    <CalendarDays className="size-4 text-primary" /> Disponibilidade Semanal
+                                                    <CalendarDays className="size-4 text-primary" /> Disponibilidade Semanal Corrida
                                                 </FormLabel>
                                                 <span className="text-[9px] font-black text-muted-foreground uppercase italic">{watchTrainingDays.length} Dias / Semana</span>
                                             </div>
@@ -506,7 +512,7 @@ export default function ProfilePage() {
                                                     )} />
                                                 ))}
                                             </div>
-                                            <FormDescription className="text-[9px] italic">Selecione os dias em que pode treinar.</FormDescription>
+                                            <FormDescription className="text-[9px] italic">Selecione os dias em que pode treinar corrida.</FormDescription>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
@@ -650,7 +656,43 @@ export default function ProfilePage() {
                                 <Card className="bg-card/50">
                                     <CardHeader><CardTitle className="font-headline text-xl md:text-2xl uppercase italic text-primary">A Blindagem de Elite</CardTitle></CardHeader>
                                     <CardContent className="space-y-6 pt-6 border-t border-border/50">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <FormLabel className="text-xs font-bold uppercase flex items-center gap-2">
+                                                    <CalendarDays className="size-4 text-primary" /> Dias de Musculação
+                                                </FormLabel>
+                                                <span className="text-[9px] font-black text-muted-foreground uppercase italic">{watchStrengthDays.length} Dias / Semana</span>
+                                            </div>
+                                            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                                                {weekDays.map(day => (
+                                                    <FormField key={day.id} control={form.control} name="strengthDays" render={({ field }) => (
+                                                        <FormItem className="space-y-0">
+                                                            <FormControl>
+                                                                <div 
+                                                                    onClick={() => {
+                                                                        const current = field.value || [];
+                                                                        if (current.includes(day.id)) field.onChange(current.filter(d => d !== day.id));
+                                                                        else field.onChange([...current, day.id]);
+                                                                    }}
+                                                                    className={cn(
+                                                                        "h-12 rounded-lg border-2 flex flex-col items-center justify-center cursor-pointer transition-all",
+                                                                        field.value?.includes(day.id) 
+                                                                            ? "border-primary bg-primary/10 text-primary" 
+                                                                            : "border-border/50 bg-secondary/10 text-muted-foreground grayscale"
+                                                                    )}
+                                                                >
+                                                                    <span className="text-[10px] font-black">{day.label}</span>
+                                                                    {field.value?.includes(day.id) && <Dumbbell className="size-3 mt-1" />}
+                                                                </div>
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )} />
+                                                ))}
+                                            </div>
+                                            <FormDescription className="text-[9px] italic">Selecione os dias em que deseja treinar força.</FormDescription>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
                                             <FormField control={form.control} name="legDay" render={({field}) => (
                                                 <FormItem>
                                                     <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase">
@@ -666,22 +708,34 @@ export default function ProfilePage() {
                                             )} />
                                             <FormField control={form.control} name="strengthSplit" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Equipamentos Disponíveis</FormLabel>
-                                                    <div className="grid grid-cols-2 gap-2 pt-2">
-                                                        {equipmentOptions.map(eq => (
-                                                            <FormField key={eq} control={form.control} name="strengthEquipment" render={({ field }) => (
-                                                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                                                    <FormControl><Checkbox checked={field.value?.includes(eq)} onCheckedChange={(checked) => {
-                                                                        const current = field.value || [];
-                                                                        if (checked) field.onChange([...current, eq]); else field.onChange(current.filter(i => i !== eq));
-                                                                    }} /></FormControl>
-                                                                    <FormLabel className="text-[9px] font-bold cursor-pointer uppercase">{eq}</FormLabel>
-                                                                </FormItem>
-                                                            )} />
-                                                        ))}
-                                                    </div>
+                                                    <FormLabel className="text-xs font-bold uppercase">Divisão de Treino</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="full_body">Full Body</SelectItem>
+                                                            <SelectItem value="upper_lower">Upper / Lower</SelectItem>
+                                                            <SelectItem value="ppl">Push / Pull / Legs</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </FormItem>
                                             )} />
+                                        </div>
+
+                                        <div className="space-y-4 border-t pt-6">
+                                            <FormLabel className="text-xs font-bold uppercase">Equipamentos Disponíveis</FormLabel>
+                                            <div className="grid grid-cols-2 gap-2 pt-2">
+                                                {equipmentOptions.map(eq => (
+                                                    <FormField key={eq} control={form.control} name="strengthEquipment" render={({ field }) => (
+                                                        <FormItem className="flex items-center space-x-2 space-y-0">
+                                                            <FormControl><Checkbox checked={field.value?.includes(eq)} onCheckedChange={(checked) => {
+                                                                const current = field.value || [];
+                                                                if (checked) field.onChange([...current, eq]); else field.onChange(current.filter(i => i !== eq));
+                                                            }} /></FormControl>
+                                                            <FormLabel className="text-[9px] font-bold cursor-pointer uppercase">{eq}</FormLabel>
+                                                        </FormItem>
+                                                    )} />
+                                                ))}
+                                            </div>
                                         </div>
 
                                         <div className="space-y-4 border-t pt-6">

@@ -50,6 +50,7 @@
       "properties": {
         "splitPreference": { "type": "string", "enum": ["full_body", "upper_lower", "ppl"] },
         "frequency": { "type": "number" },
+        "trainingDays": { "type": "array", "items": { "type": "string" } },
         "equipment": { "type": "array", "items": { "type": "string" } },
         "focusAreas": { "type": "array", "items": { "type": "string" } },
         "legDay": { "type": "string" },
