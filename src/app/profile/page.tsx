@@ -543,7 +543,7 @@ export default function ProfilePage() {
                                                 <Select onValueChange={field.onChange} value={field.value}>
                                                     <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                     <SelectContent>
-                                                        {weekDays.map(d => (
+                                                        {weekDays.filter(d => watchTrainingDays.includes(d.id)).map(d => (
                                                             <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>
                                                         ))}
                                                     </SelectContent>
@@ -879,7 +879,7 @@ export default function ProfilePage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta ação removerá permanentemente todos os seus dados salvos localmente.
+                        Esta ação removerá permanentemente todos os seus data salvos localmente.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
