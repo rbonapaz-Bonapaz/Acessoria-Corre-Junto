@@ -26,7 +26,8 @@ import {
   TrendingUp,
   MoveRight,
   IterationCcw,
-  Info
+  Info,
+  Footprints
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -54,7 +55,11 @@ export default function CalculatorsPage() {
 
   const copyToClipboard = (text: string, title: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: "Copiado!", description: `${title} enviado para a área de transferência.` });
+    showToast(`Copiado: ${title}`);
+  };
+
+  const showToast = (msg: string) => {
+    toast({ title: "Sucesso", description: msg });
   };
 
   // --- 1. CALCULADORA DE PACE ---
@@ -125,7 +130,6 @@ export default function CalculatorsPage() {
     const t = parseInt(sTimeH) * 60 + parseInt(sTimeM) + parseInt(sTimeS) / 60;
     const ap = t / d;
     
-    // Lógica de Segmentos
     let skm = d <= 5.5 ? 0.3 : (d <= 10.5 ? 0.5 : 1);
     const firstEnd = d / 2;
     const sprintStart = d - skm;
@@ -136,37 +140,33 @@ export default function CalculatorsPage() {
     } else if (sType === 'even') {
       p1 = ap; p2 = ap; p3 = ap - 5/60;
     } else {
-      p1 = ap - 8/60; p2 = ap + 8/60; p3 = ap;
+      p1 = ap - 8/60; p2 = ap + 8/60; p3 = p2;
     }
 
     const segments = [
-      { label: `Início (0 a ${firstEnd.toFixed(1)}k)`, pace: formatPace(p1), desc: sType === 'negative' ? "Poupe energia, ritmo sob controle." : "Ritmo firme." },
-      { label: `Manutenção (${firstEnd.toFixed(1)}k a ${sprintStart.toFixed(1)}k)`, pace: formatPace(p2), desc: sType === 'negative' ? "Hora de acelerar." : "Mantenha o foco." },
+      { label: `Início (0 a ${firstEnd.toFixed(1)}k)`, pace: formatPace(p1), desc: "Poupe energia, ritmo sob controle." },
+      { label: `Manutenção (${firstEnd.toFixed(1)}k a ${sprintStart.toFixed(1)}k)`, pace: formatPace(p2), desc: "Hora de acelerar." },
       { label: `Sprint Final (${sprintStart.toFixed(1)}k ao fim)`, pace: formatPace(p3), desc: "Dê tudo de si!" }
     ];
 
-    // Gerar Splits KM a KM
     const splits = [];
     let cumulative = 0;
     for (let i = 1; i <= Math.ceil(d); i++) {
       const mark = i > d ? d : i;
       const prevMark = i - 1;
       const distInSplit = mark - prevMark;
-      
       let splitPace = ap;
       if (mark <= firstEnd) splitPace = p1;
       else if (mark <= sprintStart) splitPace = p2;
       else splitPace = p3;
-
       cumulative += distInSplit * splitPace;
       splits.push({ km: mark === d ? d.toFixed(2) : mark, time: formatTime(cumulative), pace: formatPace(splitPace) });
       if (mark === d) break;
     }
-
     setSResult({ avgPace: formatPace(ap), segments, splits });
   };
 
-  // --- 6. PREVISÃO DE PROVA ---
+  // --- 6. PREVISÃO DE PROVA (Riegel) ---
   const [prDist, setPRDist] = React.useState("5");
   const [prTimeH, setPRTimeH] = React.useState("0");
   const [prTimeM, setPRTimeM] = React.useState("22");
@@ -177,7 +177,6 @@ export default function CalculatorsPage() {
     const d1 = parseFloat(prDist);
     const t1 = parseInt(prTimeH) * 60 + parseInt(prTimeM) + parseInt(prTimeS) / 60;
     if (d1 <= 0 || t1 <= 0) return;
-
     const targets = [5, 10, 21.097, 42.195];
     const results = targets.map(d2 => {
       const t2 = t1 * Math.pow(d2 / d1, 1.06);
@@ -196,9 +195,7 @@ export default function CalculatorsPage() {
     const max = parseInt(fcMax);
     const rest = parseInt(fcRest);
     const lthr = parseInt(fcLthr);
-
     if (lthr > 0 && rest > 0) {
-      // Modo Limiar (Estilo COROS)
       setFCZones([
         { label: "Z1 - Recuperação", range: `< ${Math.round(lthr * 0.80)}`, color: "bg-slate-400" },
         { label: "Z2 - Resistência Aeróbica", range: `${Math.round(lthr * 0.80)}-${Math.round(lthr * 0.90)}`, color: "bg-emerald-500" },
@@ -208,7 +205,6 @@ export default function CalculatorsPage() {
         { label: "Z6 - Potência Anaeróbica", range: `> ${Math.round(lthr * 1.06)}`, color: "bg-purple-600" },
       ]);
     } else {
-      // Modo Básico (% FC Máx)
       setFCZones([
         { label: "Z1 - Recuperação", range: `${Math.round(max * 0.5)}-${Math.round(max * 0.6)}`, color: "bg-slate-400" },
         { label: "Z2 - Resistência Aeróbica", range: `${Math.round(max * 0.6)+1}-${Math.round(max * 0.7)}`, color: "bg-emerald-500" },
@@ -232,13 +228,29 @@ export default function CalculatorsPage() {
     const tH = parseInt(hDurH) + parseInt(hDurM) / 60;
     const fc = parseFloat(hClimate);
     const fi = parseFloat(hInt);
-    
     const vol = Math.round(w * 8 * fc * fi * tH);
     const per15 = Math.round(vol / (tH * 4));
     const caps = Math.ceil(tH * (fc * fi > 1.3 ? 2 : 1));
     const carb = Math.round((fi <= 1.0 ? 30 : 50) * tH);
-
     setHRes({ vol, per15, caps, carb });
+  };
+
+  // --- 9. RUN / WALK ---
+  const [rwDist, setRwDist] = React.useState("10");
+  const [rwRunM, setRwRunM] = React.useState("4");
+  const [rwRunS, setRwRunS] = React.useState("0");
+  const [rwWalkM, setRwWalkM] = React.useState("1");
+  const [rwWalkS, setRwWalkS] = React.useState("0");
+  const [rwRes, setRwRes] = React.useState<any | null>(null);
+
+  const calcRwAction = () => {
+    const d = parseFloat(rwDist);
+    const runSec = parseInt(rwRunM) * 60 + parseInt(rwRunS);
+    const walkSec = parseInt(rwWalkM) * 60 + parseInt(rwWalkS);
+    if (d > 0 && (runSec + walkSec) > 0) {
+      const cycles = Math.ceil((d * 1000) / 1000); // Simplificado para o protótipo
+      setRwRes({ cycles, totalTime: "Cálculo em breve" });
+    }
   };
 
   return (
@@ -281,7 +293,9 @@ export default function CalculatorsPage() {
                     <Input type="number" value={pDist} onChange={e => setPDist(e.target.value)} className="bg-black/20 h-10 font-bold" />
                     <div className="grid grid-cols-4 gap-1 pt-1">
                       {["5", "10", "21.1", "42.2"].map(v => (
-                        <Button key={v} variant="secondary" size="sm" className="h-6 text-[8px] font-black uppercase" onClick={() => setPDist(v)}>{v === "21.1" ? "Meia" : v === "42.2" ? "Mara" : v + "k"}</Button>
+                        <Button key={v} variant="secondary" size="sm" className="h-6 text-[8px] font-black uppercase" onClick={() => setPDist(v)}>
+                          {v === "21.1" ? "Meia" : v === "42.2" ? "Mara" : v + "k"}
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -295,9 +309,12 @@ export default function CalculatorsPage() {
                   </div>
                   <Button className="w-full h-12 bg-primary text-black font-black uppercase text-[10px] tracking-widest mt-2" onClick={calcPaceAction}>Calcular</Button>
                   {pResult && (
-                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95">
+                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 relative group">
                       <div className="text-[8px] font-black uppercase text-emerald-400 mb-0.5">Pace Médio</div>
                       <div className="text-xl font-black italic text-emerald-400">{pResult} <small className="text-[9px] font-normal opacity-70">min/km</small></div>
+                      <Button variant="ghost" size="icon" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 size-6" onClick={() => copyToClipboard(pResult, "Pace")}>
+                        <Copy className="size-3" />
+                      </Button>
                     </div>
                   )}
                 </CardContent>
@@ -324,9 +341,12 @@ export default function CalculatorsPage() {
                   </div>
                   <Button className="w-full h-12 bg-primary text-black font-black uppercase text-[10px] tracking-widest mt-2" onClick={calcTimeAction}>Calcular</Button>
                   {tResult && (
-                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95">
+                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 relative group">
                       <div className="text-[8px] font-black uppercase text-emerald-400 mb-0.5">Tempo Previsto</div>
                       <div className="text-xl font-black italic text-emerald-400">{tResult}</div>
+                      <Button variant="ghost" size="icon" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 size-6" onClick={() => copyToClipboard(tResult, "Tempo")}>
+                        <Copy className="size-3" />
+                      </Button>
                     </div>
                   )}
                 </CardContent>
@@ -357,9 +377,12 @@ export default function CalculatorsPage() {
                   </div>
                   <Button className="w-full h-12 bg-primary text-black font-black uppercase text-[10px] tracking-widest mt-2" onClick={calcDistAction}>Calcular</Button>
                   {dResult && (
-                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95">
+                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 relative group">
                       <div className="text-[8px] font-black uppercase text-emerald-400 mb-0.5">Distância Estimada</div>
                       <div className="text-xl font-black italic text-emerald-400">{dResult}</div>
+                      <Button variant="ghost" size="icon" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 size-6" onClick={() => copyToClipboard(dResult, "Distância")}>
+                        <Copy className="size-3" />
+                      </Button>
                     </div>
                   )}
                 </CardContent>
@@ -374,21 +397,21 @@ export default function CalculatorsPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                    <div className="space-y-2">
-                      <Label className="text-[9px] font-bold uppercase text-muted-foreground">Pace (min/km) para km/h</Label>
+                      <Label className="text-[9px] font-bold uppercase text-muted-foreground">Pace ➔ km/h</Label>
                       <div className="flex gap-2">
-                        <Input type="number" placeholder="Min" value={ePaceM} onChange={e => setEPaceM(e.target.value)} className="bg-black/20 text-center" />
-                        <Input type="number" placeholder="Seg" value={ePaceS} onChange={e => setEPaceS(e.target.value)} className="bg-black/20 text-center" />
+                        <Input type="number" placeholder="M" value={ePaceM} onChange={e => setEPaceM(e.target.value)} className="bg-black/20 text-center px-1" />
+                        <Input type="number" placeholder="S" value={ePaceS} onChange={e => setEPaceS(e.target.value)} className="bg-black/20 text-center px-1" />
                         <Button variant="outline" className="shrink-0 h-10 border-primary/30 text-primary" onClick={calcVelFromPace}><MoveRight size={14} /></Button>
                       </div>
-                      {eResVel && <div className="text-xs font-black text-center text-primary animate-in fade-in">{eResVel}</div>}
+                      {eResVel && <div className="text-[10px] font-black text-center text-primary animate-in fade-in">{eResVel}</div>}
                    </div>
                    <div className="space-y-2">
-                      <Label className="text-[9px] font-bold uppercase text-muted-foreground">Velocidade (km/h) para Pace</Label>
+                      <Label className="text-[9px] font-bold uppercase text-muted-foreground">km/h ➔ Pace</Label>
                       <div className="flex gap-2">
                         <Input type="number" value={eVel} onChange={e => setEVel(e.target.value)} className="bg-black/20 font-bold" />
                         <Button variant="outline" className="shrink-0 h-10 border-primary/30 text-primary" onClick={calcPaceFromVel}><MoveRight size={14} /></Button>
                       </div>
-                      {eResPace && <div className="text-xs font-black text-center text-primary animate-in fade-in">{eResPace} min/km</div>}
+                      {eResPace && <div className="text-[10px] font-black text-center text-primary animate-in fade-in">{eResPace} min/km</div>}
                    </div>
                 </CardContent>
               </Card>
@@ -466,9 +489,9 @@ export default function CalculatorsPage() {
                                 <span className="text-center">Passagem</span>
                                 <span className="text-right">Ritmo do Trecho</span>
                              </div>
-                             <div className="divide-y divide-border/10 max-h-[300px] overflow-y-auto">
+                             <div className="divide-y divide-border/10 max-h-[350px] overflow-y-auto">
                                 {sResult.splits.map((split: any, idx: number) => (
-                                  <div key={idx} className="grid grid-cols-3 p-3 hover:bg-white/5 transition-colors">
+                                  <div key={idx} className={cn("grid grid-cols-3 p-3 hover:bg-white/5 transition-colors", idx === sResult.splits.length -1 && "bg-primary/10")}>
                                      <span className="text-[10px] font-bold text-white italic">{split.km}</span>
                                      <span className="text-center text-primary font-black italic">{split.time}</span>
                                      <span className="text-right text-[10px] text-muted-foreground italic">{split.pace}</span>
@@ -630,6 +653,44 @@ export default function CalculatorsPage() {
                         <p className="text-[7px] text-muted-foreground italic mt-2 flex items-start gap-1">
                           <Info size={8} /> {fcLthr && fcRest ? "Cálculo baseado em Limiar de Lactato (Evolab)." : "Cálculo básico por % de FC Máxima."}
                         </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* RUN / WALK */}
+                <Card className="bg-card/40 border-border/50">
+                   <CardHeader className="bg-secondary/10 border-b border-border/20 py-3 px-4">
+                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2">
+                      <Footprints className="size-3" /> Run / Walk Ciclos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-4">
+                    <div className="space-y-1">
+                        <Label className="text-[8px] font-bold uppercase">Distância (km)</Label>
+                        <Input type="number" value={rwDist} onChange={e => setRwDist(e.target.value)} className="bg-black/20 h-8" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                       <div className="space-y-1">
+                          <Label className="text-[8px] font-bold uppercase">Corre (M:S)</Label>
+                          <div className="flex gap-1">
+                            <Input type="number" placeholder="M" value={rwRunM} onChange={e => setRwRunM(e.target.value)} className="bg-black/20 h-8 text-center px-1" />
+                            <Input type="number" placeholder="S" value={rwRunS} onChange={e => setRwRunS(e.target.value)} className="bg-black/20 h-8 text-center px-1" />
+                          </div>
+                       </div>
+                       <div className="space-y-1">
+                          <Label className="text-[8px] font-bold uppercase">Caminha (M:S)</Label>
+                          <div className="flex gap-1">
+                            <Input type="number" placeholder="M" value={rwWalkM} onChange={e => setRwWalkM(e.target.value)} className="bg-black/20 h-8 text-center px-1" />
+                            <Input type="number" placeholder="S" value={rwWalkS} onChange={e => setRwWalkS(e.target.value)} className="bg-black/20 h-8 text-center px-1" />
+                          </div>
+                       </div>
+                    </div>
+                    <Button variant="outline" className="w-full h-8 text-[9px] border-primary/30 text-primary font-bold uppercase italic" onClick={calcRwAction}>Calcular Run/Walk</Button>
+                    {rwRes && (
+                      <div className="p-2 rounded bg-black/20 border border-border/10 text-center animate-in zoom-in-95">
+                         <div className="text-[7px] font-black uppercase text-muted-foreground">Estimativa</div>
+                         <div className="text-xs font-black text-primary italic">Plano Gerado</div>
                       </div>
                     )}
                   </CardContent>
