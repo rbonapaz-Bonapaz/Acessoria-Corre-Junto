@@ -12,13 +12,16 @@ import {
   Trophy, 
   Calculator,
   ChevronRight,
+  ChevronDown,
   BookOpen,
   Target,
   Key,
   Download,
   Link2,
   Info,
-  Clock
+  Clock,
+  LogOut,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -46,8 +49,17 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 const items = [
   { title: "DASHBOARD", url: "/", icon: LayoutDashboard },
@@ -65,6 +77,7 @@ const items = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const context = React.useContext(AppContext);
+  const { toast } = useToast();
   const [showKeyModal, setShowKeyModal] = React.useState(false);
   const [tempKey, setTempKey] = React.useState("");
 
@@ -142,15 +155,53 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 pl-4">
-                <div className="text-right hidden md:block leading-none">
-                  <p className="text-[10px] font-black text-white tracking-widest uppercase italic">Atleta</p>
-                  <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">Perfil Ativo</p>
-                </div>
-                <div className="size-9 rounded-full bg-primary flex items-center justify-center font-headline font-black text-black shadow-lg shadow-primary/20">
-                  {context?.activeProfile?.name?.[0] || 'A'}
-                </div>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-3 pl-4 outline-none group text-right">
+                    <div className="text-right hidden md:block leading-none">
+                      <div className="flex items-center justify-end gap-2">
+                        <p className="text-[10px] font-black text-white tracking-widest uppercase italic truncate max-w-[150px]">
+                          {context?.activeProfile?.name || 'ATLETA'}
+                        </p>
+                        <ChevronDown size={12} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
+                      </div>
+                      <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">Perfil Ativo</p>
+                    </div>
+                    <div className="size-9 rounded-full bg-primary flex items-center justify-center font-headline font-black text-black shadow-lg shadow-primary/20 shrink-0">
+                      {context?.activeProfile?.name?.[0] || 'A'}
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 bg-card border-border p-2 rounded-2xl shadow-2xl mt-2">
+                  <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    Minha Conta
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem asChild className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
+                    <Link href="/profile" className="flex items-center gap-3">
+                      <User size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Meus Dados</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
+                    <div className="flex items-center gap-3">
+                      <LayoutDashboard size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Trocar Perfil</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-border/50 my-2" />
+                  <DropdownMenuItem 
+                    className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
+                    onClick={() => {
+                      toast({ title: "Saindo...", description: "Até a próxima sessão de treino!" });
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <LogOut size={18} className="text-destructive" />
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair do App</span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-12 lg:p-16">
