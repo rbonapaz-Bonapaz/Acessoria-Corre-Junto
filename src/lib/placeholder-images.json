@@ -1,3 +1,16 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-athlete",
+      "description": "Athlete running on a dark track",
+      "imageUrl": "https://picsum.photos/seed/corre-hero/1200/600",
+      "imageHint": "runner athlete"
+    },
+    {
+      "id": "dashboard-preview",
+      "description": "Performance dashboard visualization",
+      "imageUrl": "https://picsum.photos/seed/corre-dash/800/400",
+      "imageHint": "data visualization"
+    }
+  ]
 }
