@@ -8,7 +8,7 @@ import {googleAI} from '@genkit-ai/google-genai';
  */
 export const getAiWithKey = (apiKey?: string) => {
   return genkit({
-    plugins: [googleAI({apiKey})],
+    plugins: [googleAI({ apiKey })],
     model: 'googleai/gemini-1.5-flash',
   });
 };
