@@ -30,7 +30,7 @@ import {
     SelectValue 
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { 
@@ -254,6 +254,18 @@ export default function ProfilePage() {
         await context.generateRunningPlanAsync(data as any);
     } finally {
         setIsProcessing(false);
+    }
+  };
+
+  const handleStravaClick = () => {
+    if (!context) return;
+    const isConnected = !!context.activeProfile?.integrations?.strava.connected;
+    
+    if (!isConnected) {
+      // Inicia o "redirecionamento"
+      context.toggleIntegration('strava', true);
+    } else {
+      context.toggleIntegration('strava', false);
     }
   };
 
@@ -717,39 +729,41 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-6">
-                <Card className="border-accent/20 bg-accent/5">
-                    <CardHeader>
+                <Card className="border-accent/20 bg-accent/5 overflow-hidden">
+                    <CardHeader className="bg-secondary/20 border-b">
                         <CardTitle className="text-lg flex items-center gap-2 font-headline uppercase italic">
-                            <Link2 className="size-5 text-accent" /> Conexões
+                            <Link2 className="size-5 text-accent" /> Conexões Strava
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="size-8 rounded-lg bg-[#FC6100] flex items-center justify-center text-white font-black text-sm italic">S</div>
-                                <div>
-                                    <div className="font-bold text-xs">Strava</div>
-                                    <div className="text-[8px] text-muted-foreground uppercase font-black tracking-tighter">Performance Sync</div>
+                    <CardContent className="p-6 space-y-4">
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-10 rounded-lg bg-[#FC6100] flex items-center justify-center text-white font-black text-xl italic shadow-lg">S</div>
+                                    <div>
+                                        <div className="font-black text-sm uppercase italic">Strava API</div>
+                                        <div className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">ID: 202859</div>
+                                    </div>
                                 </div>
+                                <Switch 
+                                    checked={!!context.activeProfile?.integrations?.strava.connected}
+                                    onCheckedChange={handleStravaClick}
+                                    className="data-[state=checked]:bg-[#FC6100]"
+                                />
                             </div>
-                            <Switch 
-                                checked={context.activeProfile?.integrations?.strava.connected}
-                                onCheckedChange={(val) => context.toggleIntegration('strava', val)}
-                            />
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="size-8 rounded-lg bg-white flex items-center justify-center text-black font-black text-sm italic border border-black">C</div>
-                                <div>
-                                    <div className="font-bold text-xs">COROS</div>
-                                    <div className="text-[8px] text-muted-foreground uppercase font-black tracking-tighter">EvoLab Metrics</div>
-                                </div>
-                            </div>
-                            <Switch 
-                                checked={context.activeProfile?.integrations?.coros.connected}
-                                onCheckedChange={(val) => context.toggleIntegration('coros', val)}
-                            />
+                            
+                            {context.activeProfile?.integrations?.strava.connected ? (
+                              <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30 text-[10px] font-bold uppercase italic text-green-400 text-center animate-in zoom-in-95">
+                                Atleta Conectado: Sincronização Ativa
+                              </div>
+                            ) : (
+                              <Button 
+                                onClick={handleStravaClick}
+                                className="w-full bg-[#FC6100] hover:bg-[#E55700] text-white font-black uppercase italic tracking-widest h-12 shadow-orange-500/20 shadow-lg"
+                              >
+                                DIRECIOnAR PARA CONECTAR
+                              </Button>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

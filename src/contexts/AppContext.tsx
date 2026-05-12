@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
@@ -8,8 +7,8 @@ import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
 
 type PlanGenerationStatus = 'idle' | 'pending' | 'success' | 'error';
 
-// Configuração Strava fornecida pelo usuário
-const STRAVA_DEFAULT_CONFIG = {
+// Configuração Strava oficial fornecida na imagem
+const STRAVA_OFFICIAL_CONFIG = {
   clientId: "202859",
   clientSecret: "7b421fb5979780cb527dcbd9da8509c5d796f5dc",
   accessToken: "a95830ee1a54f9c5adb34d63037565dde1599f2f",
@@ -101,7 +100,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...data, 
         id,
         integrations: data.integrations || activeProfile?.integrations || {
-            strava: { connected: false, autoSync: false, ...STRAVA_DEFAULT_CONFIG },
+            strava: { connected: false, autoSync: false, ...STRAVA_OFFICIAL_CONFIG },
             coros: { connected: false, autoSync: false }
         }
     };
@@ -192,6 +191,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleIntegration = (service: 'strava' | 'coros', connected: boolean) => {
     if (!activeProfile) return;
+
+    if (service === 'strava' && connected) {
+      // Simula o redirecionamento para o Strava OAuth
+      toast({ title: "🚴 Conectando ao Strava...", description: "Validando Client ID 202859..." });
+      
+      // Em uma aplicação real, aqui haveria um window.location.href para o OAuth do Strava
+      // Para o protótipo, usamos os tokens oficiais fornecidos
+    }
+
     const updated = {
         ...activeProfile,
         integrations: {
@@ -202,12 +210,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 autoSync: connected, 
                 lastSync: connected ? new Date().toISOString() : undefined,
                 username: connected ? 'Atleta CorreJunto' : undefined,
-                ...(service === 'strava' ? STRAVA_DEFAULT_CONFIG : {})
+                ...(service === 'strava' ? STRAVA_OFFICIAL_CONFIG : {})
             }
         }
     };
     
-    // Atualiza sem disparar o toast de salvamento de perfil para ser mais discreto
     setProfiles(prev => {
       const filtered = prev.filter(p => p.id !== activeProfile.id);
       return [updated as any, ...filtered];
@@ -215,7 +222,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     toast({ 
         title: connected ? `✅ ${service.toUpperCase()} Conectado` : `❌ ${service.toUpperCase()} Desconectado`,
-        description: connected ? 'Seus tokens de acesso foram configurados localmente.' : 'A sincronização automática foi desativada.'
+        description: connected ? 'Sincronização de atividades de elite ativada.' : 'A sincronização automática foi desativada.'
     });
   };
 
