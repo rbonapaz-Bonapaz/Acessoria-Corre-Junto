@@ -141,22 +141,22 @@ export default function DictionaryPage() {
           <TabsContent value="conceitos" className="mt-8 px-2 animate-in fade-in">
             <div className="space-y-1 mb-8">
               <h2 className="text-xl md:text-2xl font-headline font-black uppercase italic text-white">Conceitos Fisiológicos</h2>
-              <p className="text-muted-foreground text-xs md:text-sm italic">A ciência por trás do desempenho atlético.</p>
+              <p className="text-muted-foreground text-xs md:text-sm italic">A ciência por trás do desempenho atlético de elite.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                {[
-                 { title: "VO2 MÁX", icon: Zap, desc: "A capacidade máxima do seu corpo de captar e usar oxigênio." },
-                 { title: "VDOT", icon: Target, desc: "Fórmula de Jack Daniels que estima seu potencial de corrida." },
-                 { title: "TAPER", icon: Dumbbell, desc: "Redução de volume antes da prova para recuperar o corpo." },
-                 { title: "CADÊNCIA", icon: Activity, desc: "Número de passos por minuto. O ideal gira em torno de 180." },
-                 { title: "DROP", icon: Milestone, desc: "Diferença de altura entre o calcanhar e a ponta do tênis." },
-                 { title: "LIMIAR", icon: Clock, desc: "Ponto onde o corpo acumula mais lactato do que consegue remover." },
+                 { title: "VO2 MÁX", icon: Zap, desc: "Indica o teto aeróbico. É o volume máximo de oxigênio que seu corpo consegue captar, transportar e utilizar para gerar energia durante o exercício intenso." },
+                 { title: "VDOT", icon: Target, desc: "Fórmula desenvolvida por Jack Daniels que traduz o desempenho de uma prova recente em um único valor, permitindo prescrever ritmos exatos para cada tipo de treino." },
+                 { title: "TAPER", icon: Dumbbell, desc: "Fase de polimento. Uma redução estratégica e gradual do volume de treino nas semanas que antecedem a prova, visando a supercompensação e recuperação total." },
+                 { title: "CADÊNCIA", icon: Activity, desc: "Frequência de passos por minuto (SPM). Manter uma cadência próxima a 180 ajuda a reduzir o tempo de contato com o solo e o impacto, aumentando a eficiência biomecânica." },
+                 { title: "DROP", icon: Milestone, desc: "A diferença de altura entre a base do calcanhar e a frente do tênis. Drops baixos favorecem a pisada com o médio-pé, enquanto drops altos são comuns em modelos de amortecimento clássico." },
+                 { title: "LIMIAR", icon: Clock, desc: "A intensidade máxima na qual o corpo ainda consegue remover o lactato produzido. Treinar nesta zona aumenta sua velocidade sustentável por longos períodos." },
                ].map((item, i) => (
-                 <Card key={i} className="bg-card/40 border-border/50 text-center group hover:bg-primary/5 transition-colors">
+                 <Card key={i} className="bg-card/40 border-border/50 text-center group hover:bg-primary/5 transition-colors h-full">
                    <CardContent className="p-8 space-y-4 flex flex-col items-center">
                      <item.icon className="size-8 text-primary group-hover:scale-110 transition-transform" />
                      <h4 className="font-black italic text-white uppercase tracking-tight">{item.title}</h4>
-                     <p className="text-[10px] text-muted-foreground leading-tight">{item.desc}</p>
+                     <p className="text-[10px] text-muted-foreground leading-relaxed font-medium italic">{item.desc}</p>
                    </CardContent>
                  </Card>
                ))}
