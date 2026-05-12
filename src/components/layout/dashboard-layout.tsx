@@ -34,13 +34,13 @@ import {
 } from "@/components/ui/sidebar";
 
 const items = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Athlete Profile", url: "/profile", icon: User },
-  { title: "Training Engine", url: "/training", icon: Activity },
-  { title: "AI Coach", url: "/coach", icon: MessageSquare },
-  { title: "File Analyzer", url: "/analysis", icon: FileSearch },
-  { title: "Vault & Records", url: "/vault", icon: Trophy },
-  { title: "Utility Suite", url: "/utilities", icon: Calculator },
+  { title: "Painel", url: "/", icon: LayoutDashboard },
+  { title: "Perfil do Atleta", url: "/profile", icon: User },
+  { title: "Motor de Treino", url: "/training", icon: Activity },
+  { title: "Treinador IA", url: "/coach", icon: MessageSquare },
+  { title: "Analisador de Arquivos", url: "/analysis", icon: FileSearch },
+  { title: "Cofre e Recordes", url: "/vault", icon: Trophy },
+  { title: "Suíte de Utilidades", url: "/utilities", icon: Calculator },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -60,7 +60,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Main Menu</SidebarGroupLabel>
+              <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Menu Principal</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {items.map((item) => (
@@ -88,7 +88,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem>
                 <SidebarMenuButton className="w-full">
                   <Settings className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                  <span className="group-data-[collapsible=icon]:hidden">Configurações</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -103,7 +103,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </h1>
               <div className="flex items-center gap-4">
                 <Button variant="outline" size="sm" className="hidden md:flex bg-secondary">
-                  Connect Garmin
+                  Conectar Garmin
                 </Button>
                 <div className="size-8 rounded-full bg-secondary border flex items-center justify-center">
                   <User className="size-4 text-muted-foreground" />

@@ -13,48 +13,48 @@ export default function UtilitiesPage() {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
         <header>
-          <h1 className="text-3xl font-headline font-bold">Support Utility Suite</h1>
-          <p className="text-muted-foreground">Specialized tools for strategy, hydration, and technical terminology.</p>
+          <h1 className="text-3xl font-headline font-bold">Suíte de Suporte e Utilitários</h1>
+          <p className="text-muted-foreground">Ferramentas especializadas para estratégia, hidratação e terminologia técnica.</p>
         </header>
 
         <Tabs defaultValue="pace" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-secondary rounded-xl p-1 h-12">
             <TabsTrigger value="pace" className="rounded-lg">
-              <Calculator className="mr-2 size-4" /> Pace Calc
+              <Calculator className="mr-2 size-4" /> Calc Ritmo
             </TabsTrigger>
             <TabsTrigger value="nutrition" className="rounded-lg">
-              <Droplets className="mr-2 size-4" /> Nutrition
+              <Droplets className="mr-2 size-4" /> Nutrição
             </TabsTrigger>
             <TabsTrigger value="dictionary" className="rounded-lg">
-              <BookOpen className="mr-2 size-4" /> Dictionary
+              <BookOpen className="mr-2 size-4" /> Dicionário
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pace" className="mt-6">
             <Card className="bg-card border-border shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline">Race Predictor & Pace Splitting</CardTitle>
-                <CardDescription>Calculate splits based on target time and distance.</CardDescription>
+                <CardTitle className="font-headline">Preditor de Prova e Divisão de Ritmo</CardTitle>
+                <CardDescription>Calcule seus splits com base no tempo alvo e distância.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">
                 <div className="grid md:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <Label>Distance</Label>
-                    <Input defaultValue="Marathon" className="bg-secondary/50" />
+                    <Label>Distância</Label>
+                    <Input defaultValue="Maratona" className="bg-secondary/50" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Target Time</Label>
+                    <Label>Tempo Alvo</Label>
                     <Input defaultValue="3:15:00" className="bg-secondary/50 font-mono" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Unit</Label>
-                    <Input defaultValue="miles" className="bg-secondary/50" />
+                    <Label>Unidade</Label>
+                    <Input defaultValue="km" className="bg-secondary/50" />
                   </div>
                 </div>
 
                 <div className="rounded-2xl border bg-secondary/20 p-6 overflow-hidden">
                   <h4 className="font-headline font-bold mb-4 flex items-center gap-2">
-                    <Clock className="size-4 text-accent" /> Recommended Pace: 7:26/mi
+                    <Clock className="size-4 text-accent" /> Ritmo Recomendado: 4:37/km
                   </h4>
                   <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
                     {[5, 10, 15, 20, 25, 30, 35, 42.2].map(km => (
@@ -72,46 +72,46 @@ export default function UtilitiesPage() {
           <TabsContent value="nutrition" className="mt-6">
             <Card className="bg-card border-border shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline">Intra-Race Fueling Strategy</CardTitle>
-                <CardDescription>Hydration and carbohydrate intake planning.</CardDescription>
+                <CardTitle className="font-headline">Estratégia de Abastecimento Intra-Prova</CardTitle>
+                <CardDescription>Planejamento de hidratação e ingestão de carboidratos.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <h4 className="font-bold flex items-center gap-2">
-                      <Zap className="size-4 text-accent" /> Carb Intake
+                      <Zap className="size-4 text-accent" /> Ingestão de Carbo
                     </h4>
                     <div className="p-4 rounded-xl bg-secondary/50 space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Target Per Hour</span>
+                        <span>Alvo por Hora</span>
                         <span className="font-bold">60-90g</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span>Total Gels (Marathon)</span>
-                        <span className="font-bold">6 - 8 units</span>
+                        <span>Géis Totais (Maratona)</span>
+                        <span className="font-bold">6 - 8 unidades</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span>Timing Interval</span>
-                        <span className="font-bold">Every 35-45 min</span>
+                        <span>Intervalo de Consumo</span>
+                        <span className="font-bold">A cada 35-45 min</span>
                       </div>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <h4 className="font-bold flex items-center gap-2">
-                      <Droplets className="size-4 text-accent" /> Fluid Intake
+                      <Droplets className="size-4 text-accent" /> Ingestão de Líquidos
                     </h4>
                     <div className="p-4 rounded-xl bg-secondary/50 space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Base Rate</span>
+                        <span>Taxa Base</span>
                         <span className="font-bold">500-700ml / hr</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span>Sodium Target</span>
+                        <span>Alvo de Sódio</span>
                         <span className="font-bold">300-600mg / hr</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span>Sweat Rate Guess</span>
-                        <span className="font-bold text-accent">Moderate</span>
+                        <span>Taxa de Suor</span>
+                        <span className="font-bold text-accent">Moderada</span>
                       </div>
                     </div>
                   </div>
@@ -123,16 +123,16 @@ export default function UtilitiesPage() {
           <TabsContent value="dictionary" className="mt-6">
             <Card className="bg-card border-border shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline">Runner's Dictionary</CardTitle>
-                <CardDescription>Scientific terms and athletic abbreviations.</CardDescription>
+                <CardTitle className="font-headline">Dicionário do Corredor</CardTitle>
+                <CardDescription>Termos científicos e abreviações atléticas.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-4">
                   {[
-                    { term: "VDOT", def: "A method to calculate your running ability and training paces based on a race result." },
-                    { term: "T-Pace", def: "Threshold Pace. The intensity at which your body can just clear as much lactate as it produces." },
-                    { term: "GCT", def: "Ground Contact Time. The amount of time your foot spends on the ground during each stride." },
-                    { term: "Supercompensation", def: "The post-training period during which the trained function has a higher performance capacity than prior to the training." },
+                    { term: "VDOT", def: "Método para calcular sua habilidade de corrida e ritmos de treino baseados em resultados de provas." },
+                    { term: "Ritmo T", def: "Ritmo de Limiar (Threshold). A intensidade onde seu corpo limpa o lactato na mesma taxa que o produz." },
+                    { term: "TCS", def: "Tempo de Contato com o Solo. Tempo que seu pé permanece no chão em cada passada." },
+                    { term: "Supercompensação", def: "Período pós-treino onde a função treinada atinge uma capacidade maior que antes do treino." },
                   ].map(item => (
                     <div key={item.term} className="p-4 rounded-xl border bg-secondary/20 hover:border-accent/50 transition-colors">
                       <div className="font-bold font-headline text-accent">{item.term}</div>

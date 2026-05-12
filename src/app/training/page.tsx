@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Activity, Sparkles, Loader2, Calendar, Target, Ruler } from "lucide-react";
+import { Activity, Sparkles, Loader2, Calendar, Target, Ruler, Dumbbell, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function TrainingPage() {
@@ -26,13 +26,13 @@ export default function TrainingPage() {
         hrZone4End: 180,
         hrMax: 188,
         trainingBlockType: 'Construction',
-        weeklyMileageGoal: 55,
-        targetRaceDistance: 'Marathon',
-        currentLongRunDistance: 18,
-        currentLongRunPace: '8:15/mi',
-        weeklyAvailability: '5 days a week, mornings',
-        injuryHistory: 'None',
-        preferredWorkoutDays: 'Tuesday, Thursday'
+        weeklyMileageGoal: 85,
+        targetRaceDistance: 'Maratona',
+        currentLongRunDistance: 28,
+        currentLongRunPace: '5:10/km',
+        weeklyAvailability: '5 dias por semana, manhãs',
+        injuryHistory: 'Nenhuma',
+        preferredWorkoutDays: 'Terça, Quinta'
       });
       setPlan(result);
     } catch (error) {
@@ -47,8 +47,8 @@ export default function TrainingPage() {
       <div className="space-y-8 max-w-5xl mx-auto">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-headline font-bold">AI Periodization Engine</h1>
-            <p className="text-muted-foreground">Generate high-performance 4-week training cycles.</p>
+            <h1 className="text-3xl font-headline font-bold">Motor de Periodização IA</h1>
+            <p className="text-muted-foreground">Gere ciclos de treinamento de alta performance de 4 semanas.</p>
           </div>
           <Button 
             onClick={handleGenerate} 
@@ -56,7 +56,7 @@ export default function TrainingPage() {
             className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-[200px]"
           >
             {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Sparkles className="mr-2 size-4" />}
-            Generate New Block
+            Gerar Novo Bloco
           </Button>
         </header>
 
@@ -65,31 +65,31 @@ export default function TrainingPage() {
             <Card className="bg-card border-border border-dashed">
               <CardHeader>
                 <CardTitle className="font-headline flex items-center gap-2">
-                  <Target className="size-5 text-accent" /> Configure Cycle
+                  <Target className="size-5 text-accent" /> Configurar Ciclo
                 </CardTitle>
-                <CardDescription>Define your focus and availability.</CardDescription>
+                <CardDescription>Defina seu foco e disponibilidade.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Block Type</Label>
+                  <Label>Tipo de Bloco</Label>
                   <Select defaultValue="Construction">
                     <SelectTrigger className="bg-secondary/50">
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Selecione o tipo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Base">Base (Aerobic)</SelectItem>
-                      <SelectItem value="Construction">Construction (Specific)</SelectItem>
-                      <SelectItem value="Polishing">Polishing (Taper)</SelectItem>
+                      <SelectItem value="Base">Base (Aeróbico)</SelectItem>
+                      <SelectItem value="Construction">Construção (Específico)</SelectItem>
+                      <SelectItem value="Polishing">Polimento (Taper)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Weekly Mileage Goal</Label>
-                  <Input defaultValue="55" type="number" className="bg-secondary/50" />
+                  <Label>Meta Semanal (km)</Label>
+                  <Input defaultValue="85" type="number" className="bg-secondary/50" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Hard Workout Days</Label>
-                  <Input defaultValue="Tue, Thu" className="bg-secondary/50" />
+                  <Label>Dias de Treino Intenso</Label>
+                  <Input defaultValue="Ter, Qui" className="bg-secondary/50" />
                 </div>
               </CardContent>
             </Card>
@@ -98,9 +98,9 @@ export default function TrainingPage() {
               <div className="size-16 rounded-full bg-secondary flex items-center justify-center">
                 <Sparkles className="size-8 text-accent animate-pulse" />
               </div>
-              <h3 className="font-headline text-xl font-bold">Ready to Calibrate?</h3>
+              <h3 className="font-headline text-xl font-bold">Pronto para Calibrar?</h3>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Our AI uses VDOT logic to calculate your exact paces and optimize volume progression.
+                Nossa IA usa a lógica VDOT para calcular seus ritmos exatos e otimizar a progressão de volume.
               </p>
             </Card>
           </div>
@@ -118,17 +118,17 @@ export default function TrainingPage() {
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
             <div className="flex items-center gap-3">
               <Badge className="bg-accent text-accent-foreground text-sm py-1 px-4">
-                {plan.blockType} Cycle Active
+                Ciclo de {plan.blockType} Ativo
               </Badge>
               <span className="text-muted-foreground">•</span>
-              <span className="font-medium">{plan.durationWeeks} Weeks Generated</span>
+              <span className="font-medium">{plan.durationWeeks} Semanas Geradas</span>
             </div>
 
             <div className="grid gap-8">
               {plan.weeklyPlans.map((week) => (
                 <Card key={week.weekNumber} className="bg-card border-border overflow-hidden">
                   <div className="bg-secondary/50 p-4 border-b flex items-center justify-between">
-                    <h3 className="font-headline font-bold text-xl">Week {week.weekNumber}</h3>
+                    <h3 className="font-headline font-bold text-xl">Semana {week.weekNumber}</h3>
                     <Badge variant="outline" className="border-accent/30 text-accent">{week.focus}</Badge>
                   </div>
                   <CardContent className="p-0">
@@ -156,14 +156,14 @@ export default function TrainingPage() {
                       <div className="flex items-start gap-3">
                         <Dumbbell className="size-4 text-accent mt-1" />
                         <div className="text-sm">
-                          <span className="font-bold block mb-1">Strength</span>
+                          <span className="font-bold block mb-1">Força</span>
                           <span className="text-muted-foreground">{week.strength}</span>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <Info className="size-4 text-accent mt-1" />
                         <div className="text-sm">
-                          <span className="font-bold block mb-1">Notes</span>
+                          <span className="font-bold block mb-1">Notas</span>
                           <span className="text-muted-foreground">{week.notes}</span>
                         </div>
                       </div>
@@ -178,6 +178,3 @@ export default function TrainingPage() {
     </DashboardLayout>
   );
 }
-
-import { Dumbbell, Info } from "lucide-react";
-import { cn } from "@/lib/utils";

@@ -2,8 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'CorreJunto - Advanced Athletic Performance',
-  description: 'AI-powered periodization and performance analytics for athletes.',
+  title: 'CorreJunto - Performance Atlética Avançada',
+  description: 'Periodização impulsionada por IA e análise de desempenho para atletas.',
 };
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="pt-BR" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

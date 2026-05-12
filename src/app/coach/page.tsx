@@ -17,7 +17,7 @@ type Message = {
 
 export default function CoachPage() {
   const [messages, setMessages] = React.useState<Message[]>([
-    { role: "model", parts: "Hello! I'm Gemini, your AI running coach. How was your training session today? Paste your workout data if you'd like me to analyze it." }
+    { role: "model", parts: "Olá! Eu sou o Gemini, seu treinador de corrida IA. Como foi seu treino hoje? Cole seus dados aqui para que eu possa analisá-los." }
   ]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -40,8 +40,8 @@ export default function CoachPage() {
     try {
       const response = await chatWithAICoach({
         conversationHistory: [...messages, userMessage],
-        workoutHistory: "Recent: 10mi long run @ 8:10/mi, HR 145 avg. Felt strong.",
-        trainingPlan: "Currently in Week 2 of Construction phase. Goal: Sub 3:15 Marathon."
+        workoutHistory: "Recente: Longão 16km @ 5:05/km, FC 145 média. Senti-me forte.",
+        trainingPlan: "Atualmente na Semana 2 da fase de Construção. Alvo: Sub 3:15 Maratona."
       });
 
       setMessages(prev => [...prev, { role: "model", parts: response.feedback }]);
@@ -62,10 +62,10 @@ export default function CoachPage() {
                 <Bot className="size-6 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="font-headline text-lg">Gemini Coach</CardTitle>
+                <CardTitle className="font-headline text-lg">Treinador Gemini</CardTitle>
                 <div className="flex items-center gap-2 text-xs text-accent">
                   <span className="size-2 rounded-full bg-accent animate-pulse" />
-                  Online & Analyzing
+                  Online e Analisando
                 </div>
               </div>
             </div>
@@ -117,7 +117,7 @@ export default function CoachPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask about your workout or paste race data..."
+                  placeholder="Pergunte sobre seu treino ou cole dados..."
                   className="bg-secondary/50 border-border h-12 pr-12 rounded-xl focus-visible:ring-accent"
                 />
                 <Button 
@@ -135,10 +135,10 @@ export default function CoachPage() {
 
         <div className="flex flex-wrap gap-2 justify-center">
           {[
-            "Analyze my last marathon",
-            "Adjust plan for knee soreness",
-            "What should my tempo pace be?",
-            "Plan a 5K strategy"
+            "Analise minha última maratona",
+            "Ajuste plano por dor no joelho",
+            "Qual deve ser meu ritmo de tempo?",
+            "Planeje estratégia para 5K"
           ].map(suggestion => (
             <Button 
               key={suggestion} 

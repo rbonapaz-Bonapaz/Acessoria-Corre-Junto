@@ -1,10 +1,10 @@
 'use server';
 /**
- * @fileOverview A conversational AI coach that provides personalized feedback and recommendations to runners.
+ * @fileOverview Um treinador de IA conversacional que fornece feedback personalizado e recomendações para corredores.
  *
- * - chatWithAICoach - A function that handles the AI coach interaction.
- * - ChatWithAICoachInput - The input type for the chatWithAICoach function.
- * - ChatWithAICoachOutput - The return type for the chatWithAICoach function.
+ * - chatWithAICoach - Função que lida com a interação com o treinador de IA.
+ * - ChatWithAICoachInput - O tipo de entrada para a função chatWithAICoach.
+ * - ChatWithAICoachOutput - O tipo de retorno para a função chatWithAICoach.
  */
 
 import {ai} from '@/ai/genkit';
@@ -16,14 +16,14 @@ const ChatWithAICoachInputSchema = z.object({
       role: z.enum(['user', 'model']),
       parts: z.string(),
     })
-  ).describe('The history of the conversation between the user and the AI coach.'),
-  workoutHistory: z.string().describe('A summary or raw data of the runner\'s recent workout performance, which can be pasted directly.'),
-  trainingPlan: z.string().describe('The runner\'s current training plan details, which can be pasted directly.'),
+  ).describe('O histórico da conversa entre o usuário e o treinador de IA.'),
+  workoutHistory: z.string().describe('Um resumo ou dados brutos do desempenho recente do corredor.'),
+  trainingPlan: z.string().describe('Detalhes do plano de treinamento atual do corredor.'),
 });
 export type ChatWithAICoachInput = z.infer<typeof ChatWithAICoachInputSchema>;
 
 const ChatWithAICoachOutputSchema = z.object({
-  feedback: z.string().describe('Personalized feedback and recommendations from the AI running coach based on the conversation history, workout performance, and training plan.'),
+  feedback: z.string().describe('Feedback personalizado e recomendações do treinador de corrida IA baseados no histórico, desempenho e plano.'),
 });
 export type ChatWithAICoachOutput = z.infer<typeof ChatWithAICoachOutputSchema>;
 
@@ -31,23 +31,24 @@ const chatWithAICoachPrompt = ai.definePrompt({
   name: 'chatWithAICoachPrompt',
   input: {schema: ChatWithAICoachInputSchema},
   output: {schema: ChatWithAICoachOutputSchema},
-  prompt: `You are an expert running coach named Gemini. Your goal is to provide personalized, actionable feedback and recommendations to a runner based on their recent workout performance and current training plan.
+  prompt: `Você é um treinador de corrida especialista chamado Gemini. Seu objetivo é fornecer feedback personalizado e acionável para um corredor com base em seus treinos recentes e plano atual.
 
-Analyze the provided workout history and training plan to offer insights. Maintain a helpful, encouraging, and knowledgeable tone.
-Consider the conversation history to continue the dialogue naturally.
+Sempre responda em PORTUGUÊS (Brasil).
+Analise o histórico de treinos e o plano fornecido para oferecer insights. Mantenha um tom encorajador e profissional.
+Considere o histórico da conversa para manter a fluidez.
 
-Conversation History:
+Histórico da Conversa:
 {{#each conversationHistory}}
 {{this.role}}: {{this.parts}}
 {{/each}}
 
-Recent Workout Performance:
+Desempenho Recente:
 {{{workoutHistory}}}
 
-Current Training Plan:
+Plano de Treinamento Atual:
 {{{trainingPlan}}}
 
-Based on this information, provide your personalized feedback and recommendations.
+Com base nestas informações, forneça seu feedback e recomendações personalizadas em português.
 `,
 });
 

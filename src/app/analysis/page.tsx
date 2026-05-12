@@ -11,7 +11,6 @@ import {
   CheckCircle2, 
   AlertCircle, 
   ArrowRight,
-  ChevronDown,
   BarChart3,
   Dna
 } from "lucide-react";
@@ -56,15 +55,15 @@ export default function AnalysisPage() {
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
         <header>
-          <h1 className="text-3xl font-headline font-bold">Biomechanical File Analyzer</h1>
-          <p className="text-muted-foreground">Extract advanced efficiency metrics from .FIT or .CSV files.</p>
+          <h1 className="text-3xl font-headline font-bold">Analisador Biomecânico</h1>
+          <p className="text-muted-foreground">Extraia métricas avançadas de eficiência de arquivos .FIT ou .CSV.</p>
         </header>
 
         <div className="grid lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-1 bg-card border-border shadow-lg h-fit">
             <CardHeader>
-              <CardTitle className="font-headline">Data Input</CardTitle>
-              <CardDescription>Upload training file for deep inspection.</CardDescription>
+              <CardTitle className="font-headline">Entrada de Dados</CardTitle>
+              <CardDescription>Envie o arquivo do treino para inspeção profunda.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div 
@@ -82,8 +81,8 @@ export default function AnalysisPage() {
                   </div>
                 ) : (
                   <div className="text-center">
-                    <div className="font-medium">Drop file here</div>
-                    <div className="text-xs text-muted-foreground">or click to browse</div>
+                    <div className="font-medium">Solte o arquivo aqui</div>
+                    <div className="text-xs text-muted-foreground">ou clique para navegar</div>
                   </div>
                 )}
                 <input 
@@ -98,7 +97,7 @@ export default function AnalysisPage() {
               {analyzing && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs font-medium">
-                    <span>Extracting sensor data...</span>
+                    <span>Extraindo dados dos sensores...</span>
                     <span>{Math.round(progress)}%</span>
                   </div>
                   <Progress value={progress} className="h-1.5 bg-secondary" />
@@ -110,7 +109,7 @@ export default function AnalysisPage() {
                 disabled={!file || analyzing}
                 onClick={startAnalysis}
               >
-                {analyzing ? "Processing..." : "Run Extraction"}
+                {analyzing ? "Processando..." : "Iniciar Extração"}
                 <ArrowRight className="ml-2 size-4" />
               </Button>
             </CardContent>
@@ -120,9 +119,9 @@ export default function AnalysisPage() {
             {!results && !analyzing && (
               <Card className="bg-secondary/20 border-border border-dashed p-12 text-center flex flex-col items-center">
                 <Dna className="size-12 text-muted-foreground/30 mb-4" />
-                <h3 className="font-headline text-lg font-bold text-muted-foreground">No analysis data</h3>
+                <h3 className="font-headline text-lg font-bold text-muted-foreground">Sem dados de análise</h3>
                 <p className="text-sm text-muted-foreground max-w-sm mt-2">
-                  Upload a workout file containing advanced metrics like ground contact time and vertical oscillation.
+                  Envie um arquivo de treino contendo métricas avançadas como tempo de contato com o solo e oscilação vertical.
                 </p>
               </Card>
             )}
@@ -133,7 +132,7 @@ export default function AnalysisPage() {
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="font-headline flex items-center gap-2">
-                        <BarChart3 className="size-5 text-accent" /> Efficiency Score
+                        <BarChart3 className="size-5 text-accent" /> Score de Eficiência
                       </CardTitle>
                       <Badge className="bg-accent/20 text-accent border-accent/30">{results.efficiency}</Badge>
                     </div>
@@ -141,19 +140,19 @@ export default function AnalysisPage() {
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                       <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Cadence</div>
+                        <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Cadência</div>
                         <div className="text-xl font-headline font-bold">{results.cadence}</div>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">GCT</div>
+                        <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">TCS</div>
                         <div className="text-xl font-headline font-bold">{results.groundContact}</div>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Stride Ratio</div>
+                        <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Razão de Passada</div>
                         <div className="text-xl font-headline font-bold">{results.strideRatio}</div>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Vertical Osc</div>
+                        <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Oscilação Vert.</div>
                         <div className="text-xl font-headline font-bold">{results.verticalOscillation}</div>
                       </div>
                     </div>
@@ -162,7 +161,7 @@ export default function AnalysisPage() {
 
                 <Card className="bg-card border-border shadow-md">
                   <CardHeader>
-                    <CardTitle className="font-headline text-lg">Sensor Insights</CardTitle>
+                    <CardTitle className="font-headline text-lg">Insights dos Sensores</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 border">
@@ -170,8 +169,8 @@ export default function AnalysisPage() {
                         <CheckCircle2 className="size-5" />
                       </div>
                       <div className="text-sm">
-                        <span className="font-bold block mb-1">Excellent Cadence Stability</span>
-                        <p className="text-muted-foreground">Your cadence remained within ±2 spm throughout the entire 12-mile session, indicating high metabolic efficiency.</p>
+                        <span className="font-bold block mb-1">Excelente Estabilidade de Cadência</span>
+                        <p className="text-muted-foreground">Sua cadência permaneceu dentro de ±2 spm durante toda a sessão, indicando alta eficiência metabólica.</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-4 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
@@ -179,8 +178,8 @@ export default function AnalysisPage() {
                         <AlertCircle className="size-5" />
                       </div>
                       <div className="text-sm">
-                        <span className="font-bold block mb-1">Ground Contact Asymmetry</span>
-                        <p className="text-muted-foreground">Detected 3.2% bias towards left foot in final 2 miles. Potential fatigue or imbalance in right posterior chain.</p>
+                        <span className="font-bold block mb-1">Assimetria de Contato com o Solo</span>
+                        <p className="text-muted-foreground">Detectado desvio de 3.2% para o pé esquerdo nos últimos 3km. Possível fadiga ou desequilíbrio na cadeia posterior direita.</p>
                       </div>
                     </div>
                   </CardContent>
