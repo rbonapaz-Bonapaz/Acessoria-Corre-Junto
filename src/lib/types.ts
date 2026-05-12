@@ -15,6 +15,7 @@ export interface DietPreferences {
 
 export interface StrengthPreferences {
   splitPreference?: 'full_body' | 'upper_lower' | 'ppl';
+  objective?: 'strength' | 'hypertrophy' | 'performance' | 'endurance';
   frequency?: number;
   trainingDays?: string[];
   equipment?: string[];

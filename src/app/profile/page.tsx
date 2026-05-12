@@ -137,6 +137,7 @@ const profileSchema = z.object({
   
   // Força
   strengthSplit: z.enum(['full_body', 'upper_lower', 'ppl']).optional(),
+  strengthObjective: z.enum(['strength', 'hypertrophy', 'performance', 'endurance']).optional(),
   strengthFrequency: z.coerce.number().optional(),
   strengthDays: z.array(z.string()).optional(),
   strengthEquipment: z.array(z.string()).optional(),
@@ -179,6 +180,7 @@ export default function ProfilePage() {
         gender: 'male',
         strengthFrequency: 3,
         strengthDays: ['Terça', 'Quinta', 'Sábado'],
+        strengthObjective: 'performance',
         strengthEquipment: ['Academia Completa'],
         strengthFocus: ['Core / Estabilidade'],
         trainingHistory: 'Atleta em evolução buscando performance.'
@@ -201,6 +203,7 @@ export default function ProfilePage() {
             preferredFoods: p.dietPreferences?.preferredFoods || '',
             excludedFoods: p.dietPreferences?.excludedFoods || '',
             strengthSplit: p.strengthPreferences?.splitPreference || 'full_body',
+            strengthObjective: p.strengthPreferences?.objective || 'performance',
             strengthFrequency: p.strengthPreferences?.frequency || 3,
             strengthDays: p.strengthPreferences?.trainingDays || ['Terça', 'Quinta', 'Sábado'],
             strengthEquipment: p.strengthPreferences?.equipment || ['Academia Completa'],
@@ -238,7 +241,7 @@ export default function ProfilePage() {
         perfil: ['name', 'birthDate', 'gender', 'currentWeight', 'height', 'location', 'avatarUrl'],
         corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType'],
         alimentacao: ['aestheticGoal', 'trainingTiming', 'mealCount', 'supplements', 'allergies', 'preferredFoods', 'excludedFoods'],
-        musculacao: ['strengthSplit', 'strengthFrequency', 'strengthDays', 'strengthEquipment', 'strengthFocus', 'legDay', 'limitations', 'prBench', 'prSquat', 'prDeadlift']
+        musculacao: ['strengthSplit', 'strengthObjective', 'strengthFrequency', 'strengthDays', 'strengthEquipment', 'strengthFocus', 'legDay', 'limitations', 'prBench', 'prSquat', 'prDeadlift']
     };
 
     const currentTabId = activeTab as TabID;
@@ -274,6 +277,7 @@ export default function ProfilePage() {
             strengthPreferences: {
                 ...context.activeProfile?.strengthPreferences,
                 splitPreference: data.strengthSplit,
+                objective: data.strengthObjective,
                 frequency: data.strengthFrequency,
                 trainingDays: data.strengthDays,
                 equipment: data.strengthEquipment,
@@ -693,15 +697,16 @@ export default function ProfilePage() {
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
-                                            <FormField control={form.control} name="legDay" render={({field}) => (
+                                            <FormField control={form.control} name="strengthObjective" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase">
-                                                        <CalendarDays className="h-4 w-4 text-primary" /> Dia de Perna (Leg Day)
-                                                    </FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase">Objetivo de Força</FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                         <SelectContent>
-                                                            {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
+                                                            <SelectItem value="strength">Força Máxima</SelectItem>
+                                                            <SelectItem value="hypertrophy">Hipertrofia (Massa Muscular)</SelectItem>
+                                                            <SelectItem value="performance">Performance na Corrida</SelectItem>
+                                                            <SelectItem value="endurance">Resistência Muscular</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </FormItem>
@@ -712,9 +717,25 @@ export default function ProfilePage() {
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                         <SelectContent>
-                                                            <SelectItem value="full_body">Full Body</SelectItem>
-                                                            <SelectItem value="upper_lower">Upper / Lower</SelectItem>
-                                                            <SelectItem value="ppl">Push / Pull / Legs</SelectItem>
+                                                            <SelectItem value="full_body">Corpo Todo</SelectItem>
+                                                            <SelectItem value="upper_lower">Superior / Inferior</SelectItem>
+                                                            <SelectItem value="ppl">Empurre / Puxe / Pernas (PPL)</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )} />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
+                                            <FormField control={form.control} name="legDay" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase">
+                                                        <CalendarDays className="h-4 w-4 text-primary" /> Dia de Perna (Leg Day)
+                                                    </FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
                                                         </SelectContent>
                                                     </Select>
                                                 </FormItem>

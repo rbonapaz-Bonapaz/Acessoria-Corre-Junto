@@ -49,6 +49,7 @@
       "type": "object",
       "properties": {
         "splitPreference": { "type": "string", "enum": ["full_body", "upper_lower", "ppl"] },
+        "objective": { "type": "string", "enum": ["strength", "hypertrophy", "performance", "endurance"] },
         "frequency": { "type": "number" },
         "trainingDays": { "type": "array", "items": { "type": "string" } },
         "equipment": { "type": "array", "items": { "type": "string" } },
