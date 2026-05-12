@@ -14,7 +14,10 @@ import {
   BookOpen,
   Target,
   Key,
-  Download
+  Download,
+  Link2,
+  Info,
+  Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,16 +46,19 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 const items = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Meu Plano", url: "/training", icon: Target },
-  { title: "Evolução", url: "/analysis", icon: Activity },
-  { title: "Conquistas", url: "/vault", icon: Trophy },
-  { title: "Coach IA", url: "/coach", icon: MessageSquare },
-  { title: "Calculadoras", url: "/calculators", icon: Calculator },
-  { title: "Dicionário", url: "/dictionary", icon: BookOpen },
-  { title: "Meus Dados", url: "/profile", icon: User },
+  { title: "DASHBOARD", url: "/", icon: LayoutDashboard },
+  { title: "MEU PLANO", url: "/training", icon: Target },
+  { title: "EVOLUÇÃO", url: "/analysis", icon: Activity },
+  { title: "CONQUISTAS", url: "/vault", icon: Trophy },
+  { title: "COACH IA", url: "/coach", icon: MessageSquare },
+  { title: "CALCULADORAS", url: "/calculators", icon: Calculator },
+  { title: "DICIONÁRIO", url: "/dictionary", icon: BookOpen },
+  { title: "INTEGRAÇÕES", url: "/profile", icon: Link2 },
+  { title: "MEU PERFIL", url: "/profile", icon: User },
+  { title: "SOBRE", url: "/dictionary", icon: Info },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -77,33 +83,33 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-background w-full">
-        <Sidebar collapsible="icon">
-          <SidebarHeader className="py-6 px-4">
+        <Sidebar collapsible="icon" className="border-r border-border/50">
+          <SidebarHeader className="py-8 px-6">
             <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-primary flex items-center justify-center font-headline font-bold text-lg text-black">C</div>
-              <span className="font-headline font-bold text-xl tracking-tight group-data-[collapsible=icon]:hidden">
-                <span className="text-white italic">Corre</span>
-                <span className="text-primary italic">Junto</span>
+              <span className="font-headline font-black text-2xl tracking-tighter group-data-[collapsible=icon]:hidden italic">
+                <span className="text-white">CORRE</span>
+                <span className="text-primary">JUNTO</span>
               </span>
             </div>
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Menu de Elite</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-1">
                   {items.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton 
                         asChild 
                         isActive={pathname === item.url}
                         tooltip={item.title}
-                        className="transition-all duration-200"
+                        className={cn(
+                          "transition-all duration-200 h-10 px-6",
+                          pathname === item.url ? "bg-secondary/50 text-white" : "text-muted-foreground hover:text-white"
+                        )}
                       >
                         <Link href={item.url}>
-                          <item.icon className={cn("size-4", pathname === item.url ? "text-primary" : "text-muted-foreground")} />
-                          <span className="font-bold uppercase text-[10px] tracking-widest">{item.title}</span>
-                          {pathname === item.url && <ChevronRight className="ml-auto size-4 text-primary" />}
+                          <item.icon className="size-4" />
+                          <span className="font-headline font-bold text-[11px] tracking-wider">{item.title}</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -112,44 +118,46 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarFooter className="p-4">
+          <SidebarFooter className="p-4 border-t border-border/20">
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full" onClick={() => setShowKeyModal(true)}>
+                <SidebarMenuButton className="w-full text-muted-foreground hover:text-white" onClick={() => setShowKeyModal(true)}>
                   <Key className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden font-bold uppercase text-[10px]">Configurar IA</span>
+                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Configurar IA</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset className="flex-1 flex flex-col min-w-0">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background/80 backdrop-blur-md z-30">
-            <SidebarTrigger />
-            <div className="flex-1 flex justify-between items-center px-2 md:px-4">
-              <div className="font-headline font-black text-lg flex items-center gap-1 uppercase italic tracking-tighter">
-                <span className="text-white">Corre</span>
-                <span className="text-primary">Junto</span>
-                <span className="hidden sm:inline mx-2 text-muted-foreground/30 font-normal">|</span>
-                <span className="hidden sm:inline text-[10px] font-black text-muted-foreground tracking-widest">
-                   {items.find(i => i.url === pathname)?.title || "Portal"}
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-6 sticky top-0 bg-background/80 backdrop-blur-md z-30 justify-between">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="text-muted-foreground hover:text-white" />
+              <div className="font-headline font-black text-lg uppercase italic tracking-tighter hidden md:flex items-center gap-3">
+                <span className="text-white">
+                   {items.find(i => i.url === pathname)?.title || "PORTAL"}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={() => context?.exportData()} className="md:size-9">
-                   <Download className="size-4 md:size-5"/>
-                </Button>
-                <div className="size-8 md:size-9 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden">
-                  {context?.activeProfile?.avatarUrl ? (
-                    <img src={context.activeProfile.avatarUrl} alt="User" className="size-full object-cover" />
-                  ) : (
-                    <User className="size-4 text-muted-foreground" />
-                  )}
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary">
+                <Clock className="size-3.5" />
+                <span className="text-[10px] font-black uppercase tracking-widest italic">90 dias de trial</span>
+              </div>
+              
+              <div className="flex items-center gap-3 pl-4 border-l border-border/50">
+                <div className="text-right hidden md:block leading-none">
+                  <p className="text-[10px] font-black text-white tracking-widest uppercase italic">Atleta</p>
+                  <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">Perfil Ativo</p>
+                </div>
+                <div className="size-9 rounded-full bg-primary flex items-center justify-center font-headline font-black text-black shadow-lg shadow-primary/20">
+                  {context?.activeProfile?.name?.[0] || 'A'}
                 </div>
               </div>
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 md:p-8">
+          <main className="flex-1 overflow-y-auto p-4 md:p-12 lg:p-16">
             {children}
           </main>
         </SidebarInset>
