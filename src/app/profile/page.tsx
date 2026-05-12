@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useState, useEffect, useRef } from 'react';
@@ -223,7 +222,7 @@ export default function ProfilePage() {
             strengthDays: p.strengthPreferences?.trainingDays || ['Terça', 'Quinta', 'Sábado'],
             strengthEquipment: p.strengthPreferences?.equipment || ['Academia Completa'],
             strengthFocus: p.strengthPreferences?.focusAreas || ['Core / Estabilidade'],
-            legDay: p.strengthPreferences?.legDay || 'Quarta',
+            legDay: p.strengthPreferences?.legDay || '',
             limitations: p.strengthPreferences?.limitations || '',
             prBench: p.strengthPreferences?.prBench || 0,
             prSquat: p.strengthPreferences?.prSquat || 0,
@@ -771,7 +770,9 @@ export default function ProfilePage() {
                                                 <Select onValueChange={field.onChange} value={field.value}>
                                                     <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                     <SelectContent>
-                                                        {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
+                                                        {weekDays.filter(d => watchStrengthDays.includes(d.id)).map(d => (
+                                                            <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                             </FormItem>
