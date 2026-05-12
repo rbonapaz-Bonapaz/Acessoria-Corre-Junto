@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Um fluxo Genkit para gerar blocos de treinamento personalizados ou ciclos completos.
@@ -22,6 +23,8 @@ const GenerateTrainingBlockInputSchema = z.object({
   raceDate: z.string().describe('Data da prova alvo.'),
   weeklyMileageGoal: z.number().describe('Meta de volume semanal em km.'),
   targetRaceDistance: z.string().describe('Distância da prova alvo.'),
+  targetPace: z.string().optional().describe('Pace alvo pretendido para a prova (min/km).'),
+  targetTime: z.string().optional().describe('Tempo alvo pretendido para a prova (HH:MM:SS).'),
   currentLongRunDistance: z.number().describe('Distância atual do longão em km.'),
   weeklyAvailability: z.string().describe('Disponibilidade semanal.'),
   injuryHistory: z.string().describe('Histórico de lesões.'),
@@ -36,6 +39,7 @@ const WeeklyPlanSchema = z.object({
   focus: z.string().describe('Foco da semana.'),
   runs: z.array(
     z.object({
+      id: z.string().describe('ID único do treino.'),
       day: z.string().describe('Dia da semana.'),
       type: z.string().describe('Tipo de treino.'),
       distance: z.string().describe('Distância.'),
@@ -70,6 +74,7 @@ Perfil do Atleta:
 - VDOT: {{currentVDOT}}
 - Zonas FC: Z1 ate {{hrZone1End}}, Z2 ate {{hrZone2End}}, Z3 ate {{hrZone3End}}, Z4 ate {{hrZone4End}}. Max: {{hrMax}}.
 - Alvo: {{targetRaceDistance}} em {{raceDate}}.
+- Objetivo de Performance: {{#if targetPace}}Pace Alvo de {{targetPace}} min/km{{else if targetTime}}Tempo Alvo de {{targetTime}}{{else}}Melhorar desempenho geral{{/if}}.
 - Volume Alvo: {{weeklyMileageGoal}}km/semana.
 - Leg Day: {{legDay}} (NÃO agende Tiros ou Longões no dia seguinte a este dia).
 - Disponibilidade: {{weeklyAvailability}}.
@@ -77,7 +82,9 @@ Perfil do Atleta:
 Se for "full", calcule quantas semanas faltam até {{raceDate}} e gere todas elas, respeitando as fases de Base, Construção e Polimento (Taper).
 Se for "blocks", gere 4 semanas focadas em {{trainingBlockType}}.
 
-Estruture rigorosamente conforme o JSON schema.`,
+O plano deve buscar a evolução pretendida para atingir o objetivo de performance (Pace ou Tempo) definido, respeitando a biometria atual (VDOT e Zonas).
+
+Estruture rigorosamente conforme o JSON schema. Cada treino ('runs') deve ter um 'id' único (UUID ou string aleatória).`,
 });
 
 const generateTrainingBlockFlow = ai.defineFlow(

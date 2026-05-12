@@ -180,6 +180,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         raceDate: profile.raceDate,
         weeklyMileageGoal: 60,
         targetRaceDistance: profile.raceDistance,
+        targetPace: profile.targetPace,
+        targetTime: profile.targetTime,
         currentLongRunDistance: 15,
         weeklyAvailability: profile.trainingDays.join(', '),
         injuryHistory: 'Nenhuma reportada',

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useContext, useState, useEffect, useRef } from 'react';
@@ -51,7 +52,9 @@ import {
     ChevronDown,
     Activity,
     CheckCircle2,
-    Info
+    Info,
+    Clock,
+    Target
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -71,6 +74,8 @@ import {
     DropdownMenuItem, 
     DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const weekDays = [
   { id: 'Domingo', label: 'DOM' },
@@ -118,7 +123,9 @@ const profileSchema = z.object({
   raceName: z.string().optional(),
   raceDistance: z.string().min(1, "Selecione a distância."),
   raceDate: z.string().min(1, "Data da prova obrigatória."),
-  raceGoal: z.string().optional(),
+  raceGoalType: z.enum(['pace', 'time']).default('pace'),
+  targetPace: z.string().optional(),
+  targetTime: z.string().optional(),
   trainingDays: z.array(z.string()).min(1, "Selecione pelo menos um dia."),
   longRunDay: z.string().min(1, "Selecione o dia do longão"),
   planGenerationType: z.enum(['full', 'blocks']).default('blocks'),
@@ -191,6 +198,9 @@ export default function ProfilePage() {
         planGenerationType: 'blocks',
         experienceLevel: 'beginner',
         raceDistance: '10k',
+        raceGoalType: 'pace',
+        targetPace: '',
+        targetTime: '',
         gender: 'male',
         strengthFrequency: 3,
         strengthDays: ['Terça', 'Quinta', 'Sábado'],
@@ -209,6 +219,9 @@ export default function ProfilePage() {
         reset({
             ...p,
             name: p.name || '',
+            raceGoalType: p.targetTime ? 'time' : 'pace',
+            targetPace: p.targetPace || '',
+            targetTime: p.targetTime || '',
             aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
             trainingTiming: p.dietPreferences?.trainingTiming || 'manha',
             mealCount: p.dietPreferences?.mealCount || 4,
@@ -234,6 +247,7 @@ export default function ProfilePage() {
   const watchTrainingDays = watch('trainingDays') || [];
   const watchStrengthDays = watch('strengthDays') || [];
   const watchAvatarUrl = watch('avatarUrl');
+  const watchRaceGoalType = watch('raceGoalType');
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -253,7 +267,7 @@ export default function ProfilePage() {
 
     const tabFields: Record<TabID, (keyof ProfileFormValues)[]> = {
         perfil: ['name', 'birthDate', 'gender', 'currentWeight', 'height', 'location', 'avatarUrl'],
-        corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType', 'vo2Max'],
+        corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType', 'vo2Max', 'raceGoalType', 'targetPace', 'targetTime'],
         alimentacao: ['aestheticGoal', 'trainingTiming', 'mealCount', 'supplements', 'allergies', 'preferredFoods', 'excludedFoods'],
         musculacao: ['strengthSplit', 'strengthObjective', 'strengthFrequency', 'strengthDays', 'strengthEquipment', 'strengthFocus', 'legDay', 'limitations', 'prBench', 'prSquat', 'prDeadlift']
     };
@@ -601,6 +615,48 @@ export default function ProfilePage() {
                                                 <FormControl><Input type="date" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
                                             </FormItem>
                                         )} />
+                                    </div>
+
+                                    <div className="space-y-4 border-t pt-6">
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <FormLabel className="text-xs font-bold uppercase">Objetivo da Prova</FormLabel>
+                                            <FormField control={form.control} name="raceGoalType" render={({ field }) => (
+                                                <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
+                                                    <div className="flex items-center space-x-2">
+                                                        <RadioGroupItem value="pace" id="pace-goal" className="border-primary text-primary" />
+                                                        <Label htmlFor="pace-goal" className="text-xs font-bold uppercase cursor-pointer">Pace Alvo</Label>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <RadioGroupItem value="time" id="time-goal" className="border-primary text-primary" />
+                                                        <Label htmlFor="time-goal" className="text-xs font-bold uppercase cursor-pointer">Tempo Alvo</Label>
+                                                    </div>
+                                                </RadioGroup>
+                                            )} />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {watchRaceGoalType === 'pace' ? (
+                                                <FormField control={form.control} name="targetPace" render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-xs font-bold uppercase flex items-center gap-2">
+                                                            <Target size={14} className="text-primary" /> Pace Alvo Pretendido (min/km)
+                                                        </FormLabel>
+                                                        <FormControl><Input placeholder="04:30" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )} />
+                                            ) : (
+                                                <FormField control={form.control} name="targetTime" render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-xs font-bold uppercase flex items-center gap-2">
+                                                            <Clock size={14} className="text-primary" /> Tempo Alvo Pretendido (HH:MM:SS)
+                                                        </FormLabel>
+                                                        <FormControl><Input placeholder="03:45:00" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )} />
+                                            )}
+                                        </div>
                                     </div>
 
                                     <FormField control={form.control} name="trainingHistory" render={({field}) => (

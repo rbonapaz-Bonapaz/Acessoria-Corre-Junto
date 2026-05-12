@@ -55,6 +55,8 @@ export interface AthleteProfile {
   raceDistance: string;
   raceDate: string;
   raceGoal?: string;
+  targetPace?: string;
+  targetTime?: string;
   trainingDays: string[];
   longRunDay: string;
   planGenerationType: PlanGenerationType;
