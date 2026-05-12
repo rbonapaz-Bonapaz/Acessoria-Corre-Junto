@@ -66,12 +66,37 @@ export interface AthleteProfile {
   };
 }
 
+export interface AiAnalysis {
+  actualMetrics: {
+    averagePace: string;
+    averageCadence: string;
+    strideRatio: number;
+    groundContactTime?: string;
+    verticalOscillation?: string;
+  };
+  analysisSummary: string;
+  recommendations: string;
+  areasOfImprovement: string[];
+}
+
 export interface Workout {
+  id: string;
   day: string;
+  date: string;
   type: string;
   distance: string;
   paceZone: string;
   description: string;
+  objective?: string;
+  phases: Array<{
+    name: string;
+    distance: string;
+    pace?: string;
+    duration?: string;
+    description: string;
+  }>;
+  completed?: boolean;
+  analysis?: AiAnalysis;
 }
 
 export interface WeeklyPlan {

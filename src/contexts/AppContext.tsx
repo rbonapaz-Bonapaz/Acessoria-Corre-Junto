@@ -1,13 +1,13 @@
+
 'use client';
 
 import { createContext, useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
-import type { AthleteProfile, TrainingPlan, ChatMessage, FeedbackLogItem, Achievement, PersonalRecord } from '@/lib/types';
+import type { AthleteProfile, TrainingPlan, ChatMessage, FeedbackLogItem, Achievement, PersonalRecord, Workout } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
 
 type PlanGenerationStatus = 'idle' | 'pending' | 'success' | 'error';
 
-// Configuração Strava oficial fornecida na imagem
 const STRAVA_OFFICIAL_CONFIG = {
   clientId: "202859",
   clientSecret: "7b421fb5979780cb527dcbd9da8509c5d796f5dc",
@@ -26,6 +26,7 @@ interface AppContextType {
   deleteProfile: (profileId: string) => void;
   trainingPlan: TrainingPlan | null;
   setTrainingPlan: (plan: TrainingPlan | null) => void;
+  updateWorkout: (workoutId: string, updates: Partial<Workout>) => void;
   deleteTrainingPlan: (keepCompleted: boolean) => void;
   chatHistory: ChatMessage[];
   setChatHistory: (history: ChatMessage[]) => void;
@@ -119,6 +120,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return newProfile;
   }, [activeProfile, toast]);
 
+  const updateWorkout = useCallback((workoutId: string, updates: Partial<Workout>) => {
+    if (!activeProfileId || !currentProfileData.trainingPlan) return;
+    
+    const newWeeklyPlans = currentProfileData.trainingPlan.weeklyPlans.map((week: any) => ({
+      ...week,
+      runs: week.runs.map((run: any) => run.id === workoutId ? { ...run, ...updates } : run)
+    }));
+
+    setProfileData(prev => ({
+      ...prev,
+      [activeProfileId]: {
+        ...prev[activeProfileId],
+        trainingPlan: { ...prev[activeProfileId].trainingPlan, weeklyPlans: newWeeklyPlans }
+      }
+    }));
+  }, [activeProfileId, currentProfileData]);
+
   const deleteProfile = useCallback((id: string) => {
     setProfiles(prev => prev.filter(p => p.id !== id));
     if (activeProfileId === id) setActiveProfileId(null);
@@ -169,6 +187,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         legDay: profile.strengthPreferences?.legDay
       });
 
+      // Atribui IDs aos treinos se não existirem
+      result.weeklyPlans.forEach(week => {
+        week.runs.forEach(run => {
+          if (!run.id) run.id = crypto.randomUUID();
+        });
+      });
+
       for (let i = 1; i <= result.weeklyPlans.length; i++) {
         await new Promise(r => setTimeout(r, 300));
         if (i % 2 === 0 || i === result.weeklyPlans.length) {
@@ -193,11 +218,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!activeProfile) return;
 
     if (service === 'strava' && connected) {
-      // Simula o redirecionamento para o Strava OAuth
       toast({ title: "🚴 Conectando ao Strava...", description: "Validando Client ID 202859..." });
-      
-      // Em uma aplicação real, aqui haveria um window.location.href para o OAuth do Strava
-      // Para o protótipo, usamos os tokens oficiais fornecidos
     }
 
     const updated = {
@@ -266,6 +287,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!activeProfileId) return;
         setProfileData(prev => ({ ...prev, [activeProfileId]: { ...prev[activeProfileId], trainingPlan: p } }));
     },
+    updateWorkout,
     deleteTrainingPlan,
     chatHistory: currentProfileData.chatHistory || [],
     setChatHistory: (h: any) => {
