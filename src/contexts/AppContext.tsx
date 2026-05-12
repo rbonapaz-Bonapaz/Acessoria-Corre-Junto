@@ -54,7 +54,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [profileData, setProfileData] = useState<Record<string, any>>({});
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
 
-  // 1. Carregamento Inicial (Local Storage) - Fallback
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -71,12 +70,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true);
   }, []);
 
-  // 2. Sincronização em Tempo Real com Firestore (Nuvem)
   useEffect(() => {
     if (user && db) {
       const userDocRef = doc(db, 'user_data', user.uid);
-      
-      // Escuta mudanças no Firestore e atualiza o estado local instantaneamente
       const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -84,22 +80,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setProfiles(data.profiles || []);
           setActiveProfileId(data.activeProfileId || null);
           setProfileData(data.profileData || {});
-          
-          // Mantém o localStorage atualizado como cache offline
           localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
       });
-      
       return () => unsubscribe();
     }
   }, [user, db]);
 
-  // 3. Persistência de Alterações (Escrita para Local + Firestore)
   const persistChanges = useCallback(async (newData: any) => {
-    // Sempre atualiza o local para resposta imediata da UI
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-
-    // Se estiver logado, sincroniza com a nuvem
     if (user && db) {
       const userDocRef = doc(db, 'user_data', user.uid);
       await setDoc(userDocRef, newData, { merge: true });
@@ -119,12 +108,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     persistChanges({ apiKey: key, profiles, activeProfileId, profileData });
   }, [profiles, activeProfileId, profileData, persistChanges]);
 
+  const switchProfile = useCallback((id: string | null) => {
+    setActiveProfileId(id);
+    persistChanges({ apiKey, profiles, activeProfileId: id, profileData });
+  }, [apiKey, profiles, profileData, persistChanges]);
+
   const saveProfile = useCallback((data: any) => {
     const id = data.id || crypto.randomUUID();
     const newProfile = { 
         ...data, 
         id,
-        integrations: data.integrations || activeProfile?.integrations || {
+        integrations: data.integrations || {
             strava: { connected: false, autoSync: false, ...STRAVA_OFFICIAL_CONFIG },
             coros: { connected: false, autoSync: false }
         }
@@ -143,7 +137,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     toast({ title: '✅ Perfil Salvo!', description: 'Dados sincronizados entre seus dispositivos.' });
     return newProfile;
-  }, [activeProfile, profiles, apiKey, profileData, persistChanges, toast]);
+  }, [profiles, apiKey, profileData, persistChanges, toast]);
 
   const updateWorkout = useCallback((workoutId: string, updates: Partial<Workout>) => {
     if (!activeProfileId || !currentProfileData.trainingPlan) return;
@@ -206,7 +200,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         legDay: profile.strengthPreferences?.legDay
       });
 
-      // Garantir IDs únicos para os treinos
       result.weeklyPlans.forEach(week => {
         week.runs.forEach(run => {
           if (!run.id) run.id = crypto.randomUUID();
@@ -275,10 +268,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setApiKey,
       profiles,
       activeProfile,
-      switchProfile: (id: string | null) => {
-        setActiveProfileId(id);
-        persistChanges({ apiKey, profiles, activeProfileId: id, profileData });
-      },
+      switchProfile,
       saveProfile,
       deleteProfile: (id: string) => {
         const updated = profiles.filter(p => p.id !== id);

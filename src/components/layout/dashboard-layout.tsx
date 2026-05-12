@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
   User, 
@@ -18,7 +18,8 @@ import {
   Link2,
   Info,
   LogOut,
-  LogIn
+  LogIn,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,7 @@ const items = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const context = React.useContext(AppContext);
   const { user } = useUser();
   const auth = useAuth();
@@ -111,6 +113,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     } catch (error) {
       toast({ variant: "destructive", title: "Erro ao sair" });
     }
+  };
+
+  const handleSwitchProfile = () => {
+    context?.switchProfile(null); // Limpa o perfil ativo para mostrar o picker
+    router.push('/');
   };
 
   return (
@@ -214,6 +221,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       <span className="font-headline font-black text-xs uppercase italic tracking-wider">Meus Dados</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all"
+                    onClick={handleSwitchProfile}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Users size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Trocar Perfil</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-border/20" />
                   {user && (
                     <DropdownMenuItem 
                       className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"

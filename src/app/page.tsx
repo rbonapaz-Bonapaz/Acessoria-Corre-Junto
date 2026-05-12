@@ -1,5 +1,7 @@
+
 "use client";
 
+import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -8,8 +10,7 @@ import {
   ResponsiveContainer, 
   Tooltip as RechartsTooltip, 
   XAxis, 
-  YAxis, 
-  AreaProps
+  YAxis 
 } from "recharts";
 import { 
   Activity, 
@@ -19,7 +20,10 @@ import {
   ArrowUpRight, 
   Zap,
   Calendar,
-  Info
+  Info,
+  Plus,
+  User,
+  ChevronRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,8 +34,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AppContext } from "@/contexts/AppContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "next/link";
 
-const data = [
+const chartData = [
   { day: "Dom", previsto: 0, real: 0 },
   { day: "Seg", previsto: 5, real: 4.8 },
   { day: "Ter", previsto: 8, real: 8.2 },
@@ -73,6 +80,63 @@ const stats = [
 ];
 
 export default function Home() {
+  const context = React.useContext(AppContext);
+  const activeProfile = context?.activeProfile;
+  const profiles = context?.profiles || [];
+
+  // Se não houver perfil selecionado, mostra o Profile Picker
+  if (context?.isHydrated && !activeProfile) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
+        <div className="max-w-4xl w-full space-y-12">
+          <div className="text-center space-y-4">
+            <h1 className="text-5xl md:text-7xl font-headline font-black uppercase italic tracking-tighter text-white">
+              QUEM ESTÁ <span className="text-primary">TREINANDO?</span>
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-xl font-medium max-w-2xl mx-auto italic">
+              Selecione sua identidade atlética para acessar seu laboratório de performance.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {profiles.map((profile) => (
+              <button
+                key={profile.id}
+                onClick={() => context.switchProfile(profile.id)}
+                className="group flex flex-col items-center gap-4 transition-all hover:scale-105"
+              >
+                <div className="relative">
+                  <Avatar className="size-24 md:size-32 border-4 border-transparent group-hover:border-primary transition-all shadow-2xl">
+                    <AvatarImage src={profile.avatarUrl} />
+                    <AvatarFallback className="bg-secondary text-3xl font-black">{profile.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 rounded-full transition-opacity flex items-center justify-center">
+                    <ChevronRight className="size-8 text-black" />
+                  </div>
+                </div>
+                <span className="font-headline font-black text-xs md:text-sm uppercase italic tracking-widest text-muted-foreground group-hover:text-white transition-colors">
+                  {profile.name}
+                </span>
+              </button>
+            ))}
+
+            <Link
+              href="/profile"
+              className="group flex flex-col items-center gap-4 transition-all hover:scale-105"
+            >
+              <div className="size-24 md:size-32 rounded-full bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
+                <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white transition-colors">
+                Novo Atleta
+              </span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-in fade-in duration-500">
@@ -125,7 +189,7 @@ export default function Home() {
             <CardContent>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={data}>
+                  <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3}/>
@@ -175,7 +239,7 @@ export default function Home() {
                 </div>
               </div>
               <Button asChild className="w-full bg-primary hover:bg-primary/90">
-                <a href="/training">Ver Plano Completo</a>
+                <Link href="/training">Ver Plano Completo</Link>
               </Button>
             </CardContent>
           </Card>
