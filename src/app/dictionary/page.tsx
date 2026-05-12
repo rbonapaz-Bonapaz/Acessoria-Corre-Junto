@@ -30,6 +30,59 @@ const trainingTerms = [
   { term: "DESCANSO (OFF)", def: "O treino mais importante. O momento em que o corpo absorve o estímulo e reconstrói as fibras musculares (Supercompensação). Sem descanso, não há evolução." },
 ];
 
+const hrZones = [
+  {
+    z: "Z1",
+    label: "Recuperação",
+    percent: "Até 85% do L2",
+    effort: "2-3/10",
+    talkTest: "Conversa fluída e sem pausas.",
+    focus: "Regeneração ativa e aquecimento.",
+    color: "bg-blue-500",
+    textColor: "text-blue-400"
+  },
+  {
+    z: "Z2",
+    label: "Resistência Aeróbica",
+    percent: "85-89% do L2",
+    effort: "4-5/10",
+    talkTest: "Consegue falar frases completas.",
+    focus: "Base aeróbica e queima de gordura.",
+    color: "bg-green-500",
+    textColor: "text-green-400"
+  },
+  {
+    z: "Z3",
+    label: "Moderado / Ritmo",
+    percent: "90-94% do L2",
+    effort: "6-7/10",
+    talkTest: "Consegue falar apenas frases curtas.",
+    focus: "Eficiência cardiovascular e ritmo de maratona.",
+    color: "bg-yellow-500",
+    textColor: "text-yellow-400"
+  },
+  {
+    z: "Z4",
+    label: "Limiar de Lactato",
+    percent: "95-100% do L2",
+    effort: "8-9/10",
+    talkTest: "Quase impossível falar; palavras isoladas.",
+    focus: "Aumentar a velocidade sustentável (T-Pace).",
+    color: "bg-orange-500",
+    textColor: "text-orange-400"
+  },
+  {
+    z: "Z5",
+    label: "Máxima / VO2 Máx",
+    percent: "> 100% do L2",
+    effort: "10/10",
+    talkTest: "Impossível falar.",
+    focus: "Capacidade anaeróbica e potência máxima.",
+    color: "bg-red-500",
+    textColor: "text-red-400"
+  }
+];
+
 export default function DictionaryPage() {
   return (
     <DashboardLayout>
@@ -85,23 +138,32 @@ export default function DictionaryPage() {
 
           <TabsContent value="zonas" className="mt-8 px-2 animate-in fade-in">
              <div className="space-y-1 mb-8">
-              <h2 className="text-xl md:text-2xl font-headline font-black uppercase italic text-white">Zonas de Intensidade</h2>
-              <p className="text-muted-foreground text-xs md:text-sm italic">Como o corpo responde a cada faixa de batimento cardíaco.</p>
+              <h2 className="text-xl md:text-2xl font-headline font-black uppercase italic text-white">ZONAS DE FREQUÊNCIA CARDÍACA</h2>
+              <p className="text-muted-foreground text-xs md:text-sm italic">As faixas de esforço baseadas no seu Limiar de Lactato (L2) e FC Máxima.</p>
             </div>
             <div className="grid gap-4">
-               {[
-                 { z: "Z1", label: "RECUPERAÇÃO", color: "text-blue-400", desc: "Esforço muito leve para regeneração ativa." },
-                 { z: "Z2", label: "RESISTÊNCIA AERÓBICA", color: "text-green-400", desc: "O motor da base. Melhora a economia e queima gordura." },
-                 { z: "Z3", label: "POTÊNCIA AERÓBICA", color: "text-yellow-400", desc: "Ritmo de maratona. Melhora a capilarização muscular." },
-                 { z: "Z4", label: "LIMIAR DE LACTATO", color: "text-orange-400", desc: "O ponto crítico. Melhora a velocidade sustentável." },
-                 { z: "Z5", label: "VO2 MÁXIMO", color: "text-red-400", desc: "Limite absoluto. Melhora a potência e o fôlego." },
-               ].map((item, i) => (
-                 <Card key={i} className="bg-card/40 border-border/50">
-                   <CardContent className="p-5 flex items-start gap-4">
-                     <span className={cn("text-2xl font-black italic shrink-0 w-12", item.color)}>{item.z}</span>
-                     <div className="space-y-1">
-                       <h4 className="font-black italic text-xs uppercase text-white">{item.label}</h4>
-                       <p className="text-muted-foreground text-xs">{item.desc}</p>
+               {hrZones.map((item, i) => (
+                 <Card key={i} className="bg-card/40 border-border/50 overflow-hidden relative">
+                   <div className={cn("absolute left-0 top-0 bottom-0 w-1.5", item.color)} />
+                   <CardContent className="p-6">
+                     <div className="mb-4">
+                       <h3 className="font-black italic text-sm md:text-base text-white uppercase flex items-center gap-2">
+                         {item.z} - {item.label} <span className={cn("text-[10px] md:text-xs opacity-70", item.textColor)}>({item.percent})</span>
+                       </h3>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                       <div className="space-y-1">
+                         <span className="text-[9px] font-black uppercase text-muted-foreground block">Esforço:</span>
+                         <span className="text-xs font-bold text-white">{item.effort}</span>
+                       </div>
+                       <div className="space-y-1">
+                         <span className="text-[9px] font-black uppercase text-muted-foreground block">Teste da Fala:</span>
+                         <span className="text-xs text-muted-foreground leading-tight block">{item.talkTest}</span>
+                       </div>
+                       <div className="space-y-1">
+                         <span className="text-[9px] font-black uppercase text-muted-foreground block">Foco:</span>
+                         <span className="text-xs text-muted-foreground leading-tight block">{item.focus}</span>
+                       </div>
                      </div>
                    </CardContent>
                  </Card>
