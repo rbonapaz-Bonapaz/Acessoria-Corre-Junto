@@ -60,48 +60,29 @@ const GenerateTrainingBlockOutputSchema = z.object({
 
 export type GenerateTrainingBlockOutput = z.infer<typeof GenerateTrainingBlockOutputSchema>;
 
-const generateTrainingBlockPrompt = ai.definePrompt({
-  name: 'generateTrainingBlockPrompt',
-  input: { schema: GenerateTrainingBlockInputSchema },
-  output: { schema: GenerateTrainingBlockOutputSchema },
-  prompt: `Você é um treinador de corrida de elite. Gere um plano de treinamento em PORTUGUÊS.
-
-{{#if raceName}}O atleta está se preparando para a prova: {{{raceName}}}.{{/if}}
-
-Estratégia: {{planGenerationType}} (full = até a data da prova {{raceDate}}; blocks = apenas as próximas 4 semanas).
-Perfil do Atleta:
-- VDOT: {{currentVDOT}}
-- Zonas FC: Z1 ate {{hrZone1End}}, Z2 ate {{hrZone2End}}, Z3 ate {{hrZone3End}}, Z4 ate {{hrZone4End}}. Max: {{hrMax}}.
-- Alvo: {{targetRaceDistance}} em {{raceDate}}.
-- Objetivo de Performance: {{#if targetPace}}Pace Alvo de {{targetPace}} min/km{{else if targetTime}}Tempo Alvo de {{targetTime}}{{else}}Melhorar desempenho geral{{/if}}.
-- Volume Alvo: {{weeklyMileageGoal}}km/semana.
-- Leg Day: {{legDay}} (NÃO agende Tiros ou Longões no dia seguinte a este dia).
-- Disponibilidade: {{weeklyAvailability}}.
-
-Se for "full", calcule quantas semanas faltam até {{raceDate}} e gere todas elas, respeitando as fases de Base, Construção e Polimento (Taper).
-Se for "blocks", gere 4 semanas focadas em {{trainingBlockType}}.
-
-O plano deve buscar a evolução pretendida para atingir o objetivo de performance (Pace ou Tempo) definido, respeitando a biometria atual (VDOT e Zonas).
-
-Estruture rigorosamente conforme o JSON schema. Cada treino ('runs') deve ter um 'id' único (UUID ou string aleatória).`,
-});
-
-const generateTrainingBlockFlow = ai.defineFlow(
-  {
-    name: 'generateTrainingBlockFlow',
-    inputSchema: GenerateTrainingBlockInputSchema,
-    outputSchema: GenerateTrainingBlockOutputSchema,
-  },
-  async (input) => {
-    const aiInstance = getAiWithKey(input.apiKey);
-    const { output } = await aiInstance.generate({
-      prompt: 'generateTrainingBlockPrompt',
-      input: input,
-    });
-    return output!;
-  }
-);
-
 export async function generateTrainingBlock(input: GenerateTrainingBlockInput): Promise<GenerateTrainingBlockOutput> {
-  return generateTrainingBlockFlow(input);
+  const aiInstance = getAiWithKey(input.apiKey);
+  
+  const { output } = await aiInstance.generate({
+    system: 'Você é um treinador de corrida de elite. Gere um plano de treinamento em PORTUGUÊS estruturado rigorosamente conforme o esquema de saída.',
+    prompt: `
+      Gere um plano para o atleta:
+      ${input.raceName ? `Prova: ${input.raceName}` : ''}
+      Estratégia: ${input.planGenerationType} (full = até ${input.raceDate}; blocks = 4 semanas).
+      VDOT: ${input.currentVDOT}
+      Zonas FC: Z1 ate ${input.hrZone1End}, Z2 ate ${input.hrZone2End}, Z3 ate ${input.hrZone3End}, Z4 ate ${input.hrZone4End}. Max: ${input.hrMax}.
+      Alvo: ${input.targetRaceDistance} em ${input.raceDate}.
+      Objetivo: ${input.targetPace ? `Pace ${input.targetPace} min/km` : input.targetTime ? `Tempo ${input.targetTime}` : 'Performance'}.
+      Volume: ${input.weeklyMileageGoal}km/semana.
+      Leg Day: ${input.legDay} (NÃO agende Tiros ou Longões no dia seguinte).
+      Disponibilidade: ${input.weeklyAvailability}.
+
+      Se for "full", calcule as semanas até ${input.raceDate}. Se for "blocks", gere 4 semanas de ${input.trainingBlockType}.
+      Cada treino deve ter um 'id' único.
+    `,
+    output: { schema: GenerateTrainingBlockOutputSchema }
+  });
+
+  if (!output) throw new Error('Falha ao gerar o plano de treinamento.');
+  return output;
 }
