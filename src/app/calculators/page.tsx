@@ -60,6 +60,57 @@ export default function CalculatorsPage() {
     toast({ title: "Copiado!", description: `${title} salvo na área de transferência.` });
   };
 
+  // --- REGRAS DE CÓPIA DE ELITE ---
+  const copyStrategyElite = () => {
+    if (!sResult) return;
+    const typeLabel = sType === 'negative' ? 'Negativo (Início conservador, fim forte)' : sType === 'even' ? 'Constante (Ritmo mantido)' : 'Positivo (Saída rápida)';
+    
+    let text = `🏃 ESTRATÉGIA DE PROVA CORRE JUNTO 🏃\n`;
+    text += `Distância: ${sDist} km | Tempo Alvo: ${pad(Number(sTimeH))}:${pad(Number(sTimeM))}:${pad(Number(sTimeS))}\n`;
+    text += `Pace Médio Alvo: ${sResult.avgPace} min/km\n`;
+    text += `Perfil: ${typeLabel}\n\n`;
+    text += `--- DIVISÃO TÉCNICA ---\n`;
+    sResult.segments.forEach((seg: any) => {
+      text += `📍 ${seg.label}: ${seg.pace} min/km\n`;
+    });
+    text += `\n--- PARCIAIS KM A KM ---\n`;
+    sResult.splits.forEach((split: any) => {
+      text += `KM ${split.km}: ${split.time} (${split.pace})\n`;
+    });
+    
+    copyToClipboard(text, "Estratégia Completa");
+  };
+
+  const copyZonesElite = () => {
+    if (!fcZones) return;
+    let text = `❤️ ZONAS DE ESFORÇO (FC) CORRE JUNTO ❤️\n`;
+    text += `FC Máxima: ${fcMax} bpm ${fcLthr ? `| Limiar L2: ${fcLthr} bpm` : ''}\n\n`;
+    
+    const icons = ["🔵", "🟢", "🟡", "🟠", "🔴", "🟣"];
+    fcZones.forEach((z, i) => {
+      text += `${icons[i] || "⚪"} ${z.label}: ${z.range} bpm\n`;
+    });
+    
+    text += `\n💡 Dica Técnica: ${fcLthr ? 'Cálculo baseado no seu Limiar de Lactato para precisão de elite.' : 'Cálculo baseado em percentual da FC Máxima. Para maior precisão, use a FC de Limiar (L2).'}`;
+    
+    copyToClipboard(text, "Zonas de FC");
+  };
+
+  const copyHydrationElite = () => {
+    if (!hRes) return;
+    let text = `💧 PLANO DE NUTRIÇÃO & HIDRATAÇÃO 💧\n`;
+    text += `Peso: ${hWeight} kg | Duração: ${pad(Number(hDurH))}h ${pad(Number(hDurM))}min\n\n`;
+    text += `--- HIDRATAÇÃO ---\n`;
+    text += `💦 Volume Total: ${hRes.vol} ml\n`;
+    text += `🕒 Dose Sugerida: ${hRes.per15} ml a cada 15 min\n`;
+    text += `🧂 Eletrólitos: ${hRes.caps} cápsula(s) de 250mg de sódio\n\n`;
+    text += `--- ENERGIA ---\n`;
+    text += `🍬 Carboidratos: ~${hRes.carb}g (aprox. ${Math.max(1, Math.ceil(hRes.carb / 25))} géis)\n\n`;
+    text += `⚠️ Dica do Coach: Hidrate-se bem antes da largada! Beba 500ml de água 2h antes da prova.`;
+    
+    copyToClipboard(text, "Plano de Hidratação");
+  };
+
   // --- 1. CALCULADORA DE PACE ---
   const [pDist, setPDist] = React.useState("10");
   const [pTimeH, setPTimeH] = React.useState("");
@@ -506,7 +557,7 @@ export default function CalculatorsPage() {
                     <div className="space-y-10 animate-in slide-in-from-bottom-8 duration-700">
                        <div className="p-8 rounded-3xl bg-secondary/20 border border-primary/20 relative shadow-2xl overflow-hidden">
                           <div className="absolute -top-10 -right-10 size-40 bg-primary/5 blur-3xl rounded-full" />
-                          <Button variant="ghost" size="icon" className="absolute top-6 right-6 text-muted-foreground hover:text-primary transition-colors" onClick={() => copyToClipboard(`Estratégia ${sType.toUpperCase()} - Pace Médio: ${sResult.avgPace}\nDistância: ${sDist}km`, "Plano Completo")}>
+                          <Button variant="ghost" size="icon" className="absolute top-6 right-6 text-muted-foreground hover:text-primary transition-colors" onClick={copyStrategyElite}>
                             <Copy size={20} />
                           </Button>
                           <h3 className="text-center font-black uppercase italic text-lg mb-8 tracking-widest">Ritmo Médio Alvo: <span className="text-primary text-3xl ml-2">{sResult.avgPace} <small className="text-sm">min/km</small></span></h3>
@@ -590,10 +641,15 @@ export default function CalculatorsPage() {
 
                 {/* HIDRATAÇÃO */}
                 <Card className="bg-card/40 border-border/50 rounded-2xl shadow-xl">
-                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6">
+                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6 flex items-center justify-between">
                     <CardTitle className="text-[11px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
                       <Droplets className="size-4" /> Plano de Nutrição & Hidratação
                     </CardTitle>
+                    {hRes && (
+                      <Button variant="ghost" size="icon" onClick={copyHydrationElite} className="size-8 text-muted-foreground hover:text-primary">
+                        <Copy className="size-4" />
+                      </Button>
+                    )}
                   </CardHeader>
                   <CardContent className="pt-8 px-6 space-y-6">
                     <div className="grid grid-cols-2 gap-4">
@@ -662,10 +718,15 @@ export default function CalculatorsPage() {
 
                 {/* ZONAS FC */}
                 <Card className="bg-card/40 border-border/50 rounded-2xl shadow-xl">
-                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6">
+                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6 flex items-center justify-between">
                     <CardTitle className="text-[11px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
                       <Heart className="size-4" /> Zonas de Esforço (FC)
                     </CardTitle>
+                    {fcZones && (
+                      <Button variant="ghost" size="icon" onClick={copyZonesElite} className="size-8 text-muted-foreground hover:text-primary">
+                        <Copy className="size-4" />
+                      </Button>
+                    )}
                   </CardHeader>
                   <CardContent className="pt-8 px-6 space-y-6">
                     <div className="grid grid-cols-3 gap-3">
