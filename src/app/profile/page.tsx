@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useState, useEffect, useRef } from 'react';
@@ -46,7 +45,6 @@ import {
     CalendarDays,
     Target,
     Trash2,
-    Route,
     ChevronDown
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -746,7 +744,7 @@ export default function ProfilePage() {
                     <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2 font-headline uppercase italic tracking-tight">
                             <Target className="size-5 text-primary" /> Status do Motor
-                        </Target>
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div className="p-3 rounded-xl bg-secondary/20 border border-border space-y-2">
