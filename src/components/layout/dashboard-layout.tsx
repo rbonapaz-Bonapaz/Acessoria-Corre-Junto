@@ -142,12 +142,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center gap-4">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary">
-                <Clock className="size-3.5" />
-                <span className="text-[10px] font-black uppercase tracking-widest italic">90 dias de trial</span>
-              </div>
-              
-              <div className="flex items-center gap-3 pl-4 border-l border-border/50">
+              <div className="flex items-center gap-3 pl-4">
                 <div className="text-right hidden md:block leading-none">
                   <p className="text-[10px] font-black text-white tracking-widest uppercase italic">Atleta</p>
                   <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">Perfil Ativo</p>
