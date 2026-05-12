@@ -54,7 +54,8 @@ import {
     CheckCircle2,
     Info,
     Clock,
-    Target
+    Target,
+    Trophy
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -197,6 +198,7 @@ export default function ProfilePage() {
         longRunDay: 'Sexta', 
         planGenerationType: 'blocks',
         experienceLevel: 'beginner',
+        raceName: '',
         raceDistance: '10k',
         raceGoalType: 'pace',
         targetPace: '',
@@ -222,6 +224,7 @@ export default function ProfilePage() {
             raceGoalType: p.targetTime ? 'time' : 'pace',
             targetPace: p.targetPace || '',
             targetTime: p.targetTime || '',
+            raceName: p.raceName || '',
             aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
             trainingTiming: p.dietPreferences?.trainingTiming || 'manha',
             mealCount: p.dietPreferences?.mealCount || 4,
@@ -267,7 +270,7 @@ export default function ProfilePage() {
 
     const tabFields: Record<TabID, (keyof ProfileFormValues)[]> = {
         perfil: ['name', 'birthDate', 'gender', 'currentWeight', 'height', 'location', 'avatarUrl'],
-        corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType', 'vo2Max', 'raceGoalType', 'targetPace', 'targetTime'],
+        corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceName', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType', 'vo2Max', 'raceGoalType', 'targetPace', 'targetTime'],
         alimentacao: ['aestheticGoal', 'trainingTiming', 'mealCount', 'supplements', 'allergies', 'preferredFoods', 'excludedFoods'],
         musculacao: ['strengthSplit', 'strengthObjective', 'strengthFrequency', 'strengthDays', 'strengthEquipment', 'strengthFocus', 'legDay', 'limitations', 'prBench', 'prSquat', 'prDeadlift']
     };
@@ -473,7 +476,7 @@ export default function ProfilePage() {
                             <Card className="bg-card/50">
                                 <CardHeader>
                                   <CardTitle className="font-headline text-xl md:text-2xl uppercase italic text-primary">Inteligência de Corrida</CardTitle>
-                                  <CardDescription className="text-xs">Configure seus dados fisiológicos para a periodização.</CardDescription>
+                                  <CardDescription className="text-xs">Configure seus dados fisiológicos e objetivos para a periodização.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-8 pt-6 border-t border-border/50">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -513,6 +516,88 @@ export default function ProfilePage() {
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
+                                    </div>
+
+                                    {/* SEÇÃO DA PROVA ALVO */}
+                                    <div className="space-y-6 border-t pt-6 bg-secondary/5 p-4 rounded-2xl border border-border/50">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Trophy className="size-5 text-accent" />
+                                            <h3 className="text-sm font-black uppercase italic tracking-widest text-white">Informações da Prova Alvo</h3>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormField control={form.control} name="raceName" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs font-bold uppercase">Nome da Prova</FormLabel>
+                                                    <FormControl><Input placeholder="Ex: Maratona de Porto Alegre" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <FormField control={form.control} name="raceDistance" render={({field}) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-xs font-bold uppercase">Distância</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
+                                                            <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                            <SelectContent>
+                                                                <SelectItem value="5k">5 km</SelectItem>
+                                                                <SelectItem value="10k">10 km</SelectItem>
+                                                                <SelectItem value="21k">Meia Maratona (21.1k)</SelectItem>
+                                                                <SelectItem value="42k">Maratona (42.2k)</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormItem>
+                                                )} />
+                                                <FormField control={form.control} name="raceDate" render={({field}) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-xs font-bold uppercase">Data</FormLabel>
+                                                        <FormControl><Input type="date" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
+                                                    </FormItem>
+                                                )} />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4 pt-2">
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                                <FormLabel className="text-xs font-bold uppercase">Meta de Performance</FormLabel>
+                                                <FormField control={form.control} name="raceGoalType" render={({ field }) => (
+                                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
+                                                        <div className="flex items-center space-x-2">
+                                                            <RadioGroupItem value="pace" id="pace-goal" className="border-primary text-primary" />
+                                                            <Label htmlFor="pace-goal" className="text-[10px] font-black uppercase cursor-pointer">Pace Alvo</Label>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2">
+                                                            <RadioGroupItem value="time" id="time-goal" className="border-primary text-primary" />
+                                                            <Label htmlFor="time-goal" className="text-[10px] font-black uppercase cursor-pointer">Tempo Alvo</Label>
+                                                        </div>
+                                                    </RadioGroup>
+                                                )} />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {watchRaceGoalType === 'pace' ? (
+                                                    <FormField control={form.control} name="targetPace" render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel className="text-xs font-bold uppercase flex items-center gap-2">
+                                                                <Target size={14} className="text-primary" /> Ritmo Pretendido (min/km)
+                                                            </FormLabel>
+                                                            <FormControl><Input placeholder="04:30" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12 text-lg font-black" /></FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )} />
+                                                ) : (
+                                                    <FormField control={form.control} name="targetTime" render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel className="text-xs font-bold uppercase flex items-center gap-2">
+                                                                <Clock size={14} className="text-primary" /> Tempo de Chegada (HH:MM:SS)
+                                                            </FormLabel>
+                                                            <FormControl><Input placeholder="03:45:00" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12 text-lg font-black" /></FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )} />
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-4 border-t pt-6">
@@ -592,71 +677,6 @@ export default function ProfilePage() {
                                                 </Select>
                                             </FormItem>
                                         )} />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
-                                        <FormField control={form.control} name="raceDistance" render={({field}) => (
-                                            <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Distância Alvo</FormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value}>
-                                                    <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="5k">5 km</SelectItem>
-                                                        <SelectItem value="10k">10 km</SelectItem>
-                                                        <SelectItem value="21k">Meia Maratona (21.1k)</SelectItem>
-                                                        <SelectItem value="42k">Maratona (42.2k)</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormItem>
-                                        )} />
-                                        <FormField control={form.control} name="raceDate" render={({field}) => (
-                                            <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Data da Prova</FormLabel>
-                                                <FormControl><Input type="date" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
-                                            </FormItem>
-                                        )} />
-                                    </div>
-
-                                    <div className="space-y-4 border-t pt-6">
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <FormLabel className="text-xs font-bold uppercase">Objetivo da Prova</FormLabel>
-                                            <FormField control={form.control} name="raceGoalType" render={({ field }) => (
-                                                <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
-                                                    <div className="flex items-center space-x-2">
-                                                        <RadioGroupItem value="pace" id="pace-goal" className="border-primary text-primary" />
-                                                        <Label htmlFor="pace-goal" className="text-xs font-bold uppercase cursor-pointer">Pace Alvo</Label>
-                                                    </div>
-                                                    <div className="flex items-center space-x-2">
-                                                        <RadioGroupItem value="time" id="time-goal" className="border-primary text-primary" />
-                                                        <Label htmlFor="time-goal" className="text-xs font-bold uppercase cursor-pointer">Tempo Alvo</Label>
-                                                    </div>
-                                                </RadioGroup>
-                                            )} />
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {watchRaceGoalType === 'pace' ? (
-                                                <FormField control={form.control} name="targetPace" render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel className="text-xs font-bold uppercase flex items-center gap-2">
-                                                            <Target size={14} className="text-primary" /> Pace Alvo Pretendido (min/km)
-                                                        </FormLabel>
-                                                        <FormControl><Input placeholder="04:30" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )} />
-                                            ) : (
-                                                <FormField control={form.control} name="targetTime" render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel className="text-xs font-bold uppercase flex items-center gap-2">
-                                                            <Clock size={14} className="text-primary" /> Tempo Alvo Pretendido (HH:MM:SS)
-                                                        </FormLabel>
-                                                        <FormControl><Input placeholder="03:45:00" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )} />
-                                            )}
-                                        </div>
                                     </div>
 
                                     <FormField control={form.control} name="trainingHistory" render={({field}) => (

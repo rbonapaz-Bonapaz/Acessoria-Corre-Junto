@@ -165,10 +165,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     setPlanGenerationStatus('pending');
-    toast({ title: "🧠 Gemini Coach está analisando...", description: "Ajustando seu plano de performance baseado no seu T-Pace e Leg Day." });
+    toast({ title: "🧠 Gemini Coach está analisando...", description: profile.raceName ? `Planejando o caminho para ${profile.raceName}...` : "Ajustando seu plano de performance." });
 
     try {
       const result = await generateTrainingBlock({
+        raceName: profile.raceName,
         currentVDOT: profile.vo2Max,
         hrZone1End: Math.round(profile.thresholdHr * 0.8),
         hrZone2End: Math.round(profile.thresholdHr * 0.9),

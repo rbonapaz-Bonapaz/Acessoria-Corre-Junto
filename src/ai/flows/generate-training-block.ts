@@ -10,6 +10,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateTrainingBlockInputSchema = z.object({
+  raceName: z.string().optional().describe('Nome da prova alvo.'),
   currentVDOT: z.number().describe('Score VDOT atual.'),
   hrZone1End: z.number().describe('Frequência cardíaca ao final da Zona 1.'),
   hrZone2End: z.number().describe('Frequência cardíaca ao final da Zona 2.'),
@@ -68,6 +69,8 @@ const prompt = ai.definePrompt({
   input: { schema: GenerateTrainingBlockInputSchema },
   output: { schema: GenerateTrainingBlockOutputSchema },
   prompt: `Você é um treinador de corrida de elite. Gere um plano de treinamento em PORTUGUÊS.
+
+{{#if raceName}}O atleta está se preparando para a prova: {{{raceName}}}.{{/if}}
 
 Estratégia: {{planGenerationType}} (full = até a data da prova {{raceDate}}; blocks = apenas as próximas 4 semanas).
 Perfil do Atleta:
