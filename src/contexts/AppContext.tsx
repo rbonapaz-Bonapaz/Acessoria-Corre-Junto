@@ -1,28 +1,15 @@
 'use client';
 
-import { createContext, useState, useEffect, type ReactNode, useCallback, useMemo, useRef } from 'react';
+import { createContext, useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
 import type { AthleteProfile, TrainingPlan, ChatMessage, FeedbackLogItem, Achievement, PersonalRecord } from '@/lib/types';
-import { useFirestore, useAuth } from '@/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 type PlanGenerationStatus = 'idle' | 'pending' | 'success' | 'error';
 
-interface UserMetadata {
-  data_inicio: any;
-  data_expiracao: any;
-  status_assinatura: 'gratis_trial' | 'pago' | 'aluno';
-}
-
 interface AppContextType {
   isHydrated: boolean;
-  user: User | null;
-  userMetadata: UserMetadata | null;
-  trialDaysLeft: number;
-  isTrialExpired: boolean;
-  isGuestMode: boolean;
-  setGuestMode: (enabled: boolean) => void;
+  apiKey: string | null;
+  setApiKey: (key: string | null) => void;
   profiles: AthleteProfile[];
   activeProfile: AthleteProfile | null;
   switchProfile: (profileId: string | null) => void;
@@ -42,253 +29,174 @@ interface AppContextType {
   achievements: Achievement[];
   personalRecords: PersonalRecord[];
   generateRunningPlanAsync: (profile: AthleteProfile) => Promise<void>;
-  clearSession: () => void;
-  clearFeedbackLog: () => void;
+  exportData: () => void;
+  importData: (jsonData: string) => void;
 }
 
 export const AppContext = createContext<AppContextType | null>(null);
 
+const STORAGE_KEY = 'correJunto_local_data';
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  const auth = useAuth();
-  const db = useFirestore();
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [apiKey, setApiKeyInternal] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<AthleteProfile[]>([]);
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<Record<string, any>>({});
+  const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
   const { toast } = useToast();
 
-  const [user, setUser] = useState<User | null>(null);
-  const [isGuestMode, setIsGuestMode] = useState(false);
-  const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
-  const [profiles, setProfilesState] = useState<AthleteProfile[]>([]);
-  const [activeProfile, setActiveProfileState] = useState<AthleteProfile | null>(null);
-  const [trainingPlan, setTrainingPlanState] = useState<TrainingPlan | null>(null);
-  const [chatHistory, setChatHistoryState] = useState<ChatMessage[]>([]);
-  const [feedbackLog, setFeedbackLogState] = useState<FeedbackLogItem[]>([]);
-  const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
-  const [achievements, setAchievementsState] = useState<Achievement[]>([]);
-  const [personalRecords, setPersonalRecordsState] = useState<PersonalRecord[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  const snapshotUnsubscribeRef = useRef<(() => void) | null>(null);
-
-  const syncToFirestore = useCallback(async (updates: any) => {
-    if (!user || !db) return;
-    try {
-      await setDoc(doc(db, 'user_data', user.uid), updates, { merge: true });
-    } catch (e) { 
-      console.error('Erro de sincronização:', e);
-    }
-  }, [user, db]);
-
+  // Carregamento inicial do localStorage
   useEffect(() => {
-    if (!auth || !db) return;
-
-    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (snapshotUnsubscribeRef.current) snapshotUnsubscribeRef.current();
-
-      if (currentUser) {
-        setIsGuestMode(false);
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (!userDoc.exists()) {
-          const initial = { 
-            data_inicio: Timestamp.now(), 
-            data_expiracao: Timestamp.fromDate(new Date(Date.now() + 90 * 86400000)), 
-            status_assinatura: 'gratis_trial' 
-          };
-          await setDoc(userDocRef, initial);
-          setUserMetadata(initial as any);
-        } else {
-          setUserMetadata(userDoc.data() as UserMetadata);
-        }
-
-        snapshotUnsubscribeRef.current = onSnapshot(doc(db, 'user_data', currentUser.uid), (docSnapshot) => {
-          if (docSnapshot.exists()) {
-            const data = docSnapshot.data();
-            setProfilesState(data.profiles || []);
-            const activeId = data.activeProfileId;
-            if (activeId) {
-              const active = (data.profiles || []).find((p: any) => p.id === activeId);
-              setActiveProfileState(active || null);
-              const pData = data.profile_data?.[activeId] || {};
-              setTrainingPlanState(pData.trainingPlan || null);
-              setChatHistoryState(pData.chatHistory || []);
-              setFeedbackLogState(pData.feedbackLog || []);
-              setAchievementsState(pData.achievements || []);
-              setPersonalRecordsState(pData.personalRecords || []);
-            }
-          }
-        });
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setApiKeyInternal(parsed.apiKey || null);
+        setProfiles(parsed.profiles || []);
+        setActiveProfileId(parsed.activeProfileId || null);
+        setProfileData(parsed.profileData || {});
+      } catch (e) {
+        console.error('Erro ao carregar dados locais:', e);
       }
-    });
-
+    }
     setIsHydrated(true);
+  }, []);
 
-    return () => { 
-      unsubscribeAuth(); 
-      if (snapshotUnsubscribeRef.current) snapshotUnsubscribeRef.current(); 
-    };
-  }, [auth, db]);
+  // Sincronização automática com localStorage
+  useEffect(() => {
+    if (isHydrated) {
+      const dataToSave = {
+        apiKey,
+        profiles,
+        activeProfileId,
+        profileData,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    }
+  }, [isHydrated, apiKey, profiles, activeProfileId, profileData]);
 
-  const trialDaysLeft = useMemo(() => {
-    if (!userMetadata) return 90;
-    const exp = userMetadata.data_expiracao?.toDate?.() || new Date((userMetadata.data_expiracao?.seconds || 0) * 1000);
-    return Math.max(0, Math.ceil((exp.getTime() - Date.now()) / 86400000));
-  }, [userMetadata]);
+  const activeProfile = useMemo(() => 
+    profiles.find(p => p.id === activeProfileId) || null
+  , [profiles, activeProfileId]);
 
-  const saveProfile = useCallback((profileData: any) => {
-    const id = profileData.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15));
-    const newProfile = { ...profileData, id };
+  const currentProfileData = useMemo(() => 
+    activeProfileId ? (profileData[activeProfileId] || {}) : {}
+  , [activeProfileId, profileData]);
+
+  const setApiKey = (key: string | null) => setApiKeyInternal(key);
+
+  const saveProfile = useCallback((data: any) => {
+    const id = data.id || crypto.randomUUID();
+    const newProfile = { ...data, id };
     
-    // Atualização otimista: Reflete na interface antes de salvar no banco
-    setProfilesState(prev => {
-        const updated = [...prev];
-        const idx = updated.findIndex(p => p.id === id);
-        if (idx > -1) updated[idx] = newProfile; else updated.push(newProfile);
-        return updated;
+    setProfiles(prev => {
+      const filtered = prev.filter(p => p.id !== id);
+      return [newProfile, ...filtered];
     });
-    setActiveProfileState(newProfile);
-
-    // Persistência
-    syncToFirestore({ 
-      profiles: [newProfile, ...profiles.filter(p => p.id !== id)], 
-      activeProfileId: id 
-    });
-    
+    setActiveProfileId(id);
     return newProfile;
-  }, [profiles, syncToFirestore]);
+  }, []);
+
+  const deleteProfile = (id: string) => {
+    setProfiles(prev => prev.filter(p => p.id !== id));
+    if (activeProfileId === id) setActiveProfileId(null);
+  };
+
+  const updateActiveProfileData = useCallback((key: string, value: any) => {
+    if (!activeProfileId) return;
+    setProfileData(prev => ({
+      ...prev,
+      [activeProfileId]: {
+        ...(prev[activeProfileId] || {}),
+        [key]: value
+      }
+    }));
+  }, [activeProfileId]);
 
   const generateRunningPlanAsync = async (p: AthleteProfile) => {
+    if (!apiKey) {
+      toast({ variant: 'destructive', title: 'Chave de API Ausente', description: 'Configure sua Gemini API Key para usar a IA.' });
+      return;
+    }
+
     setPlanGenerationStatus('pending');
-    toast({ 
-        title: "🧠 Gemini Coach está analisando...", 
-        description: "Ajustando seu plano de performance baseado no seu T-Pace." 
-    });
+    toast({ title: "🧠 Analisando Perfil...", description: "O Gemini Coach está periodizando seu ciclo." });
 
     try {
-        // Simulação de fluxo sequencial de Elite para demonstração do progresso
-        await new Promise(r => setTimeout(r, 1500));
-        
-        toast({ 
-            title: "📅 Gerando Planilha...", 
-            description: `Processando semana 1...` 
-        });
-        await new Promise(r => setTimeout(r, 800));
-        
-        toast({ 
-            title: "📅 Gerando Planilha...", 
-            description: `Processando semana 2...` 
-        });
-        await new Promise(r => setTimeout(r, 800));
+      // Simulação de chamada direta ao Gemini API no cliente
+      // Em uma implementação real, usaríamos fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey)
+      await new Promise(r => setTimeout(r, 2000));
+      
+      const mockPlan: TrainingPlan = {
+        id: crypto.randomUUID(),
+        profileId: p.id,
+        createdAt: new Date().toISOString(),
+        blockType: p.planGenerationType === 'blocks' ? 'Construção' : 'Ciclo Completo',
+        weeklySchedule: [] 
+      };
 
-        toast({ 
-            title: "📅 Gerando Planilha...", 
-            description: `Semanas processadas e periodizadas.` 
-        });
-
-        const mockPlan: TrainingPlan = {
-          id: (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15)),
-          profileId: p.id,
-          createdAt: new Date().toISOString(),
-          blockType: p.planGenerationType === 'blocks' ? 'Construção' : 'Ciclo Completo',
-          weeklySchedule: []
-        };
-
-        setTrainingPlanState(mockPlan);
-        
-        setPlanGenerationStatus('success');
-        toast({ 
-            title: "✅ Ciclo IA Concluído!", 
-            description: "Sua planilha periodizada está pronta e salva no calendário."
-        });
-
-        // Persiste o plano final no Firestore
-        if (user && p.id) {
-            syncToFirestore({ profile_data: { [p.id]: { trainingPlan: mockPlan } } });
-        }
-    } catch (e: any) { 
-        setPlanGenerationStatus('error'); 
-        toast({ 
-            variant: 'destructive', 
-            title: '❌ Erro na IA', 
-            description: e.message || 'O motor de IA falhou. Tente novamente em instantes.' 
-        });
+      updateActiveProfileData('trainingPlan', mockPlan);
+      setPlanGenerationStatus('success');
+      toast({ title: "✅ Ciclo Gerado!", description: "Sua planilha está pronta." });
+    } catch (e) {
+      setPlanGenerationStatus('error');
+      toast({ variant: 'destructive', title: 'Erro na Geração', description: 'Verifique sua chave de API ou conexão.' });
     }
   };
 
-  const value = useMemo(() => ({
-    isHydrated, 
-    user, 
-    userMetadata, 
-    trialDaysLeft, 
-    isTrialExpired: trialDaysLeft <= 0, 
-    isGuestMode, 
-    setGuestMode: setIsGuestMode,
-    profiles, 
-    activeProfile, 
-    switchProfile: (id: string | null) => { 
-      setActiveProfileState(profiles.find(p => p.id === id) || null); 
-      syncToFirestore({ activeProfileId: id }); 
-    },
-    saveProfile, 
-    deleteProfile: (id: string) => { 
-      const filtered = profiles.filter(p => p.id !== id); 
-      setProfilesState(filtered); 
-      syncToFirestore({ profiles: filtered }); 
-    },
-    trainingPlan, 
-    setTrainingPlan: (p: any) => { 
-      setTrainingPlanState(p); 
-      if(activeProfile) syncToFirestore({ profile_data: { [activeProfile.id]: { trainingPlan: p } } }); 
-    },
-    deleteTrainingPlan: (keep: boolean) => { 
-      if(!trainingPlan) return; 
-      let np = null; 
-      if(keep) { 
-        const cw = trainingPlan.weeklySchedule.map(s => ({ 
-          ...s, 
-          workouts: s.workouts.filter(w => w.completed) 
-        })).filter(s => s.workouts.length > 0); 
-        if(cw.length > 0) np = { ...trainingPlan, weeklySchedule: cw }; 
-      } 
-      setTrainingPlanState(np); 
-      if(activeProfile) syncToFirestore({ profile_data: { [activeProfile.id]: { trainingPlan: np } } }); 
-    },
-    chatHistory, 
-    setChatHistory: (h: any) => { 
-      setChatHistoryState(h); 
-      if(activeProfile) syncToFirestore({ profile_data: { [activeProfile.id]: { chatHistory: h } } }); 
-    },
-    feedbackLog, 
-    addFeedbackLogItem: (i: any) => { 
-      const nl = [...feedbackLog, i]; 
-      setFeedbackLogState(nl); 
-      if(activeProfile) syncToFirestore({ profile_data: { [activeProfile.id]: { feedbackLog: nl } } }); 
-    },
-    updateFeedbackLogItem: (id: string, u: any) => { 
-      const nl = feedbackLog.map(i => i.id === id ? { ...i, ...u } : i); 
-      setFeedbackLogState(nl); 
-      if(activeProfile) syncToFirestore({ profile_data: { [activeProfile.id]: { feedbackLog: nl } } }); 
-    },
-    deleteFeedbackLogItem: (id: string) => { 
-      const nl = feedbackLog.filter(i => i.id !== id); 
-      setFeedbackLogState(nl); 
-      if(activeProfile) syncToFirestore({ profile_data: { [activeProfile.id]: { feedbackLog: nl } } }); 
-    },
-    planGenerationStatus, 
-    setPlanGenerationStatus, 
-    achievements, 
-    personalRecords,
-    generateRunningPlanAsync,
-    clearSession: () => { 
-      if(auth) auth.signOut(); 
-      setActiveProfileState(null); 
-      setProfilesState([]); 
-    },
-    clearFeedbackLog: () => { 
-      setFeedbackLogState([]); 
-      if(activeProfile) syncToFirestore({ profile_data: { [activeProfile.id]: { feedbackLog: [] } } }); 
-    }
-  }), [isHydrated, user, userMetadata, trialDaysLeft, isGuestMode, profiles, activeProfile, trainingPlan, chatHistory, feedbackLog, planGenerationStatus, achievements, personalRecords, saveProfile, syncToFirestore, auth, generateRunningPlanAsync]);
+  const exportData = () => {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (!data) return;
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `correJunto_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  const importData = (jsonData: string) => {
+    try {
+      const parsed = JSON.parse(jsonData);
+      if (!parsed.profiles) throw new Error('Formato inválido');
+      setApiKeyInternal(parsed.apiKey || null);
+      setProfiles(parsed.profiles);
+      setActiveProfileId(parsed.activeProfileId);
+      setProfileData(parsed.profileData);
+      toast({ title: '✅ Importação Concluída', description: 'Seus dados foram carregados com sucesso.' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Erro na Importação', description: 'O arquivo JSON fornecido é inválido.' });
+    }
+  };
+
+  const value = {
+    isHydrated,
+    apiKey,
+    setApiKey,
+    profiles,
+    activeProfile,
+    switchProfile: (id: string | null) => setActiveProfileId(id),
+    saveProfile,
+    deleteProfile,
+    trainingPlan: currentProfileData.trainingPlan || null,
+    setTrainingPlan: (p: any) => updateActiveProfileData('trainingPlan', p),
+    deleteTrainingPlan: () => updateActiveProfileData('trainingPlan', null),
+    chatHistory: currentProfileData.chatHistory || [],
+    setChatHistory: (h: any) => updateActiveProfileData('chatHistory', h),
+    feedbackLog: currentProfileData.feedbackLog || [],
+    addFeedbackLogItem: (item: any) => updateActiveProfileData('feedbackLog', [...(currentProfileData.feedbackLog || []), item]),
+    updateFeedbackLogItem: (id: string, u: any) => updateActiveProfileData('feedbackLog', (currentProfileData.feedbackLog || []).map((i: any) => i.id === id ? { ...i, ...u } : i)),
+    deleteFeedbackLogItem: (id: string) => updateActiveProfileData('feedbackLog', (currentProfileData.feedbackLog || []).filter((i: any) => i.id !== id)),
+    planGenerationStatus,
+    setPlanGenerationStatus,
+    achievements: currentProfileData.achievements || [],
+    personalRecords: currentProfileData.personalRecords || [],
+    generateRunningPlanAsync,
+    exportData,
+    importData
+  };
+
+  return <AppContext.Provider value={value as any}>{children}</AppContext.Provider>;
 }

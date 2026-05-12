@@ -13,7 +13,10 @@ import {
   Calculator,
   ChevronRight,
   BookOpen,
-  Target
+  Target,
+  Key,
+  Download,
+  Upload
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -32,6 +35,16 @@ import {
   SidebarProvider,
   SidebarTrigger 
 } from "@/components/ui/sidebar";
+import { AppContext } from "@/contexts/AppContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -46,6 +59,22 @@ const items = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const context = React.useContext(AppContext);
+  const [showKeyModal, setShowKeyModal] = React.useState(false);
+  const [tempKey, setTempKey] = React.useState("");
+
+  React.useEffect(() => {
+    if (context?.isHydrated && !context.apiKey) {
+      setShowKeyModal(true);
+    }
+  }, [context?.isHydrated, context?.apiKey]);
+
+  const handleSaveKey = () => {
+    if (tempKey.trim()) {
+      context?.setApiKey(tempKey.trim());
+      setShowKeyModal(false);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -87,9 +116,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <SidebarFooter className="p-4">
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full">
-                  <Settings className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden">Configurações</span>
+                <SidebarMenuButton className="w-full" onClick={() => setShowKeyModal(true)}>
+                  <Key className="size-4" />
+                  <span className="group-data-[collapsible=icon]:hidden">Configurar IA</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -107,9 +136,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                    {items.find(i => i.url === pathname)?.title || "Dashboard"}
                 </span>
               </div>
-              <div className="flex items-center gap-4">
-                <Button variant="outline" size="sm" className="hidden md:flex bg-secondary">
-                  Conectar Garmin
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="sm" onClick={() => context?.exportData()} className="hidden md:flex gap-2">
+                   <Download size={16}/> Exportar
                 </Button>
                 <div className="size-8 rounded-full bg-secondary border flex items-center justify-center">
                   <User className="size-4 text-muted-foreground" />
@@ -122,6 +151,35 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </main>
         </SidebarInset>
       </div>
+
+      <Dialog open={showKeyModal} onOpenChange={setShowKeyModal}>
+        <DialogContent className="sm:max-w-[425px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-primary font-headline italic">Configuração de IA</DialogTitle>
+            <DialogDescription>
+              Para gerar planos e conversar com o Coach, você precisa da sua própria chave do Gemini.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                1. Acesse o <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
+                <br/>2. Crie uma chave gratuita.
+                <br/>3. Cole ela abaixo.
+              </p>
+              <Input
+                placeholder="Insira sua API Key aqui..."
+                value={tempKey}
+                onChange={(e) => setTempKey(e.target.value)}
+                className="bg-secondary/50 border-border"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSaveKey} className="w-full font-bold uppercase">Ativar Inteligência</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }
