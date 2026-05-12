@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -58,7 +59,7 @@ const items = [
   { title: "DICIONÁRIO", url: "/dictionary", icon: BookOpen },
   { title: "INTEGRAÇÕES", url: "/profile", icon: Link2 },
   { title: "MEU PERFIL", url: "/profile", icon: User },
-  { title: "SOBRE", url: "/dictionary", icon: Info },
+  { title: "SOBRE", url: "/about", icon: Info },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
