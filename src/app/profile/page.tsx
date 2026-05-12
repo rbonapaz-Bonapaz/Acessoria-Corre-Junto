@@ -45,7 +45,10 @@ import {
     CalendarDays,
     Target,
     Trash2,
-    ChevronDown
+    ChevronDown,
+    Activity,
+    User as UserIcon,
+    Flame
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
@@ -68,13 +71,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const weekDays = [
-  { id: 'Domingo', label: 'Dom' },
-  { id: 'Segunda', label: 'Seg' },
-  { id: 'Terça', label: 'Ter' },
-  { id: 'Quarta', label: 'Qua' },
-  { id: 'Quinta', label: 'Qui' },
-  { id: 'Sexta', label: 'Sex' },
-  { id: 'Sábado', label: 'Sáb' },
+  { id: 'Segunda', label: 'SEG' },
+  { id: 'Terça', label: 'TER' },
+  { id: 'Quarta', label: 'QUA' },
+  { id: 'Quinta', label: 'QUI' },
+  { id: 'Sexta', label: 'SEX' },
+  { id: 'Sábado', label: 'SÁB' },
+  { id: 'Domingo', label: 'DOM' },
 ] as const;
 
 const focusAreasOptions = [
@@ -373,8 +376,11 @@ export default function ProfilePage() {
 
                             <TabsContent value="corrida" className="mt-6 space-y-6 animate-in fade-in">
                                 <Card className="bg-card/50">
-                                    <CardHeader><CardTitle className="font-headline text-xl md:text-2xl uppercase italic">O Cérebro Técnico</CardTitle></CardHeader>
-                                    <CardContent className="space-y-6 pt-6 border-t border-border/50">
+                                    <CardHeader>
+                                      <CardTitle className="font-headline text-xl md:text-2xl uppercase italic text-primary">Inteligência de Corrida</CardTitle>
+                                      <CardDescription className="text-xs">Configure seus dias de treino e metas para a periodização.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-8 pt-6 border-t border-border/50">
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <FormField control={form.control} name="restingHr" render={({field}) => (
                                                 <FormItem>
@@ -399,93 +405,101 @@ export default function ProfilePage() {
                                             )} />
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
-                                            <FormField control={form.control} name="experienceLevel" render={({field}) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Nível e Histórico</FormLabel>
-                                                    <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="run_walk">Caminhada/Corrida</SelectItem>
-                                                            <SelectItem value="beginner">Iniciante</SelectItem>
-                                                            <SelectItem value="intermediate">Intermediário</SelectItem>
-                                                            <SelectItem value="advanced">Avançado / Elite</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormItem>
-                                            )} />
-                                            <FormField control={form.control} name="planGenerationType" render={({field}) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Configuração de Ciclo</FormLabel>
-                                                    <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="blocks">Geração por Blocos (4 semanas)</SelectItem>
-                                                            <SelectItem value="full">Ciclo Completo (Até a prova)</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormItem>
-                                            )} />
+                                        <div className="space-y-4 border-t pt-6">
+                                            <div className="flex items-center justify-between">
+                                                <FormLabel className="text-xs font-bold uppercase flex items-center gap-2">
+                                                    <CalendarDays className="size-4 text-primary" /> Disponibilidade Semanal
+                                                </FormLabel>
+                                                <span className="text-[9px] font-black text-muted-foreground uppercase italic">{watchTrainingDays.length} Dias / Semana</span>
+                                            </div>
+                                            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                                                {weekDays.map(day => (
+                                                    <FormField key={day.id} control={form.control} name="trainingDays" render={({ field }) => (
+                                                        <FormItem className="space-y-0">
+                                                            <FormControl>
+                                                                <div 
+                                                                    onClick={() => {
+                                                                        const current = field.value || [];
+                                                                        if (current.includes(day.id)) field.onChange(current.filter(d => d !== day.id));
+                                                                        else field.onChange([...current, day.id]);
+                                                                    }}
+                                                                    className={cn(
+                                                                        "h-12 rounded-lg border-2 flex flex-col items-center justify-center cursor-pointer transition-all",
+                                                                        field.value?.includes(day.id) 
+                                                                            ? "border-primary bg-primary/10 text-primary" 
+                                                                            : "border-border/50 bg-secondary/10 text-muted-foreground grayscale"
+                                                                    )}
+                                                                >
+                                                                    <span className="text-[10px] font-black">{day.label}</span>
+                                                                    {field.value?.includes(day.id) && <Activity className="size-3 mt-1" />}
+                                                                </div>
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )} />
+                                                ))}
+                                            </div>
+                                            <FormDescription className="text-[9px] italic">Selecione todos os dias em que você pode correr. O Coach distribuirá o volume entre eles.</FormDescription>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="raceDistance" render={({field}) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Objetivo de Prova</FormLabel>
-                                                    <FormControl><Input placeholder="Nome da Prova ou Meta" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
-                                                </FormItem>
-                                            )} />
-                                            <FormField control={form.control} name="raceDate" render={({field}) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Data do Alvo</FormLabel>
-                                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
-                                                </FormItem>
-                                            )} />
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="trainingDays" render={({field}) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Dias Disponíveis</FormLabel>
-                                                    <div className="flex flex-wrap gap-1.5 pt-2">
-                                                        {weekDays.map(day => (
-                                                            <Button 
-                                                                key={day.id}
-                                                                type="button"
-                                                                variant={field.value?.includes(day.id) ? "default" : "outline"}
-                                                                size="sm"
-                                                                className="text-[9px] font-bold h-7 px-2"
-                                                                onClick={() => {
-                                                                    const current = field.value || [];
-                                                                    if (current.includes(day.id)) setValue('trainingDays', current.filter(d => d !== day.id));
-                                                                    else setValue('trainingDays', [...current, day.id]);
-                                                                }}
-                                                            >
-                                                                {day.label}
-                                                            </Button>
-                                                        ))}
-                                                    </div>
-                                                </FormItem>
-                                            )} />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
                                             <FormField control={form.control} name="longRunDay" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Dia do Longão</FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase">Dia Preferencial de Longão</FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                         <SelectContent>
-                                                            {weekDays.filter(d => watchTrainingDays.includes(d.id)).map(d => (
+                                                            {weekDays.map(d => (
                                                                 <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>
                                                             ))}
                                                         </SelectContent>
                                                     </Select>
+                                                    <FormDescription className="text-[9px]">Geralmente o dia com mais tempo livre (fim de semana).</FormDescription>
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="experienceLevel" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs font-bold uppercase">Nível de Experiência</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="run_walk">Iniciante (Caminha/Corre)</SelectItem>
+                                                            <SelectItem value="beginner">Começando a Correr (Até 20km/sem)</SelectItem>
+                                                            <SelectItem value="intermediate">Intermediário (20-50km/sem)</SelectItem>
+                                                            <SelectItem value="advanced">Avançado (Elite / 50km+ sem)</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )} />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
+                                            <FormField control={form.control} name="raceDistance" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs font-bold uppercase">Distância Alvo</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="5k">5 km</SelectItem>
+                                                            <SelectItem value="10k">10 km</SelectItem>
+                                                            <SelectItem value="21k">Meia Maratona (21.1k)</SelectItem>
+                                                            <SelectItem value="42k">Maratona (42.2k)</SelectItem>
+                                                            <SelectItem value="ultra">Ultramaratona</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="raceDate" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs font-bold uppercase">Data da Prova</FormLabel>
+                                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
                                                 </FormItem>
                                             )} />
                                         </div>
 
                                         <FormField control={form.control} name="trainingHistory" render={({field}) => (
-                                            <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Histórico Técnico (Contexto)</FormLabel>
-                                                <FormControl><Textarea placeholder="Descreva seu histórico recente de volume e lesões..." {...field} value={field.value ?? ''} className="bg-secondary/10 min-h-[100px]" /></FormControl>
+                                            <FormItem className="border-t pt-6">
+                                                <FormLabel className="text-xs font-bold uppercase">Contexto & Histórico (Opcional)</FormLabel>
+                                                <FormControl><Textarea placeholder="Ex: Sinto dor no joelho após 10km, já corri maratonas, etc..." {...field} value={field.value ?? ''} className="bg-secondary/10 min-h-[100px]" /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
@@ -577,12 +591,12 @@ export default function ProfilePage() {
                                                         <CalendarDays className="h-4 w-4 text-primary" /> Dia de Perna (Leg Day)
                                                     </FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                         <SelectContent>
                                                             {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
                                                         </SelectContent>
                                                     </Select>
-                                                    <FormDescription className="text-[9px]">A IA evita intensidade (Tiro/Longão) nas 24h seguintes.</FormDescription>
+                                                    <FormDescription className="text-[9px]">A IA evita intensidade (Tiro/Longão) nas 24h seguintes ao Leg Day.</FormDescription>
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="strengthSplit" render={({field}) => (
@@ -640,7 +654,7 @@ export default function ProfilePage() {
 
                         <div className="flex flex-col sm:flex-row gap-3">
                             <Button type="submit" size="lg" className="flex-1 h-12 font-black uppercase tracking-widest bg-white text-black hover:bg-white/90 text-xs">
-                                Salvar Perfil
+                                SALVAR PERFIL
                             </Button>
                             <div className="flex flex-1 rounded-md shadow-lg overflow-hidden">
                                 <Button 
@@ -651,7 +665,7 @@ export default function ProfilePage() {
                                     disabled={isProcessing}
                                 >
                                     {isProcessing ? <Loader2 className="animate-spin mr-2 size-4" /> : <Zap className="mr-2 size-4" />} 
-                                    Gerar Ciclo IA
+                                    GERAR CICLO IA
                                 </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -753,16 +767,16 @@ export default function ProfilePage() {
                                 <span className="text-white">{watch('thresholdPace')}</span>
                             </div>
                             <div className="flex justify-between text-[10px] font-black uppercase tracking-tight text-primary italic">
-                                <span>Dia Perna</span>
-                                <span className="text-white">{watch('legDay')}</span>
+                                <span>Dias Treino</span>
+                                <span className="text-white">{watchTrainingDays.length}x / sem</span>
                             </div>
                             <div className="flex justify-between text-[10px] font-black uppercase tracking-tight text-primary italic">
-                                <span>Timing</span>
-                                <span className="text-white uppercase">{watch('trainingTiming')}</span>
+                                <span>Leg Day</span>
+                                <span className="text-white">{watch('legDay')}</span>
                             </div>
                         </div>
                         <p className="text-[9px] text-muted-foreground leading-tight italic">
-                            O Gemini Coach cruzará o Leg Day com seu T-Pace para garantir que as sessões de V02 Max ocorram no momento ideal de recuperação.
+                            O Gemini Coach cruzará sua disponibilidade de {watchTrainingDays.length} dias com o Leg Day para otimizar os blocos de V02 Max.
                         </p>
                     </CardContent>
                 </Card>
