@@ -2,96 +2,167 @@
 
 import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Search, 
-  BookOpen, 
   Activity, 
-  Zap, 
   Heart, 
-  Dumbbell, 
-  Milestone, 
-  TrendingUp, 
-  Target, 
-  Clock 
+  Info, 
+  Brain,
+  Zap,
+  TrendingUp,
+  Target,
+  Clock,
+  Dumbbell,
+  Milestone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const terms = [
-  { term: "Rodagem (Easy Run)", category: "Treino", icon: Activity, def: "Treino de baixa intensidade para construir base aeróbica. O ritmo deve permitir conversa fluída sem perda de fôlego." },
-  { term: "Longão (LSD)", category: "Treino", icon: Milestone, def: "Treino mais longo da semana. Foco no 'tempo de pé' e resistência mental, ensinando o corpo a usar gordura como combustível." },
-  { term: "Intervalado (Tiros)", category: "Treino", icon: Zap, def: "Picos de esforço intenso seguidos de descanso. Melhora o VO2 Máx e a economia de corrida." },
-  { term: "Tempo Run (Limiar)", category: "Treino", icon: TrendingUp, def: "Ritmo 'confortavelmente difícil'. Treina o corpo para lidar com o lactato e manter velocidade por mais tempo." },
-  { term: "Regenerativo", category: "Treino", icon: Activity, def: "Trote extremamente leve após sessões intensas para ajudar na circulação sanguínea e recuperação muscular." },
-  { term: "VDOT", category: "Fisiologia", icon: Target, def: "Método criado por Jack Daniels para medir a aptidão atual e prever ritmos de treino e prova baseados em resultados recentes." },
-  { term: "Z2 - Zona Aeróbica", category: "Fisiologia", icon: Heart, def: "Intensidade de 60-70% da FC Máxima. Ideal para queima de gordura e fortalecimento do sistema cardiovascular." },
-  { term: "Pace", category: "Estratégia", icon: Clock, def: "Ritmo médio expresso em minutos por quilômetro (min/km). É o inverso da velocidade horária (km/h)." },
-  { term: "Split Negativo", category: "Estratégia", icon: TrendingUp, def: "Técnica de correr a segunda metade da prova mais rápida que a primeira. Evita fadiga precoce." },
-  { term: "Taper (Polimento)", category: "Recuperação", icon: Dumbbell, def: "Redução do volume de treino nas semanas que antecedem uma prova alvo para chegar descansado." },
-  { term: "Cadência", category: "Biomecânica", icon: Activity, def: "Número de passos por minuto (PPM). Uma cadência alta (aprox. 180) costuma reduzir o impacto." },
-  { term: "Drop", category: "Equipamento", icon: Dumbbell, def: "Diferença de altura entre o calcanhar e a ponta do tênis. Influencia na ativação da panturrilha e tendão." },
+const trainingTerms = [
+  { term: "RODAGEM (EASY RUN)", def: "É o \"arroz com feijão\" do treino. O objetivo é construir sua base aeróbica (seu motor). O ritmo deve ser leve o suficiente para você conseguir conversar normalmente. Ajuda a fortalecer articulações e queimar gordura de forma eficiente." },
+  { term: "LONGÃO (LSD)", def: "O treino mais longo da semana. Foco no \"tempo de pé\". Ensina o corpo a oxidar gordura como combustível e prepara a mente para distâncias maiores e fadiga acumulada." },
+  { term: "INTERVALADO (TIROS)", def: "Picos de esforço intenso (VO2 Máx) seguidos por descanso. É o treino que aumenta sua velocidade máxima e melhora a eficiência cardiovascular. Exige alta carga metabólica." },
+  { term: "TEMPO RUN (LIMIAR)", def: "Ritmo \"confortavelmente difícil\". Intensidade mantida no limiar de lactato (L2). Ensina o corpo a remover o lactato do sangue enquanto corre em velocidade firme." },
+  { term: "REGENERATIVO", def: "Corrida extremamente leve (Z1) para ajudar na circulação e recuperação muscular após sessões intensas. Se houver qualquer esforço, está rápido demais." },
+  { term: "FARTLEK", def: "Do sueco \"brincar de correr\". Alternar ritmos usando o ambiente como referência, sem a pressão de tempos fixos. Excelente para desenvolver percepção de esforço (RPE)." },
+  { term: "SUBIDAS (HILL REPEATS)", def: "A musculação específica do corredor. Melhora a potência mecânica, a postura de corrida e previne lesões por fortalecer a cadeia posterior." },
+  { term: "PROGRESSIVO", def: "Treino que começa em ritmo leve e termina em ritmo de prova ou superior. Ótimo para controle de pacing e simulação de final de prova." },
+  { term: "DESCANSO (OFF)", def: "O treino mais importante. O momento em que o corpo absorve o estímulo e reconstrói as fibras musculares (Supercompensação). Sem descanso, não há evolução." },
 ];
 
 export default function DictionaryPage() {
-  const [search, setSearch] = React.useState("");
-
-  const filteredTerms = terms.filter(t => 
-    t.term.toLowerCase().includes(search.toLowerCase()) || 
-    t.def.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-        <header className="space-y-4">
-          <h1 className="text-3xl font-headline font-bold">Dicionário do Corredor</h1>
-          <p className="text-muted-foreground">Guia completo de termos técnicos, tipos de treinos e conceitos fisiológicos.</p>
-          
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
-            <Input 
-              placeholder="Pesquisar termo ou conceito..." 
-              className="pl-12 h-14 bg-secondary/50 text-lg rounded-2xl border-border focus-visible:ring-accent"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
+      <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+        <header className="space-y-2 px-2">
+          <h1 className="text-3xl md:text-5xl font-headline font-black uppercase italic tracking-tighter">
+            <span className="text-white">DICIONÁRIO DO</span> <span className="text-primary">CORREDOR</span>
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-lg font-medium">
+            Seu guia completo de termos, treinos e conceitos da corrida de alta performance.
+          </p>
         </header>
 
-        <div className="grid gap-4">
-          {filteredTerms.length > 0 ? (
-            filteredTerms.map((item, i) => (
-              <Card key={i} className="bg-card border-border hover:border-accent/30 transition-all group overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row md:items-start gap-6">
-                    <div className="size-12 rounded-2xl bg-secondary flex items-center justify-center shrink-0 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                      <item.icon className="size-6" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="font-headline font-bold text-xl">{item.term}</h3>
-                        <Badge variant="secondary" className="bg-primary/20 text-primary-foreground border-primary/30 text-[10px] uppercase tracking-wider">
-                          {item.category}
-                        </Badge>
-                      </div>
-                      <p className="text-muted-foreground leading-relaxed">
-                        {item.def}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <div className="text-center py-20 bg-secondary/20 rounded-3xl border border-dashed">
-              <BookOpen className="size-12 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-muted-foreground">Nenhum termo encontrado</h3>
-              <p className="text-sm text-muted-foreground">Tente pesquisar por palavras como 'Pace', 'Z2' ou 'Tiros'.</p>
+        <Tabs defaultValue="treinos" className="w-full">
+          <div className="px-2">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-secondary/20 p-1.5 rounded-xl h-auto gap-2">
+              <TabsTrigger value="treinos" className="py-3 font-black text-[10px] md:text-xs uppercase italic gap-2">
+                <Activity className="size-4 text-primary" /> Treinos
+              </TabsTrigger>
+              <TabsTrigger value="zonas" className="py-3 font-black text-[10px] md:text-xs uppercase italic gap-2">
+                <Heart className="size-4" /> Zonas FC
+              </TabsTrigger>
+              <TabsTrigger value="guia" className="py-3 font-black text-[10px] md:text-xs uppercase italic gap-2">
+                <Info className="size-4" /> Guia da Calc.
+              </TabsTrigger>
+              <TabsTrigger value="conceitos" className="py-3 font-black text-[10px] md:text-xs uppercase italic gap-2">
+                <Brain className="size-4" /> Conceitos
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="treinos" className="mt-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500 px-2">
+            <div className="space-y-1">
+              <h2 className="text-xl md:text-2xl font-headline font-black uppercase italic text-white">Tipos de Treinamento</h2>
+              <p className="text-muted-foreground text-xs md:text-sm italic">A finalidade técnica de cada sessão na sua planilha periodizada.</p>
             </div>
-          )}
-        </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {trainingTerms.map((item, i) => (
+                <Card key={i} className="bg-card/40 border-border/50 hover:border-primary/30 transition-all group shadow-lg">
+                  <CardContent className="p-6 space-y-3">
+                    <h3 className="font-headline font-black text-primary italic text-sm md:text-base tracking-tight uppercase">
+                      {item.term}
+                    </h3>
+                    <p className="text-muted-foreground text-xs md:text-sm leading-relaxed font-medium">
+                      {item.def}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="zonas" className="mt-8 px-2 animate-in fade-in">
+             <div className="space-y-1 mb-8">
+              <h2 className="text-xl md:text-2xl font-headline font-black uppercase italic text-white">Zonas de Intensidade</h2>
+              <p className="text-muted-foreground text-xs md:text-sm italic">Como o corpo responde a cada faixa de batimento cardíaco.</p>
+            </div>
+            <div className="grid gap-4">
+               {[
+                 { z: "Z1", label: "RECUPERAÇÃO", color: "text-blue-400", desc: "Esforço muito leve para regeneração ativa." },
+                 { z: "Z2", label: "RESISTÊNCIA AERÓBICA", color: "text-green-400", desc: "O motor da base. Melhora a economia e queima gordura." },
+                 { z: "Z3", label: "POTÊNCIA AERÓBICA", color: "text-yellow-400", desc: "Ritmo de maratona. Melhora a capilarização muscular." },
+                 { z: "Z4", label: "LIMIAR DE LACTATO", color: "text-orange-400", desc: "O ponto crítico. Melhora a velocidade sustentável." },
+                 { z: "Z5", label: "VO2 MÁXIMO", color: "text-red-400", desc: "Limite absoluto. Melhora a potência e o fôlego." },
+               ].map((item, i) => (
+                 <Card key={i} className="bg-card/40 border-border/50">
+                   <CardContent className="p-5 flex items-start gap-4">
+                     <span className={cn("text-2xl font-black italic shrink-0 w-12", item.color)}>{item.z}</span>
+                     <div className="space-y-1">
+                       <h4 className="font-black italic text-xs uppercase text-white">{item.label}</h4>
+                       <p className="text-muted-foreground text-xs">{item.desc}</p>
+                     </div>
+                   </CardContent>
+                 </Card>
+               ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="guia" className="mt-8 px-2 animate-in fade-in">
+            <div className="max-w-2xl space-y-6">
+              <div className="space-y-1">
+                <h2 className="text-xl md:text-2xl font-headline font-black uppercase italic text-white">Como usar a Calculadora</h2>
+                <p className="text-muted-foreground text-xs md:text-sm italic">Entenda as ferramentas de planejamento do app.</p>
+              </div>
+              <div className="grid gap-6">
+                <div className="flex gap-4">
+                  <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                    <Target className="size-5 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-black italic text-sm text-white uppercase tracking-tight">Cálculo de Pace</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">Insira sua distância e tempo alvo para saber exatamente a velocidade média que deve manter por quilômetro.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                    <TrendingUp className="size-5 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-black italic text-sm text-white uppercase tracking-tight">Estratégia de Splits</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">Determine se sua prova será com Split Negativo (acelerando no fim) ou Constante para evitar a quebra.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="conceitos" className="mt-8 px-2 animate-in fade-in">
+            <div className="space-y-1 mb-8">
+              <h2 className="text-xl md:text-2xl font-headline font-black uppercase italic text-white">Conceitos Fisiológicos</h2>
+              <p className="text-muted-foreground text-xs md:text-sm italic">A ciência por trás do desempenho atlético.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+               {[
+                 { title: "VO2 MÁX", icon: Zap, desc: "A capacidade máxima do seu corpo de captar e usar oxigênio." },
+                 { title: "VDOT", icon: Target, desc: "Fórmula de Jack Daniels que estima seu potencial de corrida." },
+                 { title: "TAPER", icon: Dumbbell, desc: "Redução de volume antes da prova para recuperar o corpo." },
+                 { title: "CADÊNCIA", icon: Activity, desc: "Número de passos por minuto. O ideal gira em torno de 180." },
+                 { title: "DROP", icon: Milestone, desc: "Diferença de altura entre o calcanhar e a ponta do tênis." },
+                 { title: "LIMIAR", icon: Clock, desc: "Ponto onde o corpo acumula mais lactato do que consegue remover." },
+               ].map((item, i) => (
+                 <Card key={i} className="bg-card/40 border-border/50 text-center group hover:bg-primary/5 transition-colors">
+                   <CardContent className="p-8 space-y-4 flex flex-col items-center">
+                     <item.icon className="size-8 text-primary group-hover:scale-110 transition-transform" />
+                     <h4 className="font-black italic text-white uppercase tracking-tight">{item.title}</h4>
+                     <p className="text-[10px] text-muted-foreground leading-tight">{item.desc}</p>
+                   </CardContent>
+                 </Card>
+               ))}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
