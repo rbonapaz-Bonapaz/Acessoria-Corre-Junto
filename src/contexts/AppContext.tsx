@@ -77,39 +77,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // 2. Sincronização de ENTRADA (Nuvem -> App)
   useEffect(() => {
     if (!user || !db || !isHydrated) {
-      if (!user) firstCloudSyncDone.current = false;
+      if (!user) {
+        firstCloudSyncDone.current = false;
+      }
       return;
     }
 
     const userDocRef = doc(db, 'user_data', user.uid);
     
-    // Listener em tempo real
+    // Listener em tempo real com prioridade
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       isSyncingFromCloud.current = true;
       
       if (docSnap.exists()) {
         const cloudData = docSnap.data();
         
-        // Sincroniza estados
-        if (cloudData.profiles) setProfiles(cloudData.profiles);
-        if (cloudData.apiKey) setApiKeyInternal(cloudData.apiKey);
-        if (cloudData.activeProfileId !== undefined) setActiveProfileId(cloudData.activeProfileId);
-        if (cloudData.profileData) setProfileData(cloudData.profileData);
+        // Atualiza estados apenas se houver mudança real para evitar loops
+        if (JSON.stringify(cloudData.profiles) !== JSON.stringify(profiles)) {
+          setProfiles(cloudData.profiles || []);
+        }
+        if (cloudData.apiKey !== apiKey) {
+          setApiKeyInternal(cloudData.apiKey || null);
+        }
+        if (cloudData.activeProfileId !== activeProfileId) {
+          setActiveProfileId(cloudData.activeProfileId || null);
+        }
+        if (JSON.stringify(cloudData.profileData) !== JSON.stringify(profileData)) {
+          setProfileData(cloudData.profileData || {});
+        }
         
-        // Atualiza cache local
+        // Atualiza cache local para manter consistência offline
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           apiKey: cloudData.apiKey,
           profiles: cloudData.profiles,
           activeProfileId: cloudData.activeProfileId,
           profileData: cloudData.profileData
         }));
+      } else {
+        // Se o usuário logou mas não tem dados na nuvem, faz o upload inicial dos dados locais
+        const localData = { apiKey, profiles, activeProfileId, profileData };
+        setDoc(userDocRef, { ...localData, updatedAt: new Date().toISOString() }, { merge: true });
       }
       
       firstCloudSyncDone.current = true;
-      setTimeout(() => { isSyncingFromCloud.current = false; }, 500);
+      setTimeout(() => { isSyncingFromCloud.current = false; }, 300);
     }, (err) => {
-      console.error("Erro no onSnapshot:", err);
-      firstCloudSyncDone.current = true; // Libera mesmo com erro para não travar o app
+      console.error("Erro na sincronização Firestore:", err);
+      firstCloudSyncDone.current = true;
     });
 
     return () => unsubscribe();
@@ -132,7 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } catch (e) {
           console.error("Erro ao subir dados:", e);
         }
-      }, 1000);
+      }, 800);
       return () => clearTimeout(timeoutId);
     }
   }, [apiKey, profiles, activeProfileId, profileData, user, db, isHydrated]);
