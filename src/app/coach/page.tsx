@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { chatWithAICoach, type ChatWithAICoachOutput } from "@/ai/flows/chat-with-ai-coach";
+import { chatWithAICoach } from "@/ai/flows/chat-with-ai-coach";
 import { AppContext } from "@/contexts/AppContext";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Send, 
   Bot, 
@@ -19,18 +19,19 @@ import {
   History,
   Copy,
   Check,
-  BrainCircuit,
-  Zap,
-  Dna,
-  Info
+  Paperclip,
+  X,
+  Image as ImageIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { cn, fileToDataURI } from "@/lib/utils";
+import Image from "next/image";
 
 type Message = {
   role: "user" | "model";
   parts: string;
+  image?: string;
 };
 
 export default function CoachPage() {
@@ -42,14 +43,16 @@ export default function CoachPage() {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
+  const [attachedImage, setAttachedImage] = React.useState<string | null>(null);
   const [copiedId, setCopiedId] = React.useState<number | null>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, loading]);
 
   const handleCopy = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
@@ -58,17 +61,47 @@ export default function CoachPage() {
     toast({ title: "Copiado!", description: "Mensagem salva na área de transferência." });
   };
 
+  const handleImagePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (const item of items) {
+      if (item.type.indexOf("image") !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          const uri = await fileToDataURI(file);
+          setAttachedImage(uri);
+        }
+      }
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const uri = await fileToDataURI(file);
+      setAttachedImage(uri);
+    }
+  };
+
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    if ((!input.trim() && !attachedImage) || loading) return;
 
     if (!context?.apiKey) {
       toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua Gemini API Key no menu lateral." });
       return;
     }
 
-    const userMessage: Message = { role: "user", parts: input };
+    const userMessage: Message = { 
+      role: "user", 
+      parts: input, 
+      image: attachedImage || undefined 
+    };
+
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
+    const currentImage = attachedImage;
+    
     setInput("");
+    setAttachedImage(null);
     setLoading(true);
 
     try {
@@ -76,9 +109,10 @@ export default function CoachPage() {
       const planContext = plan ? `Atualmente no bloco ${plan.blockType}. Objetivo: ${profile?.raceDistance} em ${profile?.raceDate}.` : "Sem plano ativo no momento.";
 
       const response = await chatWithAICoach({
-        conversationHistory: [...messages, userMessage],
+        conversationHistory: messages.map(m => ({ role: m.role, parts: m.parts })),
         workoutHistory: workoutHistoryContext,
-        trainingPlan: planContext
+        trainingPlan: planContext,
+        imageDataUri: currentImage || undefined
       });
 
       setMessages(prev => [...prev, { role: "model", parts: response.feedback }]);
@@ -93,9 +127,8 @@ export default function CoachPage() {
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in duration-700">
-        {/* Cabeçalho do Coach */}
         <div className="text-center space-y-2">
-          <h1 className="font-headline text-4xl md:text-5xl font-black uppercase italic italic tracking-tighter text-white">
+          <h1 className="font-headline text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white">
             GEMINI <span className="text-primary">COACH</span>
           </h1>
           <p className="text-muted-foreground text-sm md:text-lg font-medium">
@@ -120,10 +153,9 @@ export default function CoachPage() {
           </TabsList>
 
           <TabsContent value="conversar" className="mt-0 animate-in slide-in-from-bottom-4 duration-500">
-            <Card className="bg-card/40 border-border/50 flex flex-col h-[550px] overflow-hidden rounded-3xl shadow-2xl relative">
+            <Card className="bg-card/40 border-border/50 flex flex-col h-[600px] overflow-hidden rounded-3xl shadow-2xl relative">
               <CardContent className="flex-1 p-0 overflow-hidden relative">
                 {messages.length === 0 ? (
-                  /* Estado Vazio - Inicie a Conversa */
                   <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
                     <div className="size-16 rounded-3xl bg-secondary/50 flex items-center justify-center border border-border/50 text-muted-foreground">
                       <MessageSquare className="size-8" />
@@ -131,12 +163,11 @@ export default function CoachPage() {
                     <div className="space-y-1">
                       <h3 className="font-headline font-black text-xl uppercase italic text-white tracking-widest">INICIE A CONVERSA</h3>
                       <p className="text-muted-foreground text-xs font-medium max-w-xs mx-auto italic leading-relaxed">
-                        Tire dúvidas técnicas ou peça ajustes no seu plano de performance.
+                        Tire dúvidas técnicas, poste prints de treinos ou peça ajustes.
                       </p>
                     </div>
                   </div>
                 ) : (
-                  /* Chat Ativo */
                   <ScrollArea className="h-full p-8" ref={scrollRef}>
                     <div className="space-y-10">
                       {messages.map((msg, i) => (
@@ -161,6 +192,11 @@ export default function CoachPage() {
                               ? "bg-primary text-black font-black italic rounded-tr-none" 
                               : "bg-black/30 border border-border/50 text-white italic rounded-tl-none"
                           )}>
+                            {msg.image && (
+                              <div className="mb-4 rounded-xl overflow-hidden border border-white/20">
+                                <img src={msg.image} alt="Anexo de treino" className="w-full h-auto max-h-60 object-contain" />
+                              </div>
+                            )}
                             {msg.parts}
                             
                             <Button 
@@ -184,7 +220,7 @@ export default function CoachPage() {
                           </Avatar>
                           <div className="bg-black/30 border border-border/50 rounded-2xl rounded-tl-none p-5 flex items-center gap-3">
                             <Loader2 className="size-4 animate-spin text-primary" />
-                            <span className="text-[10px] font-black uppercase italic tracking-widest text-muted-foreground">Analisando contexto de elite...</span>
+                            <span className="text-[10px] font-black uppercase italic tracking-widest text-muted-foreground">O Coach está analisando...</span>
                           </div>
                         </div>
                       )}
@@ -193,24 +229,62 @@ export default function CoachPage() {
                 )}
               </CardContent>
 
-              <CardFooter className="p-6 border-t border-border/20 bg-secondary/10">
+              <CardFooter className="p-6 border-t border-border/20 bg-secondary/10 flex-col gap-4">
+                {attachedImage && (
+                  <div className="w-full flex items-center gap-3 p-2 bg-secondary/50 border border-primary/30 rounded-xl animate-in slide-in-from-bottom-2">
+                    <div className="size-12 rounded-lg overflow-hidden border border-border">
+                      <img src={attachedImage} className="w-full h-full object-cover" alt="Preview" />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-[10px] font-black uppercase text-primary italic">IMAGEM ANEXADA</p>
+                      <p className="text-[9px] text-muted-foreground truncate italic">Será enviada com sua mensagem</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="size-8 text-muted-foreground hover:text-destructive" 
+                      onClick={() => setAttachedImage(null)}
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                )}
+                
                 <div className="flex w-full gap-4 items-center">
                   <div className="flex-1 relative">
                     <Input 
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                      placeholder="Pergunte ou cole histórico do Gemini..."
-                      className="bg-black/30 border-border/50 h-16 px-6 pr-16 rounded-2xl focus-visible:ring-primary font-medium text-white italic placeholder:text-muted-foreground/50 border-2"
+                      onPaste={handleImagePaste}
+                      placeholder="Pergunte ou cole um print do Strava/Relógio..."
+                      className="bg-black/30 border-border/50 h-16 px-6 pr-24 rounded-2xl focus-visible:ring-primary font-medium text-white italic placeholder:text-muted-foreground/50 border-2"
                     />
-                    <Button 
-                      onClick={handleSend}
-                      disabled={loading || !input.trim()}
-                      size="icon" 
-                      className="absolute right-3 top-3 size-10 bg-primary hover:bg-primary/90 rounded-xl text-black shadow-lg shadow-primary/20"
-                    >
-                      <Send className="size-5" />
-                    </Button>
+                    <div className="absolute right-3 top-3 flex gap-2">
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleFileChange} 
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="size-10 text-muted-foreground hover:text-primary rounded-xl"
+                      >
+                        <Paperclip className="size-5" />
+                      </Button>
+                      <Button 
+                        onClick={handleSend}
+                        disabled={loading || (!input.trim() && !attachedImage)}
+                        size="icon" 
+                        className="size-10 bg-primary hover:bg-primary/90 rounded-xl text-black shadow-lg shadow-primary/20"
+                      >
+                        <Send className="size-5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardFooter>
@@ -219,7 +293,7 @@ export default function CoachPage() {
             <div className="flex flex-wrap gap-3 justify-center pt-8">
               {[
                 "Ajuste meu plano (estou cansado)",
-                "Analise minha Cadência",
+                "Analise este print de treino",
                 "Explique o treino de Limiar",
                 "Dica para Maratona"
               ].map(suggestion => (

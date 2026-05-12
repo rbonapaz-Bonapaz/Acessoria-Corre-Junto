@@ -1,9 +1,7 @@
-
 "use client";
 
 import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { generateTrainingBlock, type GenerateTrainingBlockOutput } from "@/ai/flows/generate-training-block";
 import { analyzeWorkout } from "@/ai/flows/analyze-workout-flow";
 import { AppContext } from "@/contexts/AppContext";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,13 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Sparkles, 
   Loader2, 
-  Target, 
-  Dumbbell, 
-  Info, 
   CalendarDays,
   Zap,
   ChevronRight,
-  RefreshCw,
   CheckCircle2,
   Upload,
   FileText,
@@ -26,11 +20,12 @@ import {
   BrainCircuit,
   MessageSquare,
   Route,
-  Clock
+  Clock,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { cn, fileToDataURI } from '@/lib/utils';
 import type { Workout } from "@/lib/types";
@@ -46,6 +41,7 @@ export default function TrainingPage() {
   const [selectedWorkout, setSelectedWorkout] = React.useState<Workout | null>(null);
   const [athleteFeedback, setAthleteFeedback] = React.useState("");
   const [uploadedFileUri, setUploadedFileUri] = React.useState<string | null>(null);
+  const [uploadedFileName, setUploadedFileName] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const profile = context?.activeProfile;
@@ -67,10 +63,18 @@ export default function TrainingPage() {
     try {
       const uri = await fileToDataURI(file);
       setUploadedFileUri(uri);
-      toast({ title: "Arquivo anexado!", description: `${file.name} pronto para análise.` });
+      setUploadedFileName(file.name);
+      toast({ title: "Arquivo pronto!", description: `${file.name} foi carregado para análise.` });
     } catch (err) {
       toast({ variant: 'destructive', title: "Erro no upload" });
     }
+  };
+
+  const clearFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setUploadedFileUri(null);
+    setUploadedFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleFinalizeAnalysis = async () => {
@@ -100,6 +104,9 @@ export default function TrainingPage() {
       
       context.updateWorkout(selectedWorkout.id, updatedWorkout);
       setSelectedWorkout(updatedWorkout as any);
+      setUploadedFileUri(null);
+      setUploadedFileName(null);
+      setAthleteFeedback("");
       toast({ title: "✅ Treino Registrado!", description: "Sua análise de elite está pronta." });
     } catch (error) {
       console.error(error);
@@ -266,19 +273,48 @@ export default function TrainingPage() {
                                         <div className="space-y-3">
                                             <label className="text-[10px] font-black uppercase text-muted-foreground">Anexar Evidência (Opcional)</label>
                                             <div 
-                                                className="border-2 border-dashed border-primary/20 rounded-2xl p-8 text-center space-y-4 cursor-pointer hover:bg-primary/5 transition-all"
+                                                className={cn(
+                                                  "border-2 border-dashed rounded-2xl p-8 text-center space-y-4 cursor-pointer transition-all",
+                                                  uploadedFileUri ? "border-primary bg-primary/10" : "border-primary/20 hover:bg-primary/5"
+                                                )}
                                                 onClick={() => fileInputRef.current?.click()}
                                             >
                                                 <input type="file" ref={fileInputRef} className="sr-only" onChange={handleFileUpload} accept=".fit,.csv,image/*" />
-                                                <div className="flex justify-center gap-4">
-                                                    <div className="p-3 rounded-full bg-secondary/50 text-muted-foreground"><FileText size={24}/></div>
-                                                    <div className="p-3 rounded-full bg-primary/10 text-primary"><Upload size={24}/></div>
-                                                    <div className="p-3 rounded-full bg-secondary/50 text-muted-foreground"><ImageIcon size={24}/></div>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-black uppercase italic">Importar .FIT, .CSV ou Print</p>
-                                                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-tighter">Essencial para extração de biomecânica</p>
-                                                </div>
+                                                {uploadedFileUri ? (
+                                                  <div className="space-y-2 animate-in zoom-in-95">
+                                                     <div className="flex justify-center">
+                                                       <div className="relative">
+                                                          <div className="p-4 rounded-full bg-primary text-black">
+                                                            {uploadedFileName?.endsWith('.fit') || uploadedFileName?.endsWith('.csv') ? <FileText size={32}/> : <ImageIcon size={32}/>}
+                                                          </div>
+                                                          <Button 
+                                                            variant="destructive" 
+                                                            size="icon" 
+                                                            className="absolute -top-2 -right-2 size-6 rounded-full"
+                                                            onClick={clearFile}
+                                                          >
+                                                            <X size={14}/>
+                                                          </Button>
+                                                       </div>
+                                                     </div>
+                                                     <div>
+                                                        <p className="text-xs font-black uppercase italic text-primary">ARQUIVO IDENTIFICADO</p>
+                                                        <p className="text-[10px] text-muted-foreground truncate max-w-[200px] mx-auto">{uploadedFileName}</p>
+                                                     </div>
+                                                  </div>
+                                                ) : (
+                                                  <>
+                                                    <div className="flex justify-center gap-4">
+                                                        <div className="p-3 rounded-full bg-secondary/50 text-muted-foreground"><FileText size={24}/></div>
+                                                        <div className="p-3 rounded-full bg-primary/10 text-primary"><Upload size={24}/></div>
+                                                        <div className="p-3 rounded-full bg-secondary/50 text-muted-foreground"><ImageIcon size={24}/></div>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-black uppercase italic">Importar .FIT, .CSV ou Print</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-tighter">Essencial para extração de biomecânica</p>
+                                                    </div>
+                                                  </>
+                                                )}
                                             </div>
                                         </div>
 

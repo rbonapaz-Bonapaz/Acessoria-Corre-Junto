@@ -19,6 +19,7 @@ const ChatWithAICoachInputSchema = z.object({
   ).describe('O histórico da conversa entre o usuário e o treinador de IA.'),
   workoutHistory: z.string().describe('Um resumo ou dados brutos do desempenho recente do corredor.'),
   trainingPlan: z.string().describe('Detalhes do plano de treinamento atual do corredor.'),
+  imageDataUri: z.string().optional().describe('Uma imagem anexada pelo usuário em formato Data URI.'),
 });
 export type ChatWithAICoachInput = z.infer<typeof ChatWithAICoachInputSchema>;
 
@@ -37,6 +38,8 @@ Sempre responda em PORTUGUÊS (Brasil).
 Analise o histórico de treinos e o plano fornecido para oferecer insights. Mantenha um tom encorajador e profissional.
 Considere o histórico da conversa para manter a fluidez.
 
+Se o usuário enviar uma imagem (como um print de treino ou foto de tênis), analise o conteúdo visual para complementar sua orientação.
+
 Histórico da Conversa:
 {{#each conversationHistory}}
 {{this.role}}: {{this.parts}}
@@ -47,6 +50,9 @@ Desempenho Recente:
 
 Plano de Treinamento Atual:
 {{{trainingPlan}}}
+
+Anexo do Usuário:
+{{#if imageDataUri}}{{media url=imageDataUri}}{{else}}Nenhum anexo visual.{{/if}}
 
 Com base nestas informações, forneça seu feedback e recomendações personalizadas em português.
 `,
