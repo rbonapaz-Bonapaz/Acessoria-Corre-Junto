@@ -1,3 +1,4 @@
+
 # 🏃‍♂️ CorreJunto - Performance Atlética de Elite
 
 O **CorreJunto** é um laboratório de performance para corredores, combinando a ciência clássica do esporte (Jack Daniels, VDOT) com inteligência artificial de última geração (Gemini 1.5 Flash).
@@ -7,22 +8,27 @@ O **CorreJunto** é um laboratório de performance para corredores, combinando a
 - **🚀 Site Oficial:** [https://acessoria-corre-junto.vercel.app/](https://acessoria-corre-junto.vercel.app/)
 - **📦 Repositório GitHub:** [https://github.com/rbonapaz-Bonapaz/Acessoria-Corre-Junto](https://github.com/rbonapaz-Bonapaz/Acessoria-Corre-Junto)
 
+## 🛠️ Configuração do Firebase (IMPORTANTE)
+
+Para que o login e a sincronização entre PC e Celular funcionem no seu site oficial, você **precisa** autorizar o domínio na sua conta Firebase:
+
+1. Acesse o [Console do Firebase](https://console.firebase.google.com/).
+2. Clique no seu projeto.
+3. Vá em **Build > Authentication > Settings**.
+4. Procure pela aba **Authorized Domains**.
+5. Clique em **Add Domain** e adicione: `acessoria-corre-junto.vercel.app`.
+
+Sem este passo, o Google bloqueará as tentativas de login por segurança.
+
 ## 🚀 Funcionalidades de Elite
 
-- **Motor de Periodização IA:** Geração de ciclos completos de treinamento (Base, Construção, Polimento) baseados no seu VDOT, metas de Pace/Tempo e disponibilidade real.
-- **Coach Contextual:** Treinador de IA (Gemini 1.5 Flash) que conhece seu histórico, biometria e plano, pronto para ajustar treinos ou analisar fotos de treinos do Strava/Garmin.
-- **Laboratório Biomecânico:** Extração de métricas avançadas (Razão de Passada, Cadência, TCS) de arquivos .FIT e .CSV.
-- **Central de Cálculos:** Calculadoras calibradas de Pace, Previsão de Prova (Riegel), Zonas de FC (L2) e Nutrição/Hidratação.
-- **Privacidade Total:** Seus dados e chaves de API são armazenados localmente no seu navegador.
+- **Sincronização Nuvem:** Seus atletas e treinos sincronizados em tempo real entre PC e Celular.
+- **Motor de Periodização IA:** Geração de ciclos completos de treinamento baseados no seu VDOT.
+- **Coach Contextual:** Treinador de IA pronto para ajustar treinos ou analisar fotos do Strava/Garmin.
+- **Laboratório Biomecânico:** Extração de métricas avançadas (Razão de Passada, Cadência, TCS).
+- **Calculadoras Calibradas:** Pace, Riegel, Zonas de FC (L2) e Nutrição.
 
-## 🛠️ Tecnologias
-
-- **Framework:** Next.js 15 (App Router)
-- **IA:** Genkit + Google Gemini 1.5 Flash
-- **UI:** ShadCN UI + Tailwind CSS
-- **Ícones:** Lucide React
-
-## 🏁 Como Iniciar
+## 🏁 Como Iniciar o Desenvolvimento
 
 1. Clone o repositório.
 2. Instale as dependências: `npm install`.

@@ -104,6 +104,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ title: "Sincronização Ativa!", description: "Seus dados estão sendo baixados..." });
     } catch (error: any) {
       console.error("Auth Error:", error);
+      // Erro específico para domínio não autorizado no Firebase
       if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
           toast({ 
             variant: "destructive", 
@@ -111,11 +112,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             title: "Domínio Não Autorizado", 
             description: "Acesse o Console do Firebase > Authentication > Settings e adicione 'acessoria-corre-junto.vercel.app' aos domínios autorizados." 
           });
+      } else if (error.code === 'auth/popup-blocked') {
+          toast({ 
+            variant: "destructive", 
+            title: "Pop-up Bloqueado", 
+            description: "Seu navegador bloqueou a janela de login. Por favor, permita pop-ups para este site." 
+          });
       } else {
           toast({ 
             variant: "destructive", 
             title: "Erro no Login", 
-            description: "Verifique sua conexão ou as configurações do Firebase." 
+            description: "Verifique sua conexão ou as configurações do Firebase. (Erro: " + (error.code || 'Desconhecido') + ")" 
           });
       }
     }
@@ -177,7 +184,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             {!user ? (
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton className="w-full text-primary hover:bg-primary/10 h-12" onClick={handleLogin}>
+                  <SidebarMenuButton className="w-full text-primary hover:bg-primary/10 h-12 bg-primary/5 border border-primary/20" onClick={handleLogin}>
                     <LogIn className="size-4" />
                     <span className="group-data-[collapsible=icon]:hidden font-headline font-black text-[10px] tracking-widest uppercase italic">Entrar e Sincronizar</span>
                   </SidebarMenuButton>
@@ -221,7 +228,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         "text-[9px] font-bold uppercase tracking-tighter",
                         user ? "text-primary" : "text-destructive"
                       )}>
-                        {user ? 'Sincronizado' : 'Modo Local (Não Sincronizado)'}
+                        {user ? 'Sincronizado' : 'Modo Local'}
                       </p>
                     </div>
                     <div className={cn(
