@@ -8,22 +8,22 @@ O **CorreJunto** é um laboratório de performance para corredores, combinando a
 - **🚀 Site Oficial:** [https://acessoria-corre-junto.vercel.app/](https://acessoria-corre-junto.vercel.app/)
 - **📦 Repositório GitHub:** [https://github.com/rbonapaz-Bonapaz/Acessoria-Corre-Junto](https://github.com/rbonapaz-Bonapaz/Acessoria-Corre-Junto)
 
-## 🛠️ Configuração do Firebase (IMPORTANTE)
+## 🛠️ Configuração do Firebase (CRÍTICO PARA SINCRONIZAÇÃO)
 
-Para que o login e a sincronização entre PC e Celular funcionem no seu site oficial, você **precisa** autorizar o domínio na sua conta Firebase:
+Para que o login e a sincronização entre PC e Celular funcionem, o Google exige que você autorize o domínio do seu site. Siga estes passos no seu console:
 
 1. Acesse o [Console do Firebase](https://console.firebase.google.com/).
-2. Clique no seu projeto.
-3. Vá em **Build > Authentication > Settings**.
-4. Procure pela aba **Authorized Domains**.
-5. Clique em **Add Domain** e adicione: `acessoria-corre-junto.vercel.app`.
+2. No menu à esquerda, clique em **Build** (Construir) > **Authentication**.
+3. Clique na aba **Settings** (Configurações) no topo da tela.
+4. No menu lateral que aparecerá, clique em **Authorized Domains** (Domínios autorizados).
+5. Clique em **Add Domain** (Adicionar domínio) e adicione: `acessoria-corre-junto.vercel.app`.
 
-Sem este passo, o Google bloqueará as tentativas de login por segurança.
+**Nota Importante:** Sem este passo, o login no celular será bloqueado com erro de "Domínio não autorizado".
 
 ## 🚀 Funcionalidades de Elite
 
-- **Sincronização Nuvem:** Seus atletas e treinos sincronizados em tempo real entre PC e Celular.
-- **Motor de Periodização IA:** Geração de ciclos completos de treinamento baseados no seu VDOT.
+- **Sincronização Nuvem:** Seus atletas e treinos sincronizados em tempo real entre PC e Celular via Firestore.
+- **Motor de Periodização IA:** Geração de ciclos completos baseados no seu VDOT.
 - **Coach Contextual:** Treinador de IA pronto para ajustar treinos ou analisar fotos do Strava/Garmin.
 - **Laboratório Biomecânico:** Extração de métricas avançadas (Razão de Passada, Cadência, TCS).
 - **Calculadoras Calibradas:** Pace, Riegel, Zonas de FC (L2) e Nutrição.
