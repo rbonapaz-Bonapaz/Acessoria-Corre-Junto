@@ -48,7 +48,8 @@ import {
     ChevronDown,
     Activity,
     User as UserIcon,
-    Flame
+    Flame,
+    CheckCircle2
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
@@ -121,7 +122,7 @@ const profileSchema = z.object({
   longRunDay: z.string().min(1, "Selecione o dia do longão"),
   planGenerationType: z.enum(['full', 'blocks']).default('blocks'),
   experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']),
-  trainingHistory: z.string().min(5, 'Descreva seu histórico.'),
+  trainingHistory: z.string().min(5, 'Descreva seu histórico de forma técnica.'),
   
   // Dieta
   aestheticGoal: z.enum(['cutting', 'bulking', 'recomp', 'performance']).optional(),
@@ -153,6 +154,7 @@ export default function ProfilePage() {
   const avatarFileRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -172,7 +174,8 @@ export default function ProfilePage() {
         gender: 'male',
         strengthFrequency: 3,
         strengthEquipment: ['Academia Completa'],
-        strengthFocus: ['Core / Estabilidade']
+        strengthFocus: ['Core / Estabilidade'],
+        trainingHistory: 'Atleta em evolução buscando performance.'
     }
   });
 
@@ -213,6 +216,7 @@ export default function ProfilePage() {
       try {
         const dataUri = await fileToDataURI(e.target.files[0]);
         setValue('avatarUrl', dataUri, { shouldDirty: true });
+        toast({ title: "Foto atualizada!", description: "Clique em Salvar para confirmar." });
       } catch (err) { 
         toast({ variant: 'destructive', title: 'Erro na imagem' }); 
       }
@@ -221,29 +225,43 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async (data: ProfileFormValues) => {
     if (!context) return;
-    context.saveProfile({
-        ...data,
-        dietPreferences: {
-            aestheticGoal: data.aestheticGoal,
-            trainingTiming: data.trainingTiming,
-            mealCount: data.mealCount,
-            supplements: data.supplements,
-            allergies: data.allergies,
-            preferredFoods: data.preferredFoods,
-            excludedFoods: data.excludedFoods
-        },
-        strengthPreferences: {
-            splitPreference: data.strengthSplit,
-            frequency: data.strengthFrequency,
-            equipment: data.strengthEquipment,
-            focusAreas: data.strengthFocus,
-            legDay: data.legDay,
-            limitations: data.limitations,
-            prBench: data.prBench,
-            prSquat: data.prSquat,
-            prDeadlift: data.prDeadlift
-        }
-    } as any);
+    setIsSaving(true);
+    try {
+        context.saveProfile({
+            ...data,
+            dietPreferences: {
+                aestheticGoal: data.aestheticGoal,
+                trainingTiming: data.trainingTiming,
+                mealCount: data.mealCount,
+                supplements: data.supplements,
+                allergies: data.allergies,
+                preferredFoods: data.preferredFoods,
+                excludedFoods: data.excludedFoods
+            },
+            strengthPreferences: {
+                splitPreference: data.strengthSplit,
+                frequency: data.strengthFrequency,
+                equipment: data.strengthEquipment,
+                focusAreas: data.strengthFocus,
+                legDay: data.legDay,
+                limitations: data.limitations,
+                prBench: data.prBench,
+                prSquat: data.prSquat,
+                prDeadlift: data.prDeadlift
+            }
+        } as any);
+    } finally {
+        setTimeout(() => setIsSaving(false), 500);
+    }
+  };
+
+  const onInvalid = (errors: any) => {
+    console.error("Validation Errors:", errors);
+    toast({
+        variant: "destructive",
+        title: "Dados Incompletos",
+        description: "Verifique se todos os campos obrigatórios (incluindo abas Corrida e Perfil) foram preenchidos corretamente.",
+    });
   };
 
   const handleGenerate = async (type: 'all' | 'running') => {
@@ -262,7 +280,6 @@ export default function ProfilePage() {
     const isConnected = !!context.activeProfile?.integrations?.strava.connected;
     
     if (!isConnected) {
-      // Inicia o "redirecionamento"
       context.toggleIntegration('strava', true);
     } else {
       context.toggleIntegration('strava', false);
@@ -302,7 +319,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2">
             <div className="lg:col-span-2">
                 <Form {...form}>
-                    <form className="space-y-8" onSubmit={form.handleSubmit(handleSaveProfile)}>
+                    <form className="space-y-8" onSubmit={form.handleSubmit(handleSaveProfile, onInvalid)}>
                         <Tabs defaultValue="perfil" className="w-full" value={activeTab} onValueChange={setActiveTab}>
                             <TabsList className="grid w-full grid-cols-4 h-auto bg-secondary/20 p-1 rounded-xl overflow-x-auto">
                                 <TabsTrigger value="perfil" className="py-2.5 font-bold text-[10px] uppercase">Perfil</TabsTrigger>
@@ -378,7 +395,7 @@ export default function ProfilePage() {
                                         <FormField control={form.control} name="location" render={({field}) => (
                                             <FormItem>
                                                 <FormLabel className="text-xs font-bold uppercase">Localização (Cidade/Estado)</FormLabel>
-                                                <FormControl><Input placeholder="Calibração de clima para IA" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormControl><Input placeholder="Ex: Três de Maio, RS" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
@@ -510,9 +527,10 @@ export default function ProfilePage() {
 
                                         <FormField control={form.control} name="trainingHistory" render={({field}) => (
                                             <FormItem className="border-t pt-6">
-                                                <FormLabel className="text-xs font-bold uppercase">Contexto & Histórico (Opcional)</FormLabel>
+                                                <FormLabel className="text-xs font-bold uppercase">Contexto & Histórico</FormLabel>
                                                 <FormControl><Textarea placeholder="Ex: Sinto dor no joelho após 10km, já corri maratonas, etc..." {...field} value={field.value ?? ''} className="bg-secondary/10 min-h-[100px]" /></FormControl>
                                                 <FormMessage />
+                                                <FormDescription className="text-[9px]">Campo obrigatório para a IA calibrar o volume inicial do ciclo.</FormDescription>
                                             </FormItem>
                                         )} />
                                     </CardContent>
@@ -665,8 +683,9 @@ export default function ProfilePage() {
                         </Tabs>
 
                         <div className="flex flex-col sm:flex-row gap-3">
-                            <Button type="submit" size="lg" className="flex-1 h-12 font-black uppercase tracking-widest bg-white text-black hover:bg-white/90 text-xs">
-                                SALVAR PERFIL
+                            <Button type="submit" size="lg" disabled={isSaving} className="flex-1 h-12 font-black uppercase tracking-widest bg-white text-black hover:bg-white/90 text-xs">
+                                {isSaving ? <Loader2 className="animate-spin mr-2 size-4" /> : <CheckCircle2 className="mr-2 size-4" />}
+                                {isSaving ? "SALVANDO..." : "SALVAR PERFIL"}
                             </Button>
                             <div className="flex flex-1 rounded-md shadow-lg overflow-hidden">
                                 <Button 
@@ -761,7 +780,7 @@ export default function ProfilePage() {
                                 onClick={handleStravaClick}
                                 className="w-full bg-[#FC6100] hover:bg-[#E55700] text-white font-black uppercase italic tracking-widest h-12 shadow-orange-500/20 shadow-lg"
                               >
-                                DIRECIOnAR PARA CONECTAR
+                                DIRECIONAR PARA CONECTAR
                               </Button>
                             )}
                         </div>
