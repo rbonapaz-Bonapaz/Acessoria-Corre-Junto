@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,7 @@ import {
   TrendingUp,
   MoveRight,
   IterationCcw,
-  Info,
-  Footprints
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -442,7 +441,7 @@ export default function CalculatorsPage() {
                        {[
                          { id: "negative", label: "Negativo", desc: "Inicie conservador e termine forte (ideal para RPs).", color: "bg-[#a761d4]" },
                          { id: "even", label: "Constante", desc: "Mantenha o mesmo ritmo do início ao fim (ideal para controle total).", color: "bg-[#a761d4]" },
-                         { id: "positive", label: "Positivo", desc: "Comece rápido e diminua o ritmo no final (estratégia arriscada).", color: "bg-[#a761d4]" }
+                         { id: "positive", label: "Positivo", desc: "Comece rápido e controle a queda no final (Estratégia agressiva).", color: "bg-[#a761d4]" }
                        ].map(type => (
                          <Button 
                            key={type.id} 
@@ -458,17 +457,17 @@ export default function CalculatorsPage() {
                          </Button>
                        ))}
                     </div>
-                    <p className="text-center text-xs italic text-muted-foreground min-h-[1.5rem] animate-in fade-in duration-300">
+                    <p className="text-center text-sm italic text-muted-foreground min-h-[1.5rem] animate-in fade-in duration-300 font-medium">
                       {sType === "negative" && "Inicie conservador e termine forte (ideal para RPs)."}
                       {sType === "even" && "Mantenha o mesmo ritmo do início ao fim (ideal para controle total)."}
-                      {sType === "positive" && "Comece rápido e diminua o ritmo no final (estratégia arriscada)."}
+                      {sType === "positive" && "Comece rápido e controle a queda no final (Estratégia agressiva)."}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                     <div className="space-y-4">
                        <Label className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Distância (km)</Label>
-                       <Input type="number" value={sDist} onChange={e => setSDist(e.target.value)} className="bg-black/30 h-20 font-black text-4xl border-border/40 focus:border-accent text-center rounded-2xl" />
+                       <Input type="number" value={sDist} onChange={e => setSDist(e.target.value)} className="bg-black/30 h-16 font-black text-4xl border-border/40 focus:border-accent text-center rounded-2xl" />
                        <div className="grid grid-cols-4 gap-2">
                           {[
                             { label: "5K", val: "5" },
@@ -486,22 +485,22 @@ export default function CalculatorsPage() {
                        <Label className="text-xs font-black uppercase italic tracking-widest text-muted-foreground text-center block">Tempo Alvo</Label>
                        <div className="grid grid-cols-3 gap-3">
                           <div className="space-y-1">
-                            <Input type="number" placeholder="H" value={sTimeH} onChange={e => setSTimeH(e.target.value)} className="bg-black/30 h-20 text-center font-black text-3xl rounded-2xl" />
+                            <Input type="number" placeholder="H" value={sTimeH} onChange={e => setSTimeH(e.target.value)} className="bg-black/30 h-16 text-center font-black text-3xl rounded-2xl" />
                             <span className="text-[10px] block text-center font-bold opacity-40 uppercase">H</span>
                           </div>
                           <div className="space-y-1">
-                            <Input type="number" placeholder="M" value={sTimeM} onChange={e => setSTimeM(e.target.value)} className="bg-black/30 h-20 text-center font-black text-3xl rounded-2xl" />
+                            <Input type="number" placeholder="M" value={sTimeM} onChange={e => setSTimeM(e.target.value)} className="bg-black/30 h-16 text-center font-black text-3xl rounded-2xl" />
                             <span className="text-[10px] block text-center font-bold opacity-40 uppercase">Min</span>
                           </div>
                           <div className="space-y-1">
-                            <Input type="number" placeholder="S" value={sTimeS} onChange={e => setSTimeS(e.target.value)} className="bg-black/30 h-20 text-center font-black text-3xl rounded-2xl" />
+                            <Input type="number" placeholder="S" value={sTimeS} onChange={e => setSTimeS(e.target.value)} className="bg-black/30 h-16 text-center font-black text-3xl rounded-2xl" />
                             <span className="text-[10px] block text-center font-bold opacity-40 uppercase">Seg</span>
                           </div>
                        </div>
                     </div>
                   </div>
 
-                  <Button className="w-full h-20 bg-primary text-black font-black uppercase italic tracking-[0.2em] text-xl shadow-2xl shadow-primary/20 rounded-2xl hover:scale-[1.01] active:scale-[0.98] transition-all" onClick={calcStrategyAction}>Gerar Estratégia</Button>
+                  <Button className="w-full h-16 bg-primary text-black font-black uppercase italic tracking-[0.2em] text-xl shadow-2xl shadow-primary/20 rounded-2xl hover:scale-[1.01] active:scale-[0.98] transition-all" onClick={calcStrategyAction}>Gerar Estratégia</Button>
 
                   {sResult && (
                     <div className="space-y-10 animate-in slide-in-from-bottom-8 duration-700">
@@ -711,4 +710,3 @@ export default function CalculatorsPage() {
     </DashboardLayout>
   );
 }
-
