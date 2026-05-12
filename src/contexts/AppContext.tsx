@@ -1,12 +1,12 @@
 
 'use client';
 
-import { createContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
+import { createContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from 'react';
 import type { AthleteProfile, TrainingPlan, Workout } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
 
 type PlanGenerationStatus = 'idle' | 'pending' | 'success' | 'error';
 
@@ -53,7 +53,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<Record<string, any>>({});
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
+  
+  // Ref para evitar loops de atualização entre onSnapshot e persistChanges
+  const isSyncingFromCloud = useRef(false);
 
+  // 1. Hidratação inicial do LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -70,30 +74,72 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true);
   }, []);
 
+  // 2. Sincronização com Firestore
   useEffect(() => {
-    if (user && db) {
+    if (user && db && isHydrated) {
       const userDocRef = doc(db, 'user_data', user.uid);
+      
       const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
         if (docSnap.exists()) {
-          const data = docSnap.data();
-          setApiKeyInternal(data.apiKey || null);
-          setProfiles(data.profiles || []);
-          setActiveProfileId(data.activeProfileId || null);
-          setProfileData(data.profileData || {});
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          const cloudData = docSnap.data();
+          
+          isSyncingFromCloud.current = true;
+          setApiKeyInternal(cloudData.apiKey || null);
+          setProfiles(cloudData.profiles || []);
+          setActiveProfileId(cloudData.activeProfileId || null);
+          setProfileData(cloudData.profileData || {});
+          
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            apiKey: cloudData.apiKey,
+            profiles: cloudData.profiles,
+            activeProfileId: cloudData.activeProfileId,
+            profileData: cloudData.profileData
+          }));
+          
+          setTimeout(() => {
+            isSyncingFromCloud.current = false;
+          }, 100);
+        } else {
+          // Se o documento na nuvem não existe mas temos dados locais, fazemos o upload inicial
+          const localData = localStorage.getItem(STORAGE_KEY);
+          if (localData) {
+            const parsed = JSON.parse(localData);
+            setDoc(userDocRef, parsed, { merge: true });
+          }
         }
       });
       return () => unsubscribe();
     }
-  }, [user, db]);
+  }, [user, db, isHydrated]);
 
-  const persistChanges = useCallback(async (newData: any) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+  // Função centralizada para persistir mudanças (Nuvem + Local)
+  const persistChanges = useCallback(async (data: { 
+    apiKey?: string | null, 
+    profiles?: AthleteProfile[], 
+    activeProfileId?: string | null, 
+    profileData?: Record<string, any> 
+  }) => {
+    if (isSyncingFromCloud.current) return;
+
+    // Obtém o estado mais atual para garantir persistência completa
+    const currentData = {
+      apiKey: data.apiKey !== undefined ? data.apiKey : apiKey,
+      profiles: data.profiles !== undefined ? data.profiles : profiles,
+      activeProfileId: data.activeProfileId !== undefined ? data.activeProfileId : activeProfileId,
+      profileData: data.profileData !== undefined ? data.profileData : profileData
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+
     if (user && db) {
       const userDocRef = doc(db, 'user_data', user.uid);
-      await setDoc(userDocRef, newData, { merge: true });
+      try {
+        await setDoc(userDocRef, currentData, { merge: true });
+      } catch (error) {
+        console.error("Erro ao sincronizar com o Firestore:", error);
+      }
     }
-  }, [user, db]);
+  }, [user, db, apiKey, profiles, activeProfileId, profileData]);
 
   const activeProfile = useMemo(() => 
     profiles.find(p => p.id === activeProfileId) || null
@@ -105,13 +151,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setApiKey = useCallback((key: string | null) => {
     setApiKeyInternal(key);
-    persistChanges({ apiKey: key, profiles, activeProfileId, profileData });
-  }, [profiles, activeProfileId, profileData, persistChanges]);
+    persistChanges({ apiKey: key });
+  }, [persistChanges]);
 
   const switchProfile = useCallback((id: string | null) => {
     setActiveProfileId(id);
-    persistChanges({ apiKey, profiles, activeProfileId: id, profileData });
-  }, [apiKey, profiles, profileData, persistChanges]);
+    persistChanges({ activeProfileId: id });
+  }, [persistChanges]);
 
   const saveProfile = useCallback((data: any) => {
     const id = data.id || crypto.randomUUID();
@@ -124,25 +170,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
     };
     
-    const updatedProfiles = [newProfile, ...profiles.filter(p => p.id !== id)];
-    setProfiles(updatedProfiles);
-    setActiveProfileId(id);
-
-    persistChanges({ 
-      apiKey, 
-      profiles: updatedProfiles, 
-      activeProfileId: id, 
-      profileData 
+    setProfiles(prev => {
+      const updated = [newProfile, ...prev.filter(p => p.id !== id)];
+      persistChanges({ profiles: updated, activeProfileId: id });
+      return updated;
     });
-
-    toast({ title: '✅ Perfil Salvo!', description: 'Dados sincronizados entre seus dispositivos.' });
+    
+    setActiveProfileId(id);
+    toast({ title: '✅ Perfil Salvo!', description: 'Sincronizado em todos os seus dispositivos.' });
     return newProfile;
-  }, [profiles, apiKey, profileData, persistChanges, toast]);
+  }, [persistChanges, toast]);
 
   const updateWorkout = useCallback((workoutId: string, updates: Partial<Workout>) => {
-    if (!activeProfileId || !currentProfileData.trainingPlan) return;
+    if (!activeProfileId || !profileData[activeProfileId]?.trainingPlan) return;
     
-    const newWeeklyPlans = currentProfileData.trainingPlan.weeklyPlans.map((week: any) => ({
+    const newWeeklyPlans = profileData[activeProfileId].trainingPlan.weeklyPlans.map((week: any) => ({
       ...week,
       runs: week.runs.map((run: any) => run.id === workoutId ? { ...run, ...updates } : run)
     }));
@@ -156,8 +198,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     setProfileData(newProfileData);
-    persistChanges({ apiKey, profiles, activeProfileId, profileData: newProfileData });
-  }, [activeProfileId, currentProfileData, profileData, apiKey, profiles, persistChanges]);
+    persistChanges({ profileData: newProfileData });
+  }, [activeProfileId, profileData, persistChanges]);
 
   const setTrainingPlan = useCallback((plan: TrainingPlan | null) => {
     if (!activeProfileId) return;
@@ -166,8 +208,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       [activeProfileId]: { ...profileData[activeProfileId], trainingPlan: plan }
     };
     setProfileData(newProfileData);
-    persistChanges({ apiKey, profiles, activeProfileId, profileData: newProfileData });
-  }, [activeProfileId, profileData, apiKey, profiles, persistChanges]);
+    persistChanges({ profileData: newProfileData });
+  }, [activeProfileId, profileData, persistChanges]);
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
     if (!apiKey) {
@@ -189,11 +231,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         trainingBlockType: 'Construction',
         planGenerationType: profile.planGenerationType,
         raceDate: profile.raceDate,
-        weeklyMileageGoal: 60,
+        weeklyMileageGoal: profile.experienceLevel === 'beginner' ? 30 : profile.experienceLevel === 'intermediate' ? 50 : 80,
         targetRaceDistance: profile.raceDistance,
         targetPace: profile.targetPace,
         targetTime: profile.targetTime,
-        currentLongRunDistance: 15,
+        currentLongRunDistance: 10,
         weeklyAvailability: profile.trainingDays.join(', '),
         injuryHistory: 'Nenhuma reportada',
         preferredWorkoutDays: profile.trainingDays.slice(0, 2).join(', '),
@@ -208,7 +250,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       setTrainingPlan(result);
       setPlanGenerationStatus('success');
-      toast({ title: "✅ Ciclo IA Concluído!", description: "Sua planilha periodizada está pronta." });
+      toast({ title: "✅ Ciclo IA Concluído!", description: "Sua planilha está pronta e sincronizada." });
     } catch (error) {
       setPlanGenerationStatus('error');
       console.error('IA Error:', error);
@@ -271,9 +313,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       switchProfile,
       saveProfile,
       deleteProfile: (id: string) => {
-        const updated = profiles.filter(p => p.id !== id);
-        setProfiles(updated);
-        persistChanges({ apiKey, profiles: updated, activeProfileId, profileData });
+        setProfiles(prev => {
+          const updated = prev.filter(p => p.id !== id);
+          persistChanges({ profiles: updated, activeProfileId: null });
+          return updated;
+        });
       },
       trainingPlan: currentProfileData.trainingPlan || null,
       setTrainingPlan,
