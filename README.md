@@ -2,10 +2,15 @@
 
 O **CorreJunto** é um laboratório de performance para corredores, combinando a ciência clássica do esporte (Jack Daniels, VDOT) com inteligência artificial de última geração (Gemini 1.5 Flash).
 
+## 🌐 Links de Acesso
+
+- **🚀 Site Oficial:** [https://acessoria-corre-junto.vercel.app/](https://acessoria-corre-junto.vercel.app/)
+- **📦 Repositório GitHub:** [https://github.com/rbonapaz-Bonapaz/Acessoria-Corre-Junto](https://github.com/rbonapaz-Bonapaz/Acessoria-Corre-Junto)
+
 ## 🚀 Funcionalidades de Elite
 
-- **Motor de Periodização IA:** Geração de ciclos completos de treinamento (Base, Construção, Polimento) baseados no seu VDOT e disponibilidade real.
-- **Coach Contextual:** Treinador de IA que conhece seu histórico, biometria e plano, pronto para ajustar treinos ou analisar fotos de treinos do Strava/Garmin.
+- **Motor de Periodização IA:** Geração de ciclos completos de treinamento (Base, Construção, Polimento) baseados no seu VDOT, metas de Pace/Tempo e disponibilidade real.
+- **Coach Contextual:** Treinador de IA (Gemini 1.5 Flash) que conhece seu histórico, biometria e plano, pronto para ajustar treinos ou analisar fotos de treinos do Strava/Garmin.
 - **Laboratório Biomecânico:** Extração de métricas avançadas (Razão de Passada, Cadência, TCS) de arquivos .FIT e .CSV.
 - **Central de Cálculos:** Calculadoras calibradas de Pace, Previsão de Prova (Riegel), Zonas de FC (L2) e Nutrição/Hidratação.
 - **Privacidade Total:** Seus dados e chaves de API são armazenados localmente no seu navegador.
