@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from 'react';
+import { createContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import type { AthleteProfile, TrainingPlan, Workout } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
@@ -56,7 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const isSyncingFromCloud = useRef(false);
 
-  // Carrega dados locais no início
+  // Carrega dados locais no início (Apenas no Cliente)
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -99,16 +99,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       return () => unsubscribe();
     }
-  }, [user, db, isHydrated]);
+  }, [user, db, isHydrated, apiKey, profiles, activeProfileId, profileData]);
 
-  // Função para salvar estado completo
   const persist = useCallback(async (newApiKey: string | null, newProfiles: AthleteProfile[], newActiveId: string | null, newData: Record<string, any>) => {
     const fullState = { apiKey: newApiKey, profiles: newProfiles, activeProfileId: newActiveId, profileData: newData };
     
-    // Local
     localStorage.setItem(STORAGE_KEY, JSON.stringify(fullState));
 
-    // Cloud
     if (user && db && !isSyncingFromCloud.current) {
       const userDocRef = doc(db, 'user_data', user.uid);
       try {
@@ -181,7 +178,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
     if (!apiKey) {
-      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua API Key." });
+      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua API Key no menu lateral." });
       return;
     }
 
@@ -216,10 +213,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       setTrainingPlan(result);
       setPlanGenerationStatus('success');
-      toast({ title: "✅ Ciclo IA Pronto!", description: "Planilha gerada e sincronizada." });
-    } catch (error) {
+      toast({ title: "✅ Ciclo IA Pronto!", description: "Sua planilha foi gerada com sucesso." });
+    } catch (error: any) {
       setPlanGenerationStatus('error');
-      toast({ variant: "destructive", title: "Erro na IA", description: "Verifique sua chave." });
+      toast({ variant: "destructive", title: "Erro no Motor IA", description: error.message || "Verifique sua chave." });
     }
   };
 

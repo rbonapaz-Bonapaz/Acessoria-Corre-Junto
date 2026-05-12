@@ -1,8 +1,7 @@
+
 'use server';
 /**
  * @fileOverview Um fluxo Genkit para gerar blocos de treinamento personalizados ou ciclos completos.
- *
- * - generateTrainingBlock - Função que lida com o processo de geração do plano de treino.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -61,28 +60,37 @@ const GenerateTrainingBlockOutputSchema = z.object({
 export type GenerateTrainingBlockOutput = z.infer<typeof GenerateTrainingBlockOutputSchema>;
 
 export async function generateTrainingBlock(input: GenerateTrainingBlockInput): Promise<GenerateTrainingBlockOutput> {
+  if (!input.apiKey || input.apiKey.trim() === "") {
+    throw new Error('Chave de API não configurada. Configure no menu lateral.');
+  }
+
   const aiInstance = getAiWithKey(input.apiKey);
   
-  const { output } = await aiInstance.generate({
-    system: 'Você é um treinador de corrida de elite. Gere um plano de treinamento em PORTUGUÊS estruturado rigorosamente conforme o esquema de saída.',
-    prompt: `
-      Gere um plano para o atleta:
-      ${input.raceName ? `Prova: ${input.raceName}` : ''}
-      Estratégia: ${input.planGenerationType} (full = até ${input.raceDate}; blocks = 4 semanas).
-      VDOT: ${input.currentVDOT}
-      Zonas FC: Z1 ate ${input.hrZone1End}, Z2 ate ${input.hrZone2End}, Z3 ate ${input.hrZone3End}, Z4 ate ${input.hrZone4End}. Max: ${input.hrMax}.
-      Alvo: ${input.targetRaceDistance} em ${input.raceDate}.
-      Objetivo: ${input.targetPace ? `Pace ${input.targetPace} min/km` : input.targetTime ? `Tempo ${input.targetTime}` : 'Performance'}.
-      Volume: ${input.weeklyMileageGoal}km/semana.
-      Leg Day: ${input.legDay} (NÃO agende Tiros ou Longões no dia seguinte).
-      Disponibilidade: ${input.weeklyAvailability}.
+  try {
+    const { output } = await aiInstance.generate({
+      system: 'Você é um treinador de corrida de elite. Gere um plano de treinamento em PORTUGUÊS estruturado rigorosamente conforme o esquema de saída.',
+      prompt: `
+        Gere um plano para o atleta:
+        ${input.raceName ? `Prova: ${input.raceName}` : ''}
+        Estratégia: ${input.planGenerationType} (full = até ${input.raceDate}; blocks = 4 semanas).
+        VDOT: ${input.currentVDOT}
+        Zonas FC: Z1 ate ${input.hrZone1End}, Z2 ate ${input.hrZone2End}, Z3 ate ${input.hrZone3End}, Z4 ate ${input.hrZone4End}. Max: ${input.hrMax}.
+        Alvo: ${input.targetRaceDistance} em ${input.raceDate}.
+        Objetivo: ${input.targetPace ? `Pace ${input.targetPace} min/km` : input.targetTime ? `Tempo ${input.targetTime}` : 'Performance'}.
+        Volume: ${input.weeklyMileageGoal}km/semana.
+        Leg Day: ${input.legDay} (NÃO agende Tiros ou Longões no dia seguinte).
+        Disponibilidade: ${input.weeklyAvailability}.
 
-      Se for "full", calcule as semanas até ${input.raceDate}. Se for "blocks", gere 4 semanas de ${input.trainingBlockType}.
-      Cada treino deve ter um 'id' único.
-    `,
-    output: { schema: GenerateTrainingBlockOutputSchema }
-  });
+        Se for "full", calcule as semanas até ${input.raceDate}. Se for "blocks", gere 4 semanas de ${input.trainingBlockType}.
+        Cada treino deve ter um 'id' único.
+      `,
+      output: { schema: GenerateTrainingBlockOutputSchema }
+    });
 
-  if (!output) throw new Error('Falha ao gerar o plano de treinamento.');
-  return output;
+    if (!output) throw new Error('Falha ao gerar o plano de treinamento.');
+    return output;
+  } catch (err: any) {
+    console.error("Erro no Fluxo de Geração:", err);
+    throw new Error(err.message || 'Erro interno no motor de IA.');
+  }
 }

@@ -37,6 +37,7 @@ import {
 import { AppContext } from "@/contexts/AppContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const chartData = [
   { day: "Dom", previsto: 0, real: 0 },
@@ -84,8 +85,22 @@ export default function Home() {
   const activeProfile = context?.activeProfile;
   const profiles = context?.profiles || [];
 
+  // Proteção contra Hydration Mismatch: renderiza um estado estável durante SSR
+  if (!context?.isHydrated) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8 animate-pulse">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
+          </div>
+          <Skeleton className="h-[400px] w-full rounded-3xl" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Se não houver perfil selecionado, mostra o Profile Picker
-  if (context?.isHydrated && !activeProfile) {
+  if (!activeProfile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
         <div className="max-w-4xl w-full space-y-12">
