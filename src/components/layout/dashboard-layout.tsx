@@ -57,7 +57,7 @@ const items = [
   { title: "COACH IA", url: "/coach", icon: MessageSquare },
   { title: "CALCULADORAS", url: "/calculators", icon: Calculator },
   { title: "DICIONÁRIO", url: "/dictionary", icon: BookOpen },
-  { title: "INTEGRAÇÕES", url: "/profile", icon: Link2 },
+  { title: "INTEGRAÇÕES", url: "/integrations", icon: Link2 },
   { title: "MEU PERFIL", url: "/profile", icon: User },
   { title: "SOBRE", url: "/about", icon: Info },
 ];
