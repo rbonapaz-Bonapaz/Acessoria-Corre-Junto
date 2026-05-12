@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   Upload,
   FileText,
-  Image as ImageIcon,
+  ImageIcon,
   BrainCircuit,
   MessageSquare,
   Route,
@@ -78,13 +78,14 @@ export default function TrainingPage() {
   };
 
   const handleFinalizeAnalysis = async () => {
-    if (!selectedWorkout || !profile || !context) return;
+    if (!selectedWorkout || !profile || !context?.apiKey) return;
     
     setAnalyzing(true);
     toast({ title: "🧠 Gemini Coach está analisando...", description: "Comparando biomecânica e esforço." });
 
     try {
       const result = await analyzeWorkout({
+        apiKey: context.apiKey,
         prescribedWorkout: JSON.stringify(selectedWorkout),
         athleteFeedback,
         athleteProfile: JSON.stringify(profile),

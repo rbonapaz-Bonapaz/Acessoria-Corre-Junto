@@ -7,10 +7,11 @@
  * - ChatWithAICoachOutput - O tipo de retorno para a função chatWithAICoach.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getAiWithKey} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const ChatWithAICoachInputSchema = z.object({
+  apiKey: z.string().optional().describe('A chave de API do usuário para o processamento.'),
   conversationHistory: z.array(
     z.object({
       role: z.enum(['user', 'model']),
@@ -65,7 +66,11 @@ const chatWithAICoachFlow = ai.defineFlow(
     outputSchema: ChatWithAICoachOutputSchema,
   },
   async (input) => {
-    const {output} = await chatWithAICoachPrompt(input);
+    const aiInstance = getAiWithKey(input.apiKey);
+    const {output} = await aiInstance.generate({
+      prompt: 'chatWithAICoachPrompt',
+      input: input,
+    });
     return output!;
   }
 );

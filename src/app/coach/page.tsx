@@ -109,6 +109,7 @@ export default function CoachPage() {
       const planContext = plan ? `Atualmente no bloco ${plan.blockType}. Objetivo: ${profile?.raceDistance} em ${profile?.raceDate}.` : "Sem plano ativo no momento.";
 
       const response = await chatWithAICoach({
+        apiKey: context.apiKey,
         conversationHistory: messages.map(m => ({ role: m.role, parts: m.parts })),
         workoutHistory: workoutHistoryContext,
         trainingPlan: planContext,

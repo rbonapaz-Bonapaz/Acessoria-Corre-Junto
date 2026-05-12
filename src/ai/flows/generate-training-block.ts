@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Um fluxo Genkit para gerar blocos de treinamento personalizados ou ciclos completos.
@@ -6,10 +5,11 @@
  * - generateTrainingBlock - Função que lida com o processo de geração do plano de treino.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, getAiWithKey } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateTrainingBlockInputSchema = z.object({
+  apiKey: z.string().optional().describe('A chave de API do usuário para o processamento.'),
   raceName: z.string().optional().describe('Nome da prova alvo.'),
   currentVDOT: z.number().describe('Score VDOT atual.'),
   hrZone1End: z.number().describe('Frequência cardíaca ao final da Zona 1.'),
@@ -60,11 +60,7 @@ const GenerateTrainingBlockOutputSchema = z.object({
 
 export type GenerateTrainingBlockOutput = z.infer<typeof GenerateTrainingBlockOutputSchema>;
 
-export async function generateTrainingBlock(input: GenerateTrainingBlockInput): Promise<GenerateTrainingBlockOutput> {
-  return generateTrainingBlockFlow(input);
-}
-
-const prompt = ai.definePrompt({
+const generateTrainingBlockPrompt = ai.definePrompt({
   name: 'generateTrainingBlockPrompt',
   input: { schema: GenerateTrainingBlockInputSchema },
   output: { schema: GenerateTrainingBlockOutputSchema },
@@ -97,7 +93,15 @@ const generateTrainingBlockFlow = ai.defineFlow(
     outputSchema: GenerateTrainingBlockOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const aiInstance = getAiWithKey(input.apiKey);
+    const { output } = await aiInstance.generate({
+      prompt: 'generateTrainingBlockPrompt',
+      input: input,
+    });
     return output!;
   }
 );
+
+export async function generateTrainingBlock(input: GenerateTrainingBlockInput): Promise<GenerateTrainingBlockOutput> {
+  return generateTrainingBlockFlow(input);
+}

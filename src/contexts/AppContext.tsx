@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
@@ -169,6 +168,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     try {
       const result = await generateTrainingBlock({
+        apiKey: apiKey,
         raceName: profile.raceName,
         currentVDOT: profile.vo2Max,
         hrZone1End: Math.round(profile.thresholdHr * 0.8),

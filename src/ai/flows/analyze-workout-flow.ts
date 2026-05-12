@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Fluxo Genkit para analisar o desempenho do atleta e fornecer feedback biomecânico.
@@ -6,10 +5,11 @@
  * - analyzeWorkout - Função que compara o treino prescrito com o realizado.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, getAiWithKey } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const AnalyzeWorkoutInputSchema = z.object({
+  apiKey: z.string().optional().describe('A chave de API do usuário para o processamento.'),
   prescribedWorkout: z.string().describe('Detalhes do treino que foi planejado.'),
   athleteFeedback: z.string().describe('Relato subjetivo do atleta sobre o treino.'),
   fileDataUri: z.string().optional().describe("URI de dados do arquivo (.FIT, .CSV ou Imagem) baseada em Base64."),
@@ -36,11 +36,7 @@ const AnalyzeWorkoutOutputSchema = z.object({
 
 export type AnalyzeWorkoutOutput = z.infer<typeof AnalyzeWorkoutOutputSchema>;
 
-export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<AnalyzeWorkoutOutput> {
-  return analyzeWorkoutFlow(input);
-}
-
-const prompt = ai.definePrompt({
+const analyzeWorkoutPrompt = ai.definePrompt({
   name: 'analyzeWorkoutPrompt',
   input: { schema: AnalyzeWorkoutInputSchema },
   output: { schema: AnalyzeWorkoutOutputSchema },
@@ -67,7 +63,15 @@ const analyzeWorkoutFlow = ai.defineFlow(
     outputSchema: AnalyzeWorkoutOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const aiInstance = getAiWithKey(input.apiKey);
+    const { output } = await aiInstance.generate({
+      prompt: 'analyzeWorkoutPrompt',
+      input: input,
+    });
     return output!;
   }
 );
+
+export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<AnalyzeWorkoutOutput> {
+  return analyzeWorkoutFlow(input);
+}
