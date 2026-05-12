@@ -27,7 +27,8 @@ import {
   TrendingUp,
   MoveRight,
   IterationCcw,
-  Info
+  Info,
+  Lightbulb
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -296,7 +297,7 @@ export default function CalculatorsPage() {
             <span className="text-primary">CÁLCULOS ELITE</span>
           </h1>
           <p className="text-muted-foreground text-sm md:text-lg font-medium max-w-2xl mt-4">
-            Ferramentas técnicas para corredores que buscam precisão e performance baseada em dados.
+            Ferramentas técnicas calibradas para precisão de performance. Entenda seus números para dominar seu asfalto.
           </p>
         </header>
 
@@ -321,6 +322,7 @@ export default function CalculatorsPage() {
                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
                      <Activity className="size-3" /> Calcular Pace
                    </CardTitle>
+                   <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Descubra o ritmo médio necessário para o tempo alvo.</p>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
                   <div className="space-y-3">
@@ -370,6 +372,7 @@ export default function CalculatorsPage() {
                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
                      <Clock className="size-3" /> Calcular Tempo
                    </CardTitle>
+                   <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Estime seu tempo de chegada baseando-se no ritmo.</p>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
                   <div className="space-y-3">
@@ -415,6 +418,7 @@ export default function CalculatorsPage() {
                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
                      <Milestone className="size-3" /> Calcular Distância
                    </CardTitle>
+                   <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Quanto você percorrerá no tempo que tem disponível?</p>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
                   <div className="space-y-3">
@@ -451,6 +455,7 @@ export default function CalculatorsPage() {
                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
                      <MoveRight className="size-3" /> Conversor Esteira
                    </CardTitle>
+                   <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Alinhe seu pace (min/km) com a velocidade (km/h).</p>
                 </CardHeader>
                 <CardContent className="space-y-8 pt-6">
                    <div className="space-y-4">
@@ -481,13 +486,22 @@ export default function CalculatorsPage() {
               {/* ESTRATÉGIA DE PACE */}
               <Card className="lg:col-span-2 bg-card/40 border-border/50 overflow-hidden shadow-2xl rounded-3xl">
                 <CardHeader className="bg-secondary/10 border-b border-border/20 py-8 px-8">
-                   <CardTitle className="text-lg font-black uppercase italic text-primary flex items-center gap-3 tracking-tighter">
-                     <TrendingUp size={24} /> Pacing de Prova Estratégico
-                   </CardTitle>
+                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                     <CardTitle className="text-lg font-black uppercase italic text-primary flex items-center gap-3 tracking-tighter">
+                       <TrendingUp size={24} /> Pacing de Prova Estratégico
+                     </CardTitle>
+                     <div className="flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full border border-primary/20">
+                        <Lightbulb size={14} className="text-primary" />
+                        <span className="text-[9px] font-black uppercase text-muted-foreground italic">Distribuição técnica de esforço</span>
+                     </div>
+                   </div>
                 </CardHeader>
                 <CardContent className="pt-10 px-8 pb-12 space-y-12">
                   <div className="space-y-4">
-                    <Label className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Tipo de Prova</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Perfil da Estratégia</Label>
+                      <span className="text-[10px] text-primary italic font-bold">Influencia como você gasta energia</span>
+                    </div>
                     <div className="grid grid-cols-3 gap-3">
                        {[
                          { id: "negative", label: "Negativo", desc: "Inicie conservador e termine forte (ideal para RPs).", color: "bg-[#a761d4]" },
@@ -607,6 +621,7 @@ export default function CalculatorsPage() {
                     <CardTitle className="text-[11px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
                       <IterationCcw className="size-4" /> Previsão de Prova (Riegel)
                     </CardTitle>
+                    <p className="text-[9px] text-muted-foreground italic leading-tight mt-2">Usa um resultado real para projetar seu potencial em outras distâncias.</p>
                   </CardHeader>
                   <CardContent className="pt-8 px-6 space-y-6">
                     <div className="grid grid-cols-2 gap-4">
@@ -643,7 +658,7 @@ export default function CalculatorsPage() {
                 <Card className="bg-card/40 border-border/50 rounded-2xl shadow-xl">
                   <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6 flex items-center justify-between">
                     <CardTitle className="text-[11px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
-                      <Droplets className="size-4" /> Plano de Nutrição & Hidratação
+                      <Droplets className="size-4" /> Nutrição & Hidratação
                     </CardTitle>
                     {hRes && (
                       <Button variant="ghost" size="icon" onClick={copyHydrationElite} className="size-8 text-muted-foreground hover:text-primary">
@@ -651,7 +666,8 @@ export default function CalculatorsPage() {
                       </Button>
                     )}
                   </CardHeader>
-                  <CardContent className="pt-8 px-6 space-y-6">
+                  <CardContent className="pt-6 px-6 space-y-6">
+                    <p className="text-[9px] text-muted-foreground italic leading-tight">Previna a desidratação e o "bonking" (quebra de glicogênio) com cálculos de eletrólitos e géis.</p>
                     <div className="grid grid-cols-2 gap-4">
                        <div className="space-y-2">
                           <Label className="text-[9px] font-bold uppercase tracking-widest opacity-70">Peso (kg)</Label>
@@ -728,7 +744,8 @@ export default function CalculatorsPage() {
                       </Button>
                     )}
                   </CardHeader>
-                  <CardContent className="pt-8 px-6 space-y-6">
+                  <CardContent className="pt-6 px-6 space-y-6">
+                    <p className="text-[9px] text-muted-foreground italic leading-tight">Calibre suas faixas de treino. O Limiar de Lactato (L2) é o padrão ouro para performance.</p>
                     <div className="grid grid-cols-3 gap-3">
                        <div className="space-y-2">
                           <Label className="text-[9px] font-black uppercase tracking-tighter opacity-60">FC Máx</Label>
@@ -755,9 +772,9 @@ export default function CalculatorsPage() {
                              <span className="font-black text-primary tracking-widest">{z.range} <small className="font-normal opacity-50 text-[9px]">bpm</small></span>
                           </div>
                         ))}
-                        <p className="text-[10px] text-muted-foreground italic mt-5 flex items-start gap-3 bg-secondary/30 p-4 rounded-2xl leading-relaxed">
+                        <p className="text-[10px] text-muted-foreground italic mt-5 flex items-start gap-3 bg-secondary/30 p-4 rounded-2xl leading-relaxed shadow-inner">
                           <Info size={14} className="shrink-0 mt-0.5 text-primary" /> 
-                          {fcLthr ? "Cálculo avançado baseado no Limiar de Lactato (Padrão Elite)." : "Cálculo baseado em percentual simples da FC Máxima."}
+                          {fcLthr ? "Cálculo avançado baseado no Limiar de Lactato (Padrão Elite). Ideal para quem usa medidores precisos." : "Cálculo baseado em percentual simples da FC Máxima. Para mais precisão, use a FC de Limiar (L2)."}
                         </p>
                       </div>
                     )}
