@@ -4,6 +4,7 @@
 import { createContext, useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
 import type { AthleteProfile, TrainingPlan, ChatMessage, FeedbackLogItem, Achievement, PersonalRecord } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
 
 type PlanGenerationStatus = 'idle' | 'pending' | 'success' | 'error';
 
@@ -105,6 +106,61 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return newProfile;
   }, [activeProfile]);
 
+  const generateRunningPlanAsync = async (profile: AthleteProfile) => {
+    setPlanGenerationStatus('pending');
+    
+    toast({ 
+      title: "🧠 Gemini Coach está analisando...", 
+      description: "Ajustando seu plano de performance baseado no seu T-Pace e Leg Day." 
+    });
+
+    try {
+      // Simulação de streaming de progresso através de toasts sequenciais
+      const totalWeeks = profile.planGenerationType === 'full' ? 12 : 4; // Estimativa simples
+      
+      const result = await generateTrainingBlock({
+        currentVDOT: profile.vo2Max,
+        hrZone1End: Math.round(profile.thresholdHr * 0.8),
+        hrZone2End: Math.round(profile.thresholdHr * 0.9),
+        hrZone3End: Math.round(profile.thresholdHr * 0.95),
+        hrZone4End: profile.thresholdHr,
+        hrMax: profile.thresholdHr + 20,
+        trainingBlockType: 'Construction',
+        planGenerationType: profile.planGenerationType,
+        raceDate: profile.raceDate,
+        weeklyMileageGoal: 60,
+        targetRaceDistance: profile.raceDistance,
+        currentLongRunDistance: 15,
+        weeklyAvailability: profile.trainingDays.join(', '),
+        injuryHistory: 'Nenhuma reportada',
+        preferredWorkoutDays: profile.trainingDays.slice(0, 2).join(', '),
+        legDay: profile.strengthPreferences?.legDay
+      });
+
+      // Feedback de progresso fake para UX "Elite"
+      for (let i = 1; i <= result.weeklyPlans.length; i++) {
+        await new Promise(r => setTimeout(r, 400));
+        if (i % 2 === 0 || i === result.weeklyPlans.length) {
+          toast({ 
+            title: "📅 Gerando Planilha...", 
+            description: `Bloco atual: ${i} semanas processadas.` 
+          });
+        }
+      }
+
+      setProfileData(prev => ({ 
+        ...prev, 
+        [activeProfileId!]: { ...prev[activeProfileId!], trainingPlan: result } 
+      }));
+      
+      setPlanGenerationStatus('success');
+      toast({ title: "✅ Ciclo IA Concluído!", description: "Sua planilha periodizada está pronta." });
+    } catch (error) {
+      setPlanGenerationStatus('error');
+      toast({ variant: "destructive", title: "Erro na Geração", description: "O motor de IA falhou. Verifique sua chave." });
+    }
+  };
+
   const toggleIntegration = (service: 'strava' | 'coros', connected: boolean) => {
     if (!activeProfile) return;
     const updated = {
@@ -124,15 +180,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         title: connected ? `✅ ${service.toUpperCase()} Conectado` : `❌ ${service.toUpperCase()} Desconectado`,
         description: connected ? 'Seus treinos serão sincronizados localmente.' : 'A sincronização automática foi desativada.'
     });
-  };
-
-  const generateRunningPlanAsync = async (p: AthleteProfile) => {
-    if (!apiKey) return;
-    setPlanGenerationStatus('pending');
-    toast({ title: "🧠 Analisando Perfil...", description: "O Gemini Coach está periodizando seu ciclo." });
-    await new Promise(r => setTimeout(r, 2000));
-    setPlanGenerationStatus('success');
-    toast({ title: "✅ Ciclo Gerado!", description: "Sua planilha está pronta." });
   };
 
   const exportData = () => {
@@ -163,7 +210,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = {
     isHydrated,
     apiKey,
-    setApiKey,
+    setApiKey: setApiKeyInternal,
     profiles,
     activeProfile,
     switchProfile: (id: string | null) => setActiveProfileId(id),

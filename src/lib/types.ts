@@ -63,29 +63,25 @@ export interface AthleteProfile {
 }
 
 export interface Workout {
-  id: string;
+  day: string;
   type: string;
-  title: string;
+  distance: string;
+  paceZone: string;
   description: string;
-  distance?: string;
-  duration?: string;
-  paceZone?: string;
-  completed: boolean;
-  feedback?: string;
 }
 
-export interface WeeklySchedule {
+export interface WeeklyPlan {
   weekNumber: number;
   focus: string;
-  workouts: Workout[];
+  runs: Workout[];
+  strength: string;
+  notes: string;
 }
 
 export interface TrainingPlan {
-  id: string;
-  profileId: string;
-  createdAt: string;
   blockType: string;
-  weeklySchedule: WeeklySchedule[];
+  durationWeeks: number;
+  weeklyPlans: WeeklyPlan[];
 }
 
 export interface ChatMessage {

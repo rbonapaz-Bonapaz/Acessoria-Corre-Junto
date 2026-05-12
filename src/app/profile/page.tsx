@@ -42,14 +42,14 @@ import {
     Utensils, 
     Route, 
     Link2,
-    Activity,
     RefreshCw,
     Download,
-    Upload
+    Upload,
+    CalendarDays,
+    Target
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 
 const weekDays = [
   { id: 'Domingo', label: 'Dom' },
@@ -61,18 +61,25 @@ const weekDays = [
   { id: 'Sábado', label: 'Sáb' },
 ] as const;
 
+const equipmentOptions = [
+    'Academia Completa',
+    'Peso do Corpo',
+    'Elásticos / Mini-bands',
+    'Halteres / Kettlebells'
+];
+
 const profileSchema = z.object({
   name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.'),
   avatarUrl: z.string().optional(),
   location: z.string().optional(),
   birthDate: z.string().min(1, "Data de nascimento obrigatória."),
-  gender: z.enum(['male', 'female', 'other'], { required_error: "Selecione o gênero" }),
+  gender: z.enum(['male', 'female', 'other']),
   currentWeight: z.coerce.number().min(30, 'Insira um peso válido.'),
   height: z.coerce.number().min(100, 'Insira uma altura válida em cm.'),
-  restingHr: z.coerce.number().min(30, "Mínimo 30bpm"),
-  vo2Max: z.coerce.number().min(20, 'Insira um VO2 Max válido.'),
+  restingHr: z.coerce.number().min(30),
+  vo2Max: z.coerce.number().min(20),
   thresholdPace: z.string().regex(/^\d{1,2}:\d{2}$/, 'Formato MM:SS.'),
-  thresholdHr: z.coerce.number().min(100, "Mínimo 100bpm"),
+  thresholdHr: z.coerce.number().min(100),
   raceDate: z.string().min(1, "Data da prova obrigatória."),
   raceDistance: z.string().min(1, "Selecione a distância."),
   trainingDays: z.array(z.string()).min(1, "Selecione pelo menos um dia."),
@@ -84,7 +91,9 @@ const profileSchema = z.object({
   // Dieta
   aestheticGoal: z.enum(['cutting', 'bulking', 'recomp', 'performance']).optional(),
   trainingTiming: z.enum(['jejum', 'manha', 'meio-dia', 'tarde', 'noite']).optional(),
+  mealCount: z.coerce.number().optional(),
   excludedFoods: z.string().optional(),
+  preferredFoods: z.string().optional(),
   
   // Força
   strengthSplit: z.enum(['full_body', 'upper_lower', 'ppl']).optional(),
@@ -92,6 +101,7 @@ const profileSchema = z.object({
   prBench: z.coerce.number().optional(),
   prSquat: z.coerce.number().optional(),
   prDeadlift: z.coerce.number().optional(),
+  equipment: z.array(z.string()).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -118,6 +128,8 @@ export default function ProfilePage() {
         planGenerationType: 'blocks',
         experienceLevel: 'beginner',
         raceDistance: '10k',
+        gender: 'male',
+        equipment: ['Academia Completa']
     }
   });
 
@@ -130,11 +142,16 @@ export default function ProfilePage() {
             ...p,
             name: p.name || '',
             aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
+            trainingTiming: p.dietPreferences?.trainingTiming || 'manha',
+            mealCount: p.dietPreferences?.mealCount || 4,
+            preferredFoods: p.dietPreferences?.preferredFoods || '',
+            excludedFoods: p.dietPreferences?.excludedFoods || '',
             strengthSplit: p.strengthPreferences?.splitPreference || 'full_body',
             prBench: p.strengthPreferences?.prBench || 0,
             prSquat: p.strengthPreferences?.prSquat || 0,
             prDeadlift: p.strengthPreferences?.prDeadlift || 0,
             legDay: p.strengthPreferences?.legDay || 'Quarta',
+            equipment: p.strengthPreferences?.equipment || ['Academia Completa']
         } as any);
         trigger();
     }
@@ -156,8 +173,25 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async (data: ProfileFormValues) => {
     if (!context) return;
-    context.saveProfile(data as any);
-    toast({ title: '✅ Perfil Atualizado!', description: 'Seus dados locais foram salvos.' });
+    context.saveProfile({
+        ...data,
+        dietPreferences: {
+            aestheticGoal: data.aestheticGoal,
+            trainingTiming: data.trainingTiming,
+            mealCount: data.mealCount,
+            preferredFoods: data.preferredFoods,
+            excludedFoods: data.excludedFoods
+        },
+        strengthPreferences: {
+            splitPreference: data.strengthSplit,
+            legDay: data.legDay,
+            prBench: data.prBench,
+            prSquat: data.prSquat,
+            prDeadlift: data.prDeadlift,
+            equipment: data.equipment
+        }
+    } as any);
+    toast({ title: '✅ Perfil Atualizado!', description: 'Seus dados locais foram salvos com atualização otimista.' });
   };
 
   if (!context?.isHydrated) return <DashboardLayout><Skeleton className="h-96 w-full"/></DashboardLayout>;
@@ -170,7 +204,7 @@ export default function ProfilePage() {
                 <h1 className="font-headline text-4xl tracking-wide uppercase font-black italic">
                     <span className="text-white">Meus Dados &</span> <span className="text-primary">Ciclo</span>
                 </h1>
-                <p className="text-muted-foreground mt-1">Armazenamento Local-First. Conecte seus sensores e configure seu perfil.</p>
+                <p className="text-muted-foreground mt-1">Centro de comando técnico. Sua fisiologia e planejamento em um só lugar.</p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
@@ -217,8 +251,8 @@ export default function ProfilePage() {
                                                 </Button>
                                             </div>
                                             <div>
-                                                <CardTitle className="font-headline text-2xl uppercase italic">Dados Pessoais</CardTitle>
-                                                <CardDescription>Calibração basal do atleta.</CardDescription>
+                                                <CardTitle className="font-headline text-2xl uppercase italic">Identidade & Biometria</CardTitle>
+                                                <CardDescription>O alicerce para o cálculo de idade metabólica e carga de impacto.</CardDescription>
                                             </div>
                                         </div>
                                     </CardHeader>
@@ -255,7 +289,7 @@ export default function ProfilePage() {
                                         </div>
                                         <FormField control={form.control} name="location" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel>Localização</FormLabel>
+                                                <FormLabel>Localização (Calibração IA)</FormLabel>
                                                 <FormControl><Input placeholder="Cidade, Estado" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -266,7 +300,7 @@ export default function ProfilePage() {
 
                             <TabsContent value="corrida" className="mt-6 space-y-6 animate-in fade-in">
                                 <Card>
-                                    <CardHeader><CardTitle className="font-headline uppercase italic">Fisiologia & Objetivos</CardTitle></CardHeader>
+                                    <CardHeader><CardTitle className="font-headline uppercase italic">O Cérebro Técnico (Corrida)</CardTitle></CardHeader>
                                     <CardContent className="space-y-8 pt-6 border-t border-border/50">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                             <FormField control={form.control} name="restingHr" render={({field}) => (
@@ -292,6 +326,35 @@ export default function ProfilePage() {
                                             )} />
                                         </div>
                                         
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
+                                            <FormField control={form.control} name="raceDistance" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel>Objetivo de Distância</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="5k">5km</SelectItem>
+                                                            <SelectItem value="10k">10km</SelectItem>
+                                                            <SelectItem value="21k">21.1km (Meia)</SelectItem>
+                                                            <SelectItem value="42k">42.2km (Maratona)</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="planGenerationType" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel>Estratégia de Geração</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="blocks">Por Blocos (4 semanas)</SelectItem>
+                                                            <SelectItem value="full">Ciclo Completo (Até a prova)</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )} />
+                                        </div>
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <FormField control={form.control} name="trainingDays" render={({field}) => (
                                                 <FormItem>
@@ -303,7 +366,7 @@ export default function ProfilePage() {
                                                                 type="button"
                                                                 variant={field.value?.includes(day.id) ? "default" : "outline"}
                                                                 size="sm"
-                                                                className="text-[10px]"
+                                                                className="text-[10px] font-bold"
                                                                 onClick={() => {
                                                                     const current = field.value || [];
                                                                     if (current.includes(day.id)) setValue('trainingDays', current.filter(d => d !== day.id));
@@ -336,38 +399,52 @@ export default function ProfilePage() {
 
                             <TabsContent value="alimentacao" className="mt-6 space-y-6 animate-in fade-in">
                                 <Card>
-                                    <CardHeader><CardTitle className="font-headline uppercase italic">Nutrição</CardTitle></CardHeader>
+                                    <CardHeader><CardTitle className="font-headline uppercase italic">O Combustível (Dieta)</CardTitle></CardHeader>
                                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border/50">
                                         <FormField control={form.control} name="aestheticGoal" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel>Objetivo</FormLabel>
+                                                <FormLabel>Objetivo Principal</FormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
                                                     <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
                                                     <SelectContent>
                                                         <SelectItem value="cutting">Secar (Cutting)</SelectItem>
                                                         <SelectItem value="bulking">Ganhar Massa (Bulking)</SelectItem>
                                                         <SelectItem value="performance">Apenas Performance</SelectItem>
+                                                        <SelectItem value="recomp">Recomposição</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </FormItem>
                                         )} />
                                         <FormField control={form.control} name="trainingTiming" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel>Momento do Treino</FormLabel>
+                                                <FormLabel>Timing: Momento do Treino</FormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
                                                     <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
                                                     <SelectContent>
-                                                        <SelectItem value="jejum">Jejum</SelectItem>
-                                                        <SelectItem value="manha">Manhã</SelectItem>
-                                                        <SelectItem value="noite">Noite</SelectItem>
+                                                        <SelectItem value="jejum">Em Jejum (Ajuste de Macros)</SelectItem>
+                                                        <SelectItem value="manha">Pela Manhã</SelectItem>
+                                                        <SelectItem value="meio-dia">Meio-dia</SelectItem>
+                                                        <SelectItem value="noite">À Noite</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </FormItem>
                                         )} />
+                                        <FormField control={form.control} name="mealCount" render={({field}) => (
+                                            <FormItem>
+                                                <FormLabel>Refeições Diárias</FormLabel>
+                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                            </FormItem>
+                                        )} />
+                                        <FormField control={form.control} name="preferredFoods" render={({field}) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>Alimentos Favoritos</FormLabel>
+                                                <FormControl><Input placeholder="Ovos, Arroz, Batata Doce..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                            </FormItem>
+                                        )} />
                                         <FormField control={form.control} name="excludedFoods" render={({field}) => (
                                             <FormItem className="md:col-span-2">
-                                                <FormLabel>Restrições Alimentares</FormLabel>
-                                                <FormControl><Textarea {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel>Restrições / Alimentos Excluídos</FormLabel>
+                                                <FormControl><Textarea placeholder="Alimentos que a IA nunca deve sugerir..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                             </FormItem>
                                         )} />
                                     </CardContent>
@@ -376,39 +453,70 @@ export default function ProfilePage() {
 
                             <TabsContent value="musculacao" className="mt-6 space-y-6 animate-in fade-in">
                                 <Card>
-                                    <CardHeader><CardTitle className="font-headline uppercase italic">Força</CardTitle></CardHeader>
+                                    <CardHeader><CardTitle className="font-headline uppercase italic">A Blindagem de Elite (Força)</CardTitle></CardHeader>
                                     <CardContent className="space-y-6 pt-6 border-t border-border/50">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <FormField control={form.control} name="prBench" render={({field}) => (
-                                                <FormItem><FormLabel>Supino (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl></FormItem>
+                                                <FormItem><FormLabel>Supino PR (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl></FormItem>
                                             )} />
                                             <FormField control={form.control} name="prSquat" render={({field}) => (
-                                                <FormItem><FormLabel>Agachamento (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl></FormItem>
+                                                <FormItem><FormLabel>Agachamento PR (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl></FormItem>
                                             )} />
                                             <FormField control={form.control} name="prDeadlift" render={({field}) => (
-                                                <FormItem><FormLabel>Terra (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl></FormItem>
+                                                <FormItem><FormLabel>L. Terra PR (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl></FormItem>
                                             )} />
                                         </div>
-                                        <FormField control={form.control} name="legDay" render={({field}) => (
-                                            <FormItem>
-                                                <FormLabel>Dia de Perna (Leg Day)</FormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value}>
-                                                    <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
-                                                    <SelectContent>
-                                                        {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormDescription>IA prioriza descanso de corrida após este dia.</FormDescription>
-                                            </FormItem>
-                                        )} />
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormField control={form.control} name="legDay" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="flex items-center gap-2">
+                                                        <CalendarDays className="h-4 w-4 text-primary" /> A Regra de Ouro: Dia de Perna
+                                                    </FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormDescription>A IA proíbe treinos intensos nas 24h seguintes a este dia.</FormDescription>
+                                                </FormItem>
+                                            )} />
+                                            
+                                            <FormField control={form.control} name="strengthSplit" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel>Divisão de Treino (Split)</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="full_body">Full Body</SelectItem>
+                                                            <SelectItem value="upper_lower">Upper / Lower</SelectItem>
+                                                            <SelectItem value="ppl">Push / Pull / Legs</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )} />
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </TabsContent>
                         </Tabs>
 
-                        <Button type="submit" size="lg" className="w-full h-14 font-black uppercase tracking-widest bg-primary text-black">
-                            Salvar Dados Localmente
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <Button type="submit" size="lg" className="flex-1 h-14 font-black uppercase tracking-widest bg-white text-black hover:bg-white/90">
+                                Salvar Dados Localmente
+                            </Button>
+                            <Button 
+                                type="button" 
+                                size="lg" 
+                                className="flex-1 h-14 font-black uppercase tracking-widest bg-primary text-black"
+                                onClick={() => context.generateRunningPlanAsync(form.getValues() as any)}
+                                disabled={context.planGenerationStatus === 'pending'}
+                            >
+                                {context.planGenerationStatus === 'pending' ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />} 
+                                Gerar Ciclo Completo IA
+                            </Button>
+                        </div>
                     </form>
                 </Form>
             </div>
@@ -417,9 +525,9 @@ export default function ProfilePage() {
                 <Card className="border-accent/20 bg-accent/5">
                     <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
-                            <Link2 className="size-5 text-accent" /> Integrações
+                            <Link2 className="size-5 text-accent" /> Integrações de Dados
                         </CardTitle>
-                        <CardDescription>Conecte seus aplicativos externos.</CardDescription>
+                        <CardDescription>Sincronize seus sensores externos.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border shadow-sm">
@@ -427,7 +535,7 @@ export default function ProfilePage() {
                                 <div className="size-10 rounded-lg bg-[#FC6100] flex items-center justify-center text-white font-black text-xl italic">S</div>
                                 <div>
                                     <div className="font-bold text-sm">Strava</div>
-                                    <div className="text-[10px] text-muted-foreground uppercase font-black">Atividades de Corrida</div>
+                                    <div className="text-[10px] text-muted-foreground uppercase font-black">Performance</div>
                                 </div>
                             </div>
                             <Switch 
@@ -451,13 +559,9 @@ export default function ProfilePage() {
                         </div>
 
                         {(context.activeProfile?.integrations?.strava.connected || context.activeProfile?.integrations?.coros.connected) && (
-                            <div className="p-4 rounded-xl bg-secondary/30 border border-dashed border-border animate-in slide-in-from-bottom-2">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-black uppercase text-muted-foreground">Última Sincronização</span>
-                                    <RefreshCw className="size-3 text-accent animate-spin" />
-                                </div>
+                            <div className="p-4 rounded-xl bg-secondary/30 border border-dashed border-border">
+                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-1">Última Sincronização Local</div>
                                 <div className="text-xs font-bold text-foreground">Hoje às 10:45</div>
-                                <Button variant="link" size="sm" className="h-auto p-0 text-[10px] text-accent mt-2">Sincronizar Manualmente</Button>
                             </div>
                         )}
                     </CardContent>
@@ -466,19 +570,23 @@ export default function ProfilePage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
-                            <Zap className="size-5 text-primary" /> Sugestões de IA
+                            <Target className="size-5 text-primary" /> Status do Ciclo
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="p-4 rounded-xl bg-secondary/20 border border-border space-y-3">
-                            <h4 className="text-xs font-bold uppercase tracking-tight text-primary italic">Status do Ciclo</h4>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Baseado no seu <span className="text-white font-bold">Pace Limiar ({watch('thresholdPace')})</span> e no <span className="text-white font-bold">Leg Day ({watch('legDay')})</span>, o Gemini recomenda evitar treinos de tiro nas quintas-feiras.
-                            </p>
+                        <div className="p-4 rounded-xl bg-secondary/20 border border-border space-y-2">
+                            <div className="flex justify-between text-xs font-bold uppercase tracking-tight text-primary italic">
+                                <span>Pace de Limiar</span>
+                                <span className="text-white">{watch('thresholdPace')}</span>
+                            </div>
+                            <div className="flex justify-between text-xs font-bold uppercase tracking-tight text-primary italic">
+                                <span>Dia de Perna</span>
+                                <span className="text-white">{watch('legDay')}</span>
+                            </div>
                         </div>
-                        <Button variant="outline" className="w-full text-xs font-bold gap-2">
-                            <RefreshCw size={14}/> Re-calibrar Plano
-                        </Button>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            O Gemini Coach utiliza estes dados para garantir que seu volume de treino não comprometa sua recuperação muscular.
+                        </p>
                     </CardContent>
                 </Card>
             </div>
