@@ -8,15 +8,13 @@ import {
   User, 
   Activity, 
   MessageSquare, 
-  Settings, 
   Trophy, 
   Calculator,
   ChevronRight,
   BookOpen,
   Target,
   Key,
-  Download,
-  Upload
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -51,7 +49,7 @@ const items = [
   { title: "Meu Plano", url: "/training", icon: Target },
   { title: "Evolução", url: "/analysis", icon: Activity },
   { title: "Conquistas", url: "/vault", icon: Trophy },
-  { title: "Coach & Histórico", url: "/coach", icon: MessageSquare },
+  { title: "Coach IA", url: "/coach", icon: MessageSquare },
   { title: "Calculadoras", url: "/calculators", icon: Calculator },
   { title: "Dicionário", url: "/dictionary", icon: BookOpen },
   { title: "Meus Dados", url: "/profile", icon: User },
@@ -84,13 +82,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-2">
               <div className="size-8 rounded-lg bg-primary flex items-center justify-center font-headline font-bold text-lg text-black">C</div>
               <span className="font-headline font-bold text-xl tracking-tight group-data-[collapsible=icon]:hidden">
-                <span className="text-white">Corre</span><span className="text-primary">Junto</span>
+                <span className="text-white italic">Corre</span>
+                <span className="text-primary italic">Junto</span>
               </span>
             </div>
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Menu Principal</SidebarGroupLabel>
+              <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Menu de Elite</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {items.map((item) => (
@@ -103,7 +102,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       >
                         <Link href={item.url}>
                           <item.icon className={cn("size-4", pathname === item.url ? "text-primary" : "text-muted-foreground")} />
-                          <span className="font-medium">{item.title}</span>
+                          <span className="font-bold uppercase text-[10px] tracking-widest">{item.title}</span>
                           {pathname === item.url && <ChevronRight className="ml-auto size-4 text-primary" />}
                         </Link>
                       </SidebarMenuButton>
@@ -118,7 +117,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem>
                 <SidebarMenuButton className="w-full" onClick={() => setShowKeyModal(true)}>
                   <Key className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden">Configurar IA</span>
+                  <span className="group-data-[collapsible=icon]:hidden font-bold uppercase text-[10px]">Configurar IA</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -127,21 +126,25 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <SidebarInset className="flex-1 flex flex-col min-w-0">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background/80 backdrop-blur-md z-30">
             <SidebarTrigger />
-            <div className="flex-1 flex justify-between items-center px-4">
-              <div className="font-headline font-semibold text-lg flex items-center gap-1">
+            <div className="flex-1 flex justify-between items-center px-2 md:px-4">
+              <div className="font-headline font-black text-lg flex items-center gap-1 uppercase italic tracking-tighter">
                 <span className="text-white">Corre</span>
                 <span className="text-primary">Junto</span>
-                <span className="mx-2 text-muted-foreground/30">|</span>
-                <span className="text-sm font-normal text-muted-foreground">
-                   {items.find(i => i.url === pathname)?.title || "Dashboard"}
+                <span className="hidden sm:inline mx-2 text-muted-foreground/30 font-normal">|</span>
+                <span className="hidden sm:inline text-[10px] font-black text-muted-foreground tracking-widest">
+                   {items.find(i => i.url === pathname)?.title || "Portal"}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" onClick={() => context?.exportData()} className="hidden md:flex gap-2">
-                   <Download size={16}/> Exportar
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => context?.exportData()} className="md:size-9">
+                   <Download className="size-4 md:size-5"/>
                 </Button>
-                <div className="size-8 rounded-full bg-secondary border flex items-center justify-center">
-                  <User className="size-4 text-muted-foreground" />
+                <div className="size-8 md:size-9 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden">
+                  {context?.activeProfile?.avatarUrl ? (
+                    <img src={context.activeProfile.avatarUrl} alt="User" className="size-full object-cover" />
+                  ) : (
+                    <User className="size-4 text-muted-foreground" />
+                  )}
                 </div>
               </div>
             </div>
@@ -155,28 +158,27 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <Dialog open={showKeyModal} onOpenChange={setShowKeyModal}>
         <DialogContent className="sm:max-w-[425px] bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-primary font-headline italic">Configuração de IA</DialogTitle>
+            <DialogTitle className="text-primary font-headline italic font-black uppercase">Configuração de IA</DialogTitle>
             <DialogDescription>
-              Para gerar planos e conversar com o Coach, você precisa da sua própria chave do Gemini.
+              Insira sua Gemini API Key para ativar o motor de periodização e o Coach.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                1. Acesse o <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
-                <br/>2. Crie uma chave gratuita.
-                <br/>3. Cole ela abaixo.
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                1. Gere sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
+                <br/>2. Cole abaixo. Seus dados são salvos apenas localmente.
               </p>
               <Input
-                placeholder="Insira sua API Key aqui..."
+                placeholder="Cole sua API Key aqui..."
                 value={tempKey}
                 onChange={(e) => setTempKey(e.target.value)}
-                className="bg-secondary/50 border-border"
+                className="bg-secondary/50 border-border h-12 font-mono text-sm"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveKey} className="w-full font-bold uppercase">Ativar Inteligência</Button>
+            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black">Ativar Inteligência</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

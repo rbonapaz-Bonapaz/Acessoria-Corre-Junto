@@ -1,9 +1,8 @@
-
 "use client";
 
 import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Tabs, TabsContent, SidebarMenu, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,15 +12,12 @@ import {
   Calculator, 
   Clock, 
   Milestone, 
-  Activity, 
-  Droplets, 
   TrendingUp, 
-  FastForward,
-  Copy,
-  Zap,
-  Info
+  Info,
+  Copy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 // --- Utility Functions ---
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -42,7 +38,7 @@ const formatTime = (totalMinutes: number) => {
 export default function CalculatorsPage() {
   const { toast } = useToast();
   
-  // State for different calculators
+  // State
   const [paceDist, setPaceDist] = React.useState("5");
   const [paceH, setPaceH] = React.useState("");
   const [paceM, setPaceM] = React.useState("");
@@ -53,13 +49,6 @@ export default function CalculatorsPage() {
   const [timePM, setTimePM] = React.useState("");
   const [timePS, setTimePS] = React.useState("");
   const [timeRes, setTimeRes] = React.useState<string | null>(null);
-
-  const [distH, setDistH] = React.useState("");
-  const [distM, setDistM] = React.useState("");
-  const [distS, setDistS] = React.useState("");
-  const [distPM, setDistPM] = React.useState("");
-  const [distPS, setDistPS] = React.useState("");
-  const [distRes, setDistRes] = React.useState<string | null>(null);
 
   const [esteiraKmh, setEsteiraKmh] = React.useState("");
   const [esteiraRes, setEsteiraRes] = React.useState<string | null>(null);
@@ -74,13 +63,11 @@ export default function CalculatorsPage() {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast({ title: "Copiado!", description: "Resultado copiado para a área de transferência." });
+      toast({ title: "Copiado!", description: "Resultado copiado com sucesso." });
     } catch (err) {
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível copiar." });
+      toast({ variant: "destructive", title: "Erro", description: "Falha ao copiar." });
     }
   };
-
-  // --- Calculations ---
 
   const handleCalcPace = () => {
     const d = parseFloat(paceDist);
@@ -101,18 +88,6 @@ export default function CalculatorsPage() {
     setTimeRes(formatTime(d * paceMin));
   };
 
-  const handleCalcDist = () => {
-    const h = parseInt(distH) || 0;
-    const m = parseInt(distM) || 0;
-    const s = parseInt(distS) || 0;
-    const pm = parseInt(distPM) || 0;
-    const ps = parseInt(distPS) || 0;
-    if ((h === 0 && m === 0 && s === 0) || (pm === 0 && ps === 0)) return;
-    const totalMin = h * 60 + m + s / 60;
-    const paceMin = pm + ps / 60;
-    setDistRes((totalMin / paceMin).toFixed(2) + " km");
-  };
-
   const handleEsteira = () => {
     const speed = parseFloat(esteiraKmh);
     if (speed <= 0) return;
@@ -128,7 +103,6 @@ export default function CalculatorsPage() {
     const totalMin = h * 60 + m + s / 60;
     const avgPace = totalMin / d;
 
-    // Simplified split logic based on the provided HTML
     let p1, p2, p3;
     if (stratType === 'negative') {
       p1 = avgPace + 8/60; p2 = avgPace - 8/60; p3 = p2 - 5/60;
@@ -140,7 +114,6 @@ export default function CalculatorsPage() {
 
     const firstEnd = d / 2;
     const sprintDist = d <= 5.5 ? 0.3 : (d <= 10.5 ? 0.5 : 1);
-    const sprintStart = d - sprintDist;
 
     setStratRes({
       avg: formatPace(avgPace),
@@ -155,110 +128,78 @@ export default function CalculatorsPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
-        <header>
-          <h1 className="text-3xl font-headline font-bold">Calculadoras de Performance</h1>
-          <p className="text-muted-foreground">Ferramentas essenciais para planejar seus ritmos, tempos e estratégias.</p>
+      <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-12">
+        <header className="px-2">
+          <h1 className="text-2xl md:text-4xl font-headline font-black uppercase italic tracking-tight">
+            <span className="text-white">Calculadoras de</span> <span className="text-primary">Performance</span>
+          </h1>
+          <p className="text-xs md:text-sm text-muted-foreground mt-1">Ferramentas técnicas para planejar seus ritmos e metas.</p>
         </header>
 
         <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 bg-secondary p-1 rounded-xl h-auto">
-            <TabsTrigger value="basic" className="py-2">Básicos</TabsTrigger>
-            <TabsTrigger value="treadmill" className="py-2">Esteira</TabsTrigger>
-            <TabsTrigger value="strategy" className="py-2">Estratégia</TabsTrigger>
-            <TabsTrigger value="zones" className="py-2">Zonas FC</TabsTrigger>
-          </TabsList>
+          <div className="px-2">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-secondary/20 p-1 rounded-xl h-auto gap-1">
+              <TabsTrigger value="basic" className="py-2.5 font-bold text-[10px] uppercase">Básicos</TabsTrigger>
+              <TabsTrigger value="treadmill" className="py-2.5 font-bold text-[10px] uppercase">Esteira</TabsTrigger>
+              <TabsTrigger value="strategy" className="py-2.5 font-bold text-[10px] uppercase">Estratégia</TabsTrigger>
+              <TabsTrigger value="zones" className="py-2.5 font-bold text-[10px] uppercase">Zonas FC</TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* BASIC CALCULATORS */}
           <TabsContent value="basic" className="mt-6 space-y-6">
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card className="bg-card border-border shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-accent">
-                    <Milestone className="size-4" /> Calcular Pace
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-2">
+              <Card className="bg-card/50 border-border shadow-md">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-sm md:text-lg flex items-center gap-2 text-primary font-black uppercase italic">
+                    <Milestone className="size-4" /> Pace
                   </CardTitle>
-                  <CardDescription>Descubra seu ritmo em min/km.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Distância (km)</Label>
-                    <Input type="number" value={paceDist} onChange={e => setPaceDist(e.target.value)} className="bg-secondary/50" />
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Distância (km)</Label>
+                    <Input type="number" value={paceDist} onChange={e => setPaceDist(e.target.value)} className="bg-secondary/30 h-10" />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Tempo Final (h:m:s)</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Input placeholder="H" value={paceH} onChange={e => setPaceH(e.target.value)} className="bg-secondary/50" />
-                      <Input placeholder="M" value={paceM} onChange={e => setPaceM(e.target.value)} className="bg-secondary/50" />
-                      <Input placeholder="S" value={paceS} onChange={e => setPaceS(e.target.value)} className="bg-secondary/50" />
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Tempo Final (H:M:S)</Label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <Input placeholder="H" value={paceH} onChange={e => setPaceH(e.target.value)} className="bg-secondary/30" />
+                      <Input placeholder="M" value={paceM} onChange={e => setPaceM(e.target.value)} className="bg-secondary/30" />
+                      <Input placeholder="S" value={paceS} onChange={e => setPaceS(e.target.value)} className="bg-secondary/30" />
                     </div>
                   </div>
-                  <Button onClick={handleCalcPace} className="w-full">Calcular</Button>
+                  <Button onClick={handleCalcPace} className="w-full bg-primary text-black font-black uppercase tracking-widest text-xs h-10">Calcular</Button>
                   {paceRes && (
-                    <div className="p-4 rounded-lg bg-accent/10 border border-accent/20 text-center animate-in zoom-in-95">
-                      <div className="text-sm text-muted-foreground">Pace Médio</div>
-                      <div className="text-2xl font-bold font-headline text-accent">{paceRes} min/km</div>
+                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center animate-in zoom-in-95">
+                      <div className="text-[10px] uppercase font-black text-muted-foreground">Pace Médio</div>
+                      <div className="text-xl font-bold font-headline text-primary italic">{paceRes} <span className="text-xs font-normal">min/km</span></div>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border-border shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-accent">
-                    <Clock className="size-4" /> Calcular Tempo
+              <Card className="bg-card/50 border-border shadow-md">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-sm md:text-lg flex items-center gap-2 text-primary font-black uppercase italic">
+                    <Clock className="size-4" /> Tempo
                   </CardTitle>
-                  <CardDescription>Projete seu tempo de chegada.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Distância (km)</Label>
-                    <Input type="number" value={timeDist} onChange={e => setTimeDist(e.target.value)} className="bg-secondary/50" />
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Distância (km)</Label>
+                    <Input type="number" value={timeDist} onChange={e => setTimeDist(e.target.value)} className="bg-secondary/30 h-10" />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Pace Alvo (min:seg)</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] uppercase font-bold text-muted-foreground">Pace Alvo (min:seg)</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="Min" value={timePM} onChange={e => setTimePM(e.target.value)} className="bg-secondary/50" />
-                      <Input placeholder="Seg" value={timePS} onChange={e => setTimePS(e.target.value)} className="bg-secondary/50" />
+                      <Input placeholder="Min" value={timePM} onChange={e => setTimePM(e.target.value)} className="bg-secondary/30" />
+                      <Input placeholder="Seg" value={timePS} onChange={e => setTimePS(e.target.value)} className="bg-secondary/30" />
                     </div>
                   </div>
-                  <Button onClick={handleCalcTime} className="w-full">Calcular</Button>
+                  <Button onClick={handleCalcTime} className="w-full bg-primary text-black font-black uppercase tracking-widest text-xs h-10">Calcular</Button>
                   {timeRes && (
-                    <div className="p-4 rounded-lg bg-accent/10 border border-accent/20 text-center animate-in zoom-in-95">
-                      <div className="text-sm text-muted-foreground">Tempo Estimado</div>
-                      <div className="text-2xl font-bold font-headline text-accent">{timeRes}</div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card border-border shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-accent">
-                    <TrendingUp className="size-4" /> Distância
-                  </CardTitle>
-                  <CardDescription>Até onde você consegue ir?</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Tempo Disponível</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Input placeholder="H" value={distH} onChange={e => setDistH(e.target.value)} className="bg-secondary/50" />
-                      <Input placeholder="M" value={distM} onChange={e => setDistM(e.target.value)} className="bg-secondary/50" />
-                      <Input placeholder="S" value={distS} onChange={e => setDistS(e.target.value)} className="bg-secondary/50" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Pace Médio</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="Min" value={distPM} onChange={e => setDistPM(e.target.value)} className="bg-secondary/50" />
-                      <Input placeholder="Seg" value={distPS} onChange={e => setDistPS(e.target.value)} className="bg-secondary/50" />
-                    </div>
-                  </div>
-                  <Button onClick={handleCalcDist} className="w-full">Calcular</Button>
-                  {distRes && (
-                    <div className="p-4 rounded-lg bg-accent/10 border border-accent/20 text-center animate-in zoom-in-95">
-                      <div className="text-sm text-muted-foreground">Distância Total</div>
-                      <div className="text-2xl font-bold font-headline text-accent">{distRes}</div>
+                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center animate-in zoom-in-95">
+                      <div className="text-[10px] uppercase font-black text-muted-foreground">Tempo Estimado</div>
+                      <div className="text-xl font-bold font-headline text-primary italic">{timeRes}</div>
                     </div>
                   )}
                 </CardContent>
@@ -266,105 +207,102 @@ export default function CalculatorsPage() {
             </div>
           </TabsContent>
 
-          {/* TREADMILL */}
           <TabsContent value="treadmill" className="mt-6">
-            <Card className="bg-card border-border shadow-lg max-w-2xl mx-auto">
-              <CardHeader>
-                <CardTitle className="text-xl text-accent">Conversor de Velocidade (Esteira)</CardTitle>
-                <CardDescription>Converta km/h em pace (min/km) instantaneamente.</CardDescription>
+            <Card className="bg-card/50 border-border shadow-lg mx-2">
+              <CardHeader className="text-center">
+                <CardTitle className="text-lg md:text-xl text-primary font-black uppercase italic tracking-tight">Conversor de Esteira</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Velocidade na Esteira (km/h)</Label>
+              <CardContent className="space-y-6 max-w-md mx-auto">
+                <div className="space-y-1.5">
+                  <Label className="text-center block text-xs font-bold uppercase text-muted-foreground mb-2">Velocidade na Esteira (km/h)</Label>
                   <Input 
                     type="number" 
                     step="0.1" 
                     placeholder="Ex: 12.0" 
                     value={esteiraKmh} 
                     onChange={e => setEsteiraKmh(e.target.value)} 
-                    className="bg-secondary/50 h-14 text-2xl text-center" 
+                    className="bg-secondary/20 h-14 md:h-16 text-3xl font-black text-center text-primary" 
                   />
                 </div>
-                <Button onClick={handleEsteira} size="lg" className="w-full bg-primary text-xl">Converter</Button>
+                <Button onClick={handleEsteira} className="w-full bg-primary text-black font-black uppercase tracking-widest h-12">Converter</Button>
                 {esteiraRes && (
-                  <div className="p-8 rounded-2xl bg-secondary/30 border border-border text-center">
-                    <div className="text-muted-foreground uppercase tracking-widest text-xs font-bold mb-2">Equivale ao Pace de</div>
-                    <div className="text-5xl font-bold font-headline text-accent">{esteiraRes}</div>
-                    <div className="text-muted-foreground mt-1">min/km</div>
+                  <div className="p-6 rounded-2xl bg-secondary/10 border border-border text-center">
+                    <div className="text-muted-foreground uppercase tracking-widest text-[10px] font-black mb-2">Equivale ao Pace de</div>
+                    <div className="text-5xl font-black font-headline text-primary italic">{esteiraRes}</div>
+                    <div className="text-muted-foreground text-xs font-bold mt-1">min/km</div>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* STRATEGY */}
           <TabsContent value="strategy" className="mt-6">
-            <Card className="bg-card border-border shadow-lg">
+            <Card className="bg-card/50 border-border shadow-lg mx-2">
               <CardHeader>
-                <CardTitle className="text-xl text-accent">Estratégia de Splits</CardTitle>
-                <CardDescription>Distribua seu esforço de forma inteligente para bater recordes.</CardDescription>
+                <CardTitle className="text-lg md:text-xl text-primary font-black uppercase italic tracking-tight">Estratégia de Splits</CardTitle>
+                <CardDescription className="text-xs">Distribua seu esforço para quebrar recordes.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8">
-                <div className="grid md:grid-cols-3 gap-6">
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <Label>Tipo de Estratégia</Label>
-                    <div className="grid grid-cols-1 gap-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Tipo de Estratégia</Label>
+                    <div className="flex flex-col gap-2">
                       <Button 
                         variant={stratType === 'negative' ? 'default' : 'outline'} 
                         onClick={() => setStratType('negative')}
-                        className="justify-start"
+                        className="justify-start text-[10px] font-bold h-9"
                       >
                         Split Negativo (Sugerido)
                       </Button>
                       <Button 
                         variant={stratType === 'even' ? 'default' : 'outline'} 
                         onClick={() => setStratType('even')}
-                        className="justify-start"
+                        className="justify-start text-[10px] font-bold h-9"
                       >
                         Ritmo Constante
                       </Button>
                       <Button 
                         variant={stratType === 'positive' ? 'default' : 'outline'} 
                         onClick={() => setStratType('positive')}
-                        className="justify-start"
+                        className="justify-start text-[10px] font-bold h-9"
                       >
                         Split Positivo
                       </Button>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Distância (km)</Label>
-                    <Input value={stratDist} onChange={e => setStratDist(e.target.value)} className="bg-secondary/50" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Distância (km)</Label>
+                    <Input value={stratDist} onChange={e => setStratDist(e.target.value)} className="bg-secondary/30 h-10" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Tempo Alvo</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Input placeholder="H" value={stratH} onChange={e => setStratH(e.target.value)} className="bg-secondary/50" />
-                      <Input placeholder="M" value={stratM} onChange={e => setStratM(e.target.value)} className="bg-secondary/50" />
-                      <Input placeholder="S" value={stratS} onChange={e => setStratS(e.target.value)} className="bg-secondary/50" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Tempo Alvo</Label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <Input placeholder="H" value={stratH} onChange={e => setStratH(e.target.value)} className="bg-secondary/30" />
+                      <Input placeholder="M" value={stratM} onChange={e => setStratM(e.target.value)} className="bg-secondary/30" />
+                      <Input placeholder="S" value={stratS} onChange={e => setStratS(e.target.value)} className="bg-secondary/30" />
                     </div>
                   </div>
                 </div>
-                <Button onClick={handleStrategy} className="w-full bg-primary h-12 text-lg">Gerar Plano de Prova</Button>
+                <Button onClick={handleStrategy} className="w-full bg-primary text-black font-black uppercase tracking-widest h-12 text-xs">Gerar Plano de Prova</Button>
                 
                 {stratRes && (
-                  <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <div className="p-4 rounded-xl bg-secondary/40 border border-border">
-                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Início (0 - {stratRes.dist1}k)</div>
-                        <div className="text-xl font-headline font-bold text-accent">{stratRes.p1} <span className="text-sm font-normal text-muted-foreground">min/km</span></div>
+                  <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+                        <div className="text-[9px] text-muted-foreground uppercase font-black mb-1">Início (0 - {stratRes.dist1}k)</div>
+                        <div className="text-lg font-headline font-black text-primary italic">{stratRes.p1} <span className="text-[10px] font-normal text-muted-foreground">min/km</span></div>
                       </div>
-                      <div className="p-4 rounded-xl bg-secondary/40 border border-border">
-                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Manutenção</div>
-                        <div className="text-xl font-headline font-bold text-accent">{stratRes.p2} <span className="text-sm font-normal text-muted-foreground">min/km</span></div>
+                      <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+                        <div className="text-[9px] text-muted-foreground uppercase font-black mb-1">Manutenção</div>
+                        <div className="text-lg font-headline font-black text-primary italic">{stratRes.p2} <span className="text-[10px] font-normal text-muted-foreground">min/km</span></div>
                       </div>
-                      <div className="p-4 rounded-xl bg-secondary/40 border border-border">
-                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Sprint Final</div>
-                        <div className="text-xl font-headline font-bold text-accent">{stratRes.p3} <span className="text-sm font-normal text-muted-foreground">min/km</span></div>
+                      <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+                        <div className="text-[9px] text-muted-foreground uppercase font-black mb-1">Sprint Final</div>
+                        <div className="text-lg font-headline font-black text-primary italic">{stratRes.p3} <span className="text-[10px] font-normal text-muted-foreground">min/km</span></div>
                       </div>
                     </div>
-                    <div className="text-center p-4 bg-accent/5 rounded-xl border border-accent/20 border-dashed">
-                      <p className="text-sm italic text-muted-foreground">
+                    <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 border-dashed text-center">
+                      <p className="text-[10px] italic text-muted-foreground leading-tight">
                         {stratType === 'negative' ? "Comece controlado para poupar glicogênio e feche os últimos km com força total." : "Mantenha o foco mental para sustentar o ritmo sem oscilações significativas."}
                       </p>
                     </div>
@@ -374,19 +312,18 @@ export default function CalculatorsPage() {
             </Card>
           </TabsContent>
 
-          {/* ZONES FC */}
           <TabsContent value="zones" className="mt-6">
-             <Card className="bg-card border-border shadow-lg max-w-xl mx-auto">
-              <CardHeader>
-                <CardTitle className="text-xl text-accent">Zonas de Frequência Cardíaca</CardTitle>
-                <CardDescription>Determine suas intensidades baseadas na FC Máxima.</CardDescription>
+             <Card className="bg-card/50 border-border shadow-lg max-w-xl mx-auto overflow-hidden">
+              <CardHeader className="text-center">
+                <CardTitle className="text-lg md:text-xl text-primary font-black uppercase italic tracking-tight">Zonas de Frequência Cardíaca</CardTitle>
+                <CardDescription className="text-xs">Determine suas intensidades baseadas na FC Máxima.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>FC Máxima (bpm)</Label>
-                  <Input type="number" placeholder="Ex: 188" className="bg-secondary/50 h-12 text-center text-xl" />
+                <div className="space-y-2 max-w-xs mx-auto">
+                  <Label className="text-center block text-[10px] font-black uppercase text-muted-foreground">FC Máxima (bpm)</Label>
+                  <Input type="number" placeholder="Ex: 188" className="bg-secondary/30 h-12 text-center text-2xl font-black text-primary" />
                 </div>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-2">
                   {[
                     { zone: "Z1", label: "Recuperação", range: "94 - 113", color: "text-blue-400" },
                     { zone: "Z2", label: "Aeróbica (Base)", range: "113 - 132", color: "text-green-400" },
@@ -394,18 +331,18 @@ export default function CalculatorsPage() {
                     { zone: "Z4", label: "Limiar Lactato", range: "151 - 170", color: "text-orange-400" },
                     { zone: "Z5", label: "Máximo / VO2", range: "170 - 188", color: "text-red-400" },
                   ].map((z) => (
-                    <div key={z.zone} className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border border-border">
+                    <div key={z.zone} className="flex items-center justify-between p-3 rounded-lg bg-secondary/10 border border-border/50">
                       <div className="flex items-center gap-3">
-                        <span className={cn("font-bold w-8", z.color)}>{z.zone}</span>
-                        <span className="text-sm font-medium">{z.label}</span>
+                        <span className={cn("font-black w-6 text-sm italic", z.color)}>{z.zone}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-tight">{z.label}</span>
                       </div>
-                      <span className="font-headline font-bold">{z.range} <span className="text-[10px] text-muted-foreground uppercase">bpm</span></span>
+                      <span className="font-headline font-black text-sm italic">{z.range} <span className="text-[8px] text-muted-foreground uppercase tracking-tighter">bpm</span></span>
                     </div>
                   ))}
                 </div>
-                <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 flex gap-3">
-                  <Info className="size-4 text-accent shrink-0 mt-0.5" />
-                  <p className="text-xs text-muted-foreground leading-relaxed">
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 flex gap-3">
+                  <Info className="size-4 text-primary shrink-0" />
+                  <p className="text-[9px] text-muted-foreground leading-relaxed italic">
                     Cálculos baseados na % da FC Máxima. Para maior precisão, use a Reserva de FC (Karvonen) se souber sua FC de Repouso.
                   </p>
                 </div>
