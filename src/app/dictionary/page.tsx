@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -6,7 +5,18 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, BookOpen, Activity, Zap, Heart, Dumbbell } from "lucide-react";
+import { 
+  Search, 
+  BookOpen, 
+  Activity, 
+  Zap, 
+  Heart, 
+  Dumbbell, 
+  Milestone, 
+  TrendingUp, 
+  Target, 
+  Clock 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const terms = [
