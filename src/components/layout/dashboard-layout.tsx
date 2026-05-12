@@ -101,8 +101,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     try {
       await signInWithPopup(auth, provider);
       toast({ title: "Bem-vindo!", description: "Sincronização em nuvem ativada." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Erro no Login", description: "Não foi possível conectar com o Google." });
+    } catch (error: any) {
+      console.error("Auth Error:", error);
+      if (error.code === 'auth/unauthorized-domain') {
+          toast({ 
+            variant: "destructive", 
+            title: "Domínio Não Autorizado", 
+            description: "Adicione 'acessoria-corre-junto.vercel.app' aos domínios autorizados no Firebase Console." 
+          });
+      } else {
+          toast({ 
+            variant: "destructive", 
+            title: "Erro no Login", 
+            description: "Não foi possível conectar com o Google. Verifique sua conexão ou as configurações do Firebase." 
+          });
+      }
     }
   };
 
@@ -116,7 +129,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   const handleSwitchProfile = () => {
-    context?.switchProfile(null); // Limpa o perfil ativo para mostrar o picker
+    context?.switchProfile(null); 
     router.push('/');
   };
 
@@ -264,7 +277,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground leading-relaxed">
                 1. Gere sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
-                <br/>2. Cole abaixo. Seus dados são salvos de forma segura no Firebase.
+                <br/>2. Cole abaixo. Seus dados são salvos de forma segura.
               </p>
               <Input
                 placeholder="Cole sua API Key aqui..."
