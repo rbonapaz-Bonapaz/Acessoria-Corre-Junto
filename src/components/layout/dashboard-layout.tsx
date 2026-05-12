@@ -104,19 +104,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error("Auth Error:", error);
       
-      if (error.message?.includes('identitytoolkit.googleapis.com')) {
+      const errorMsg = error.message?.toLowerCase() || "";
+      
+      if (errorMsg.includes('identitytoolkit') || errorMsg.includes('api has not been used')) {
         toast({ 
           variant: "destructive", 
-          duration: 15000,
-          title: "API de Autenticação Desativada", 
-          description: "Você precisa clicar em 'Começar' na aba Authentication do Console do Firebase para ativar o login." 
+          duration: 20000,
+          title: "API de Autenticação Necessária", 
+          description: "No Console do Firebase, vá em Authentication > Sign-in method e ative o 'Google'. Se já estiver ativo, aguarde 2 minutos para a API propagar." 
         });
-      } else if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
+      } else if (error.code === 'auth/unauthorized-domain' || errorMsg.includes('unauthorized-domain')) {
         toast({ 
           variant: "destructive", 
           duration: 10000,
           title: "Domínio Não Autorizado", 
-          description: "Adicione 'acessoria-corre-junto.vercel.app' nos Domínios Autorizados nas configurações de Authentication do Firebase." 
+          description: "Adicione 'acessoria-corre-junto.vercel.app' nos Domínios Autorizados em Authentication > Settings." 
         });
       } else {
         toast({ 

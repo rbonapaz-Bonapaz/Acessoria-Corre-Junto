@@ -16,31 +16,25 @@ O app suporta **qualquer conta Google**.
 
 ## 🛠️ Configuração do Firebase (CRÍTICO PARA SINCRONIZAÇÃO)
 
-Para que o login e a sincronização funcionem entre PC e Celular, você deve realizar estes passos no [Console do Firebase](https://console.firebase.google.com/):
+Se o botão **"Começar"** não aparece, é porque a Autenticação já está ativa. Siga estes passos para configurar o login:
 
-### 1. Ativar a Autenticação
-1. No menu à esquerda, clique em **Build** > **Authentication**.
-2. Clique no botão **Get Started** (Começar). Isso ativará as APIs necessárias (Identity Toolkit).
-3. Na aba **Sign-in method**, ative o provedor **Google**.
+### 1. Ativar o Provedor Google
+1. No menu à esquerda do [Console do Firebase](https://console.firebase.google.com/), clique em **Build** > **Authentication**.
+2. Clique na aba **Sign-in method** (no topo).
+3. Se não houver nenhum provedor, clique em **Add new provider** (Adicionar novo provedor).
+4. Escolha **Google**, ative a chave e selecione um e-mail de suporte. Clique em **Salvar**.
 
 ### 2. Autorizar o Domínio (Resolve erro de Login)
 1. Ainda em **Authentication**, clique na aba **Settings** (Configurações) no topo.
-2. No menu lateral, clique em **Authorized Domains** (Domínios autorizados).
-3. Clique em **Add Domain** e adicione exatamente: `acessoria-corre-junto.vercel.app`.
+2. No menu lateral da esquerda (dentro de Authentication), clique em **Authorized domains** (Domínios autorizados).
+3. Clique em **Add domain** e adicione exatamente: `acessoria-corre-junto.vercel.app`.
 
 ### 3. Firestore Database
-1. Clique em **Build** > **Firestore Database**.
-2. Clique em **Create Database** e siga as instruções. Escolha uma localização próxima (ex: `southamerica-east1` para o Brasil).
+1. No menu principal à esquerda, clique em **Build** > **Firestore Database**.
+2. Se não houver um banco, clique em **Create Database**.
+3. Escolha uma localização (ex: `southamerica-east1` para o Brasil) e inicie em **Modo de Teste** (ou Modo Produção com as regras que o sistema gera automaticamente).
 
-**Nota:** Após estas ativações, o Google pode levar de 2 a 5 minutos para propagar as permissões de API.
-
-## 🚀 Funcionalidades de Elite
-
-- **Sincronização Nuvem:** Seus atletas e treinos sincronizados em tempo real entre PC e Celular via Firestore.
-- **Seletor de Perfil:** Escolha quem está treinando logo na abertura do app (Estilo Netflix).
-- **Motor de Periodização IA:** Geração de ciclos completos baseados no seu VDOT e ciência de Jack Daniels.
-- **Coach Contextual:** Treinador de IA (Gemini 1.5 Flash) pronto para ajustar treinos ou analisar fotos do Strava/Garmin.
-- **Calculadoras Calibradas:** Pace, Riegel, Zonas de FC (L2) e Nutrição/Hidratação.
+**Nota:** Após estas ativações, o Google leva cerca de **2 a 5 minutos** para propagar as permissões de API. Se o erro persistir, aguarde um pouco e tente logar novamente.
 
 ---
 *Desenvolvido para atletas que buscam transformar dados em performance.*
