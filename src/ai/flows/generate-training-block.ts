@@ -5,7 +5,7 @@
  * - generateTrainingBlock - Função que lida com o processo de geração do plano de treino.
  */
 
-import { ai, getAiWithKey } from '@/ai/genkit';
+import { getAiWithKey } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateTrainingBlockInputSchema = z.object({
