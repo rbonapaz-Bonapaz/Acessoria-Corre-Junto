@@ -111,7 +111,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           variant: "destructive", 
           duration: 20000,
           title: "API de Autenticação Necessária", 
-          description: "No Console do Firebase, vá em Authentication > Método de login e ative o 'Google'. Se já estiver ativo, aguarde 2 minutos para a API propagar." 
+          description: "No Console do Firebase, vá em Build > Authentication e clique em 'Começar'. Se já estiver ativo, aguarde 2 minutos para a API propagar." 
         });
       } else if (error.code === 'auth/unauthorized-domain' || errorMsg.includes('unauthorized-domain')) {
         toast({ 
@@ -244,18 +244,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     Gerenciamento
                   </DropdownMenuLabel>
+                  
                   {!user && (
-                    <DropdownMenuItem onClick={handleLogin} className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
+                    <DropdownMenuItem onClick={handleLogin} className="p-3 focus:bg-primary/10 text-primary focus:text-primary cursor-pointer rounded-xl group transition-all">
                       <LogIn size={18} className="text-primary" />
                       <span className="font-headline font-black text-xs uppercase italic tracking-wider">Entrar no Google</span>
                     </DropdownMenuItem>
                   )}
+
                   <DropdownMenuItem asChild className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
                     <Link href="/profile" className="flex items-center gap-3">
                       <User size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
                       <span className="font-headline font-black text-xs uppercase italic tracking-wider">Meus Dados</span>
                     </Link>
                   </DropdownMenuItem>
+                  
                   <DropdownMenuItem 
                     className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all"
                     onClick={handleSwitchProfile}
@@ -265,8 +268,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       <span className="font-headline font-black text-xs uppercase italic tracking-wider">Trocar Atleta</span>
                     </div>
                   </DropdownMenuItem>
+
                   <DropdownMenuSeparator className="bg-border/20" />
-                  {user && (
+                  
+                  {user ? (
                     <DropdownMenuItem 
                       className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
                       onClick={handleLogout}
@@ -274,6 +279,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       <div className="flex items-center gap-3">
                         <LogOut size={18} className="text-destructive" />
                         <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair da Nuvem</span>
+                      </div>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem 
+                      className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
+                      onClick={handleSwitchProfile}
+                    >
+                      <div className="flex items-center gap-3">
+                        <LogOut size={18} className="text-destructive" />
+                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
                       </div>
                     </DropdownMenuItem>
                   )}
