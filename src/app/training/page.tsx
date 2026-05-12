@@ -3,174 +3,234 @@
 import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { generateTrainingBlock, type GenerateTrainingBlockOutput } from "@/ai/flows/generate-training-block";
+import { AppContext } from "@/contexts/AppContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Activity, Sparkles, Loader2, Calendar, Target, Ruler, Dumbbell, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Sparkles, 
+  Loader2, 
+  Target, 
+  Dumbbell, 
+  Info, 
+  CalendarDays,
+  Zap,
+  ChevronRight,
+  RefreshCw
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TrainingPage() {
+  const context = React.useContext(AppContext);
+  const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
-  const [plan, setPlan] = React.useState<GenerateTrainingBlockOutput | null>(null);
+  const profile = context?.activeProfile;
 
   const handleGenerate = async () => {
+    if (!profile) {
+      toast({ variant: "destructive", title: "Perfil Incompleto", description: "Configure seus dados em 'Meus Dados' primeiro." });
+      return;
+    }
+
     setLoading(true);
+    toast({ title: "🧠 Gemini Coach está analisando...", description: "Calculando zonas de intensidade e periodização de elite." });
+
     try {
       const result = await generateTrainingBlock({
-        currentVDOT: 54.2,
-        hrZone1End: 135,
-        hrZone2End: 152,
-        hrZone3End: 168,
-        hrZone4End: 180,
-        hrMax: 188,
+        currentVDOT: profile.vo2Max, // Usando vo2max como proxy de VDOT simplificado
+        hrZone1End: Math.round(profile.thresholdHr * 0.8),
+        hrZone2End: Math.round(profile.thresholdHr * 0.9),
+        hrZone3End: Math.round(profile.thresholdHr * 0.95),
+        hrZone4End: profile.thresholdHr,
+        hrMax: profile.thresholdHr + 20, // Estimação simples
         trainingBlockType: 'Construction',
-        weeklyMileageGoal: 85,
-        targetRaceDistance: 'Maratona',
-        currentLongRunDistance: 28,
-        currentLongRunPace: '5:10/km',
-        weeklyAvailability: '5 dias por semana, manhãs',
-        injuryHistory: 'Nenhuma',
-        preferredWorkoutDays: 'Terça, Quinta'
+        planGenerationType: profile.planGenerationType || 'blocks',
+        raceDate: profile.raceDate,
+        weeklyMileageGoal: 60, // Padrão
+        targetRaceDistance: profile.raceDistance,
+        currentLongRunDistance: 15,
+        weeklyAvailability: profile.trainingDays.join(', '),
+        injuryHistory: 'Nenhuma reportada',
+        preferredWorkoutDays: profile.trainingDays.slice(0, 2).join(', '),
+        legDay: profile.strengthPreferences?.legDay
       });
-      setPlan(result);
+
+      context?.setTrainingPlan(result as any);
+      toast({ title: "✅ Ciclo Gerado!", description: `Plano de ${result.durationWeeks} semanas salvo com sucesso.` });
     } catch (error) {
       console.error(error);
+      toast({ variant: "destructive", title: "Erro na Geração", description: "Não foi possível gerar o plano. Verifique sua conexão e chave de API." });
     } finally {
       setLoading(false);
     }
   };
 
+  const plan = context?.trainingPlan as unknown as GenerateTrainingBlockOutput;
+
   return (
     <DashboardLayout>
-      <div className="space-y-8 max-w-5xl mx-auto">
+      <div className="space-y-8 max-w-5xl mx-auto pb-20">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-headline font-bold">Motor de Periodização IA</h1>
-            <p className="text-muted-foreground">Gere ciclos de treinamento de alta performance de 4 semanas.</p>
+            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tight">
+              <span className="text-white">Motor de</span> <span className="text-primary">Periodização</span>
+            </h1>
+            <p className="text-muted-foreground mt-1">Sua planilha inteligente baseada em ciência e performance.</p>
           </div>
           <Button 
             onClick={handleGenerate} 
-            disabled={loading}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-[200px]"
+            disabled={loading || !profile}
+            className="bg-primary text-black hover:bg-primary/90 min-w-[220px] h-12 font-black uppercase tracking-widest"
           >
-            {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Sparkles className="mr-2 size-4" />}
-            Gerar Novo Bloco
+            {loading ? <Loader2 className="mr-2 size-5 animate-spin" /> : <Sparkles className="mr-2 size-5" />}
+            {plan ? "Re-calibrar Ciclo" : "Gerar Meu Ciclo"}
           </Button>
         </header>
 
-        {!plan && !loading && (
+        {!profile && (
+          <Card className="border-accent/20 bg-accent/5 p-8 text-center">
+            <Zap className="size-12 text-accent mx-auto mb-4 animate-pulse" />
+            <h3 className="font-headline text-xl font-bold mb-2">Dados Faltantes</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Precisamos do seu Pace de Limiar e data da prova para criar uma periodização segura.
+            </p>
+            <Button onClick={() => window.location.href = '/profile'} variant="outline">Configurar Perfil</Button>
+          </Card>
+        )}
+
+        {profile && !plan && !loading && (
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="bg-card border-border border-dashed">
               <CardHeader>
                 <CardTitle className="font-headline flex items-center gap-2">
-                  <Target className="size-5 text-accent" /> Configurar Ciclo
+                  <Target className="size-5 text-primary" /> Estratégia Ativa
                 </CardTitle>
-                <CardDescription>Defina seu foco e disponibilidade.</CardDescription>
+                <CardDescription>Configurado em seu perfil.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Tipo de Bloco</Label>
-                  <Select defaultValue="Construction">
-                    <SelectTrigger className="bg-secondary/50">
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Base">Base (Aeróbico)</SelectItem>
-                      <SelectItem value="Construction">Construção (Específico)</SelectItem>
-                      <SelectItem value="Polishing">Polimento (Taper)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/30">
+                  <span className="text-sm font-medium">Modo de Geração:</span>
+                  <Badge variant="outline" className="uppercase font-bold border-primary/50 text-primary">
+                    {profile.planGenerationType === 'full' ? 'Ciclo Completo' : 'Blocos de 4 Semanas'}
+                  </Badge>
                 </div>
-                <div className="space-y-2">
-                  <Label>Meta Semanal (km)</Label>
-                  <Input defaultValue="85" type="number" className="bg-secondary/50" />
+                <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/30">
+                  <span className="text-sm font-medium">Data da Prova:</span>
+                  <span className="text-sm font-bold text-white">{new Date(profile.raceDate).toLocaleDateString('pt-BR')}</span>
                 </div>
-                <div className="space-y-2">
-                  <Label>Dias de Treino Intenso</Label>
-                  <Input defaultValue="Ter, Qui" className="bg-secondary/50" />
+                <div className="flex justify-between items-center p-3 rounded-lg bg-secondary/30">
+                  <span className="text-sm font-medium">Pace de Limiar (T):</span>
+                  <span className="text-sm font-bold text-primary">{profile.thresholdPace} min/km</span>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-card border-border flex flex-col justify-center items-center p-8 text-center space-y-4">
-              <div className="size-16 rounded-full bg-secondary flex items-center justify-center">
-                <Sparkles className="size-8 text-accent animate-pulse" />
+              <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                <Sparkles className="size-10 text-primary animate-pulse" />
               </div>
-              <h3 className="font-headline text-xl font-bold">Pronto para Calibrar?</h3>
+              <h3 className="font-headline text-xl font-bold uppercase italic">Inteligência Pronta</h3>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Nossa IA usa a lógica VDOT para calcular seus ritmos exatos e otimizar a progressão de volume.
+                O Gemini Coach usará a lógica VDOT para calcular seus ritmos exatos de Intervalado, Tempo e Rodagem.
               </p>
             </Card>
           </div>
         )}
 
         {loading && (
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 w-full shimmer rounded-2xl" />
+          <div className="space-y-6">
+            <div className="h-10 w-48 bg-secondary/50 rounded-lg animate-pulse" />
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-64 w-full shimmer rounded-2xl border border-border" />
             ))}
           </div>
         )}
 
-        {plan && (
-          <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-            <div className="flex items-center gap-3">
-              <Badge className="bg-accent text-accent-foreground text-sm py-1 px-4">
-                Ciclo de {plan.blockType} Ativo
+        {plan && !loading && (
+          <div className="space-y-8 animate-in fade-in zoom-in-95 duration-700">
+            <div className="flex items-center gap-4">
+              <Badge className="bg-primary text-black text-xs font-black uppercase py-1 px-4 tracking-widest italic">
+                {plan.blockType || 'Ciclo Ativo'}
               </Badge>
-              <span className="text-muted-foreground">•</span>
-              <span className="font-medium">{plan.durationWeeks} Semanas Geradas</span>
+              <div className="h-px flex-1 bg-border/50" />
+              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase">
+                <CalendarDays className="size-4" />
+                {plan.durationWeeks} Semanas de Treino
+              </div>
             </div>
 
-            <div className="grid gap-8">
+            <div className="grid gap-10">
               {plan.weeklyPlans.map((week) => (
-                <Card key={week.weekNumber} className="bg-card border-border overflow-hidden">
-                  <div className="bg-secondary/50 p-4 border-b flex items-center justify-between">
-                    <h3 className="font-headline font-bold text-xl">Semana {week.weekNumber}</h3>
-                    <Badge variant="outline" className="border-accent/30 text-accent">{week.focus}</Badge>
+                <div key={week.weekNumber} className="relative">
+                  <div className="absolute -left-4 top-0 bottom-0 w-1 bg-primary/20 rounded-full" />
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="size-10 rounded-xl bg-primary flex items-center justify-center font-headline font-black text-black italic">
+                      S{week.weekNumber}
+                    </div>
+                    <div>
+                      <h3 className="font-headline font-bold text-2xl uppercase italic tracking-tight">{week.focus}</h3>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Fase: Periodização Específica</p>
+                    </div>
                   </div>
-                  <CardContent className="p-0">
-                    <div className="divide-y divide-border">
-                      {week.runs.map((run, idx) => (
-                        <div key={idx} className="p-4 flex flex-col md:flex-row gap-4 hover:bg-secondary/30 transition-colors">
-                          <div className="md:w-32 shrink-0">
-                            <div className="text-sm font-bold text-accent">{run.day}</div>
-                            <div className="text-xs text-muted-foreground">{run.type}</div>
-                          </div>
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold">{run.distance}</span>
-                              <span className="text-muted-foreground">•</span>
-                              <span className="text-xs font-mono bg-secondary px-2 py-0.5 rounded">{run.paceZone}</span>
+
+                  <Card className="bg-card/50 border-border overflow-hidden hover:border-primary/30 transition-all group shadow-xl">
+                    <CardContent className="p-0">
+                      <div className="divide-y divide-border">
+                        {week.runs.map((run, idx) => (
+                          <div key={idx} className="p-5 flex flex-col md:flex-row gap-6 hover:bg-primary/5 transition-colors">
+                            <div className="md:w-40 shrink-0">
+                              <div className="text-xs font-black text-primary uppercase tracking-widest mb-1">{run.day}</div>
+                              <div className="inline-block px-2 py-0.5 rounded bg-secondary text-[10px] font-bold uppercase text-muted-foreground border border-border">
+                                {run.type}
+                              </div>
                             </div>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                              {run.description}
-                            </p>
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-3">
+                                <span className="text-xl font-headline font-black italic text-white">{run.distance}</span>
+                                <ChevronRight className="size-4 text-muted-foreground" />
+                                <span className="text-xs font-mono font-bold bg-primary/20 text-primary px-3 py-1 rounded-full border border-primary/20">
+                                  {run.paceZone}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                                {run.description}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="p-5 bg-secondary/10 grid md:grid-cols-2 gap-6 border-t border-border/50">
+                        <div className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border shadow-sm">
+                          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Dumbbell className="size-4 text-primary" />
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-black uppercase text-[10px] text-muted-foreground block mb-1">Força & Mobilidade</span>
+                            <span className="text-white font-medium">{week.strength}</span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="p-4 bg-secondary/20 grid md:grid-cols-2 gap-4 border-t">
-                      <div className="flex items-start gap-3">
-                        <Dumbbell className="size-4 text-accent mt-1" />
-                        <div className="text-sm">
-                          <span className="font-bold block mb-1">Força</span>
-                          <span className="text-muted-foreground">{week.strength}</span>
+                        <div className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border shadow-sm">
+                          <div className="size-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                            <Info className="size-4 text-accent" />
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-black uppercase text-[10px] text-muted-foreground block mb-1">Nota Estratégica</span>
+                            <span className="text-white font-medium">{week.notes}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <Info className="size-4 text-accent mt-1" />
-                        <div className="text-sm">
-                          <span className="font-bold block mb-1">Notas</span>
-                          <span className="text-muted-foreground">{week.notes}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
               ))}
+            </div>
+            
+            <div className="flex justify-center pt-10">
+              <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-primary" onClick={handleGenerate}>
+                <RefreshCw size={16} /> Re-gerar planilha inteira
+              </Button>
             </div>
           </div>
         )}
