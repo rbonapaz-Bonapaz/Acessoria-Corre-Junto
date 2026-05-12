@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -13,7 +14,11 @@ import {
   Trophy, 
   Calculator,
   ChevronRight,
-  Menu
+  BookOpen,
+  History,
+  Target,
+  Share2,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -34,13 +39,14 @@ import {
 } from "@/components/ui/sidebar";
 
 const items = [
-  { title: "Painel", url: "/", icon: LayoutDashboard },
-  { title: "Perfil do Atleta", url: "/profile", icon: User },
-  { title: "Motor de Treino", url: "/training", icon: Activity },
-  { title: "Treinador IA", url: "/coach", icon: MessageSquare },
-  { title: "Analisador de Arquivos", url: "/analysis", icon: FileSearch },
-  { title: "Cofre e Recordes", url: "/vault", icon: Trophy },
-  { title: "Suíte de Utilidades", url: "/utilities", icon: Calculator },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Meu Plano", url: "/training", icon: Target },
+  { title: "Evolução", url: "/analysis", icon: Activity },
+  { title: "Conquistas", url: "/vault", icon: Trophy },
+  { title: "Coach & Histórico", url: "/coach", icon: MessageSquare },
+  { title: "Calculadoras", url: "/calculators", icon: Calculator },
+  { title: "Dicionário", url: "/dictionary", icon: BookOpen },
+  { title: "Meus Dados", url: "/profile", icon: User },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
