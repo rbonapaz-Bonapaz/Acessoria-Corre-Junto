@@ -9,16 +9,12 @@ import {
   User, 
   Activity, 
   MessageSquare, 
-  FileSearch, 
   Settings, 
   Trophy, 
   Calculator,
   ChevronRight,
   BookOpen,
-  History,
-  Target,
-  Share2,
-  Info
+  Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -58,9 +54,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <Sidebar collapsible="icon">
           <SidebarHeader className="py-6 px-4">
             <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-primary flex items-center justify-center font-headline font-bold text-lg">C</div>
+              <div className="size-8 rounded-lg bg-primary flex items-center justify-center font-headline font-bold text-lg text-black">C</div>
               <span className="font-headline font-bold text-xl tracking-tight group-data-[collapsible=icon]:hidden">
-                Corre<span className="text-accent">Junto</span>
+                <span className="text-white">Corre</span><span className="text-primary">Junto</span>
               </span>
             </div>
           </SidebarHeader>
@@ -78,9 +74,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         className="transition-all duration-200"
                       >
                         <Link href={item.url}>
-                          <item.icon className={cn("size-4", pathname === item.url ? "text-accent" : "text-muted-foreground")} />
+                          <item.icon className={cn("size-4", pathname === item.url ? "text-primary" : "text-muted-foreground")} />
                           <span className="font-medium">{item.title}</span>
-                          {pathname === item.url && <ChevronRight className="ml-auto size-4 text-accent" />}
+                          {pathname === item.url && <ChevronRight className="ml-auto size-4 text-primary" />}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
