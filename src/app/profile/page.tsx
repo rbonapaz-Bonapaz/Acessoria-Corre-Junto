@@ -229,7 +229,6 @@ export default function ProfilePage() {
     if (!context) return;
     setIsSaving(true);
 
-    // Mapeamento de campos por aba para validação parcial
     const tabFields: Record<TabID, (keyof ProfileFormValues)[]> = {
         perfil: ['name', 'birthDate', 'gender', 'currentWeight', 'height', 'location', 'avatarUrl'],
         corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType'],
@@ -247,7 +246,7 @@ export default function ProfilePage() {
         toast({
             variant: "destructive",
             title: "Dados Incompletos",
-            description: `Existem erros de preenchimento na aba ${activeTab.toUpperCase()}. Corrija para salvar.`,
+            description: `Existem erros na aba ${activeTab.toUpperCase()}. Corrija para salvar.`,
         });
         return;
     }
@@ -283,12 +282,12 @@ export default function ProfilePage() {
         
         toast({ 
             title: `✅ ${activeTab.toUpperCase()} Salvo`, 
-            description: 'Alterações registradas com sucesso.' 
+            description: 'Alterações registradas localmente.' 
         });
     } catch (err) {
-        toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Não foi possível persistir os dados.' });
+        toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Não foi possível salvar os dados.' });
     } finally {
-        setTimeout(() => setIsSaving(false), 500);
+        setTimeout(() => setIsSaving(false), 300);
     }
   };
 
@@ -300,8 +299,8 @@ export default function ProfilePage() {
     if (!isValid) {
         toast({
             variant: "destructive",
-            title: "Planilha não gerada",
-            description: "Preencha todos os dados da aba CORRIDA antes de gerar o ciclo.",
+            title: "Dados Fisiológicos Necessários",
+            description: "Preencha a aba CORRIDA antes de gerar o ciclo.",
         });
         setActiveTab('corrida');
         return;
@@ -319,7 +318,6 @@ export default function ProfilePage() {
   const handleStravaClick = () => {
     if (!context) return;
     const isConnected = !!context.activeProfile?.integrations?.strava.connected;
-    
     if (!isConnected) {
       context.toggleIntegration('strava', true);
     } else {
@@ -508,13 +506,13 @@ export default function ProfilePage() {
                                                     )} />
                                                 ))}
                                             </div>
-                                            <FormDescription className="text-[9px] italic">Selecione todos os dias em que você pode correr. O Coach distribuirá o volume entre eles.</FormDescription>
+                                            <FormDescription className="text-[9px] italic">Selecione os dias em que pode treinar.</FormDescription>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
                                             <FormField control={form.control} name="longRunDay" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Dia Preferencial de Longão</FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase">Dia de Longão</FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                         <SelectContent>
@@ -523,7 +521,6 @@ export default function ProfilePage() {
                                                             ))}
                                                         </SelectContent>
                                                     </Select>
-                                                    <FormDescription className="text-[9px]">Geralmente o dia com mais tempo livre (fim de semana).</FormDescription>
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="experienceLevel" render={({field}) => (
@@ -533,9 +530,9 @@ export default function ProfilePage() {
                                                         <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                         <SelectContent>
                                                             <SelectItem value="run_walk">Iniciante (Caminha/Corre)</SelectItem>
-                                                            <SelectItem value="beginner">Começando a Correr (Até 20km/sem)</SelectItem>
+                                                            <SelectItem value="beginner">Começando (Até 20km/sem)</SelectItem>
                                                             <SelectItem value="intermediate">Intermediário (20-50km/sem)</SelectItem>
-                                                            <SelectItem value="advanced">Avançado (Elite / 50km+ sem)</SelectItem>
+                                                            <SelectItem value="advanced">Avançado (50km+ / sem)</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </FormItem>
@@ -553,7 +550,6 @@ export default function ProfilePage() {
                                                             <SelectItem value="10k">10 km</SelectItem>
                                                             <SelectItem value="21k">Meia Maratona (21.1k)</SelectItem>
                                                             <SelectItem value="42k">Maratona (42.2k)</SelectItem>
-                                                            <SelectItem value="ultra">Ultramaratona</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </FormItem>
@@ -569,9 +565,8 @@ export default function ProfilePage() {
                                         <FormField control={form.control} name="trainingHistory" render={({field}) => (
                                             <FormItem className="border-t pt-6">
                                                 <FormLabel className="text-xs font-bold uppercase">Contexto & Histórico</FormLabel>
-                                                <FormControl><Textarea placeholder="Ex: Sinto dor no joelho após 10km, já corri maratonas, etc..." {...field} value={field.value ?? ''} className="bg-secondary/10 min-h-[100px]" /></FormControl>
+                                                <FormControl><Textarea placeholder="Descreva brevemente sua rotina atual..." {...field} value={field.value ?? ''} className="bg-secondary/10 min-h-[100px]" /></FormControl>
                                                 <FormMessage />
-                                                <FormDescription className="text-[9px]">Campo obrigatório para a IA calibrar o volume inicial do ciclo.</FormDescription>
                                             </FormItem>
                                         )} />
                                     </CardContent>
@@ -616,35 +611,35 @@ export default function ProfilePage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <FormField control={form.control} name="mealCount" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Número de Refeições/Dia</FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase">Refeições/Dia</FormLabel>
                                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="supplements" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Suplementação em Uso</FormLabel>
-                                                    <FormControl><Input placeholder="Whey, Creatina, Gel de Carbo..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                    <FormLabel className="text-xs font-bold uppercase">Suplementos</FormLabel>
+                                                    <FormControl><Input placeholder="Whey, Creatina..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                                 </FormItem>
                                             )} />
                                         </div>
 
                                         <FormField control={form.control} name="allergies" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Alergias ou Restrições</FormLabel>
-                                                <FormControl><Input placeholder="Lactose, Glúten, Amendoim..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-xs font-bold uppercase">Restrições</FormLabel>
+                                                <FormControl><Input placeholder="Lactose, Glúten..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                             </FormItem>
                                         )} />
                                         
                                         <FormField control={form.control} name="preferredFoods" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Alimentos Favoritos</FormLabel>
-                                                <FormControl><Input placeholder="Ovos, Arroz, Batata Doce..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-xs font-bold uppercase">Favoritos</FormLabel>
+                                                <FormControl><Input placeholder="Ovos, Arroz..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                             </FormItem>
                                         )} />
                                         <FormField control={form.control} name="excludedFoods" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Alimentos Excluídos</FormLabel>
-                                                <FormControl><Textarea placeholder="Alimentos a serem ignorados pela IA..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-xs font-bold uppercase">Excluídos</FormLabel>
+                                                <FormControl><Textarea placeholder="Alimentos que você evita..." {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                             </FormItem>
                                         )} />
                                     </CardContent>
@@ -667,7 +662,6 @@ export default function ProfilePage() {
                                                             {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
                                                         </SelectContent>
                                                     </Select>
-                                                    <FormDescription className="text-[9px]">A IA evita intensidade (Tiro/Longão) nas 24h seguintes ao Leg Day.</FormDescription>
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="strengthSplit" render={({field}) => (
@@ -691,7 +685,7 @@ export default function ProfilePage() {
                                         </div>
 
                                         <div className="space-y-4 border-t pt-6">
-                                            <FormLabel className="text-xs font-bold uppercase">Grupos de Foco Adicional</FormLabel>
+                                            <FormLabel className="text-xs font-bold uppercase">Grupos de Foco</FormLabel>
                                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                                 {focusAreasOptions.map(focus => (
                                                     <FormField key={focus} control={form.control} name="strengthFocus" render={({ field }) => (
@@ -709,13 +703,13 @@ export default function ProfilePage() {
 
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-6">
                                             <FormField control={form.control} name="prBench" render={({field}) => (
-                                                <FormItem><FormLabel className="text-[10px] font-bold uppercase">PR Supino (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl></FormItem>
+                                                <FormItem><FormLabel className="text-[10px] font-bold uppercase">Supino (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl></FormItem>
                                             )} />
                                             <FormField control={form.control} name="prSquat" render={({field}) => (
-                                                <FormItem><FormLabel className="text-[10px] font-bold uppercase">PR Agachamento (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl></FormItem>
+                                                <FormItem><FormLabel className="text-[10px] font-bold uppercase">Agachamento (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl></FormItem>
                                             )} />
                                             <FormField control={form.control} name="prDeadlift" render={({field}) => (
-                                                <FormItem><FormLabel className="text-[10px] font-bold uppercase">PR Terra (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl></FormItem>
+                                                <FormItem><FormLabel className="text-[10px] font-bold uppercase">Terra (kg)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl></FormItem>
                                             )} />
                                         </div>
                                     </CardContent>
@@ -773,7 +767,7 @@ export default function ProfilePage() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Esta ação é irreversível. Todos os seus planos, perfis e a chave de API salvos neste navegador serão removidos permanentemente.
+                            Esta ação removerá permanentemente todos os dados salvos neste navegador.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -855,9 +849,6 @@ export default function ProfilePage() {
                                 <span className="text-white">{watch('legDay')}</span>
                             </div>
                         </div>
-                        <p className="text-[9px] text-muted-foreground leading-tight italic">
-                            O Gemini Coach cruzará sua disponibilidade de {watchTrainingDays.length} dias com o Leg Day para otimizar os blocos de V02 Max.
-                        </p>
                     </CardContent>
                 </Card>
             </div>
