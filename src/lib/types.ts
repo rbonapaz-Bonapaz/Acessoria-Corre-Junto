@@ -25,6 +25,13 @@ export interface StrengthPreferences {
   prDeadlift?: number;
 }
 
+export interface IntegrationData {
+  connected: boolean;
+  lastSync?: string;
+  username?: string;
+  autoSync: boolean;
+}
+
 export interface AthleteProfile {
   id: string;
   name: string;
@@ -49,6 +56,10 @@ export interface AthleteProfile {
   trainingHistory: string;
   dietPreferences?: DietPreferences;
   strengthPreferences?: StrengthPreferences;
+  integrations?: {
+    strava: IntegrationData;
+    coros: IntegrationData;
+  };
 }
 
 export interface Workout {

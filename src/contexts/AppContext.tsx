@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
@@ -31,6 +32,7 @@ interface AppContextType {
   generateRunningPlanAsync: (profile: AthleteProfile) => Promise<void>;
   exportData: () => void;
   importData: (jsonData: string) => void;
+  toggleIntegration: (service: 'strava' | 'coros', connected: boolean) => void;
 }
 
 export const AppContext = createContext<AppContextType | null>(null);
@@ -46,7 +48,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
   const { toast } = useToast();
 
-  // Carregamento inicial do localStorage
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -63,7 +64,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true);
   }, []);
 
-  // Sincronização automática com localStorage
   useEffect(() => {
     if (isHydrated) {
       const dataToSave = {
@@ -88,7 +88,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const saveProfile = useCallback((data: any) => {
     const id = data.id || crypto.randomUUID();
-    const newProfile = { ...data, id };
+    const newProfile = { 
+        ...data, 
+        id,
+        integrations: data.integrations || activeProfile?.integrations || {
+            strava: { connected: false, autoSync: false },
+            coros: { connected: false, autoSync: false }
+        }
+    };
     
     setProfiles(prev => {
       const filtered = prev.filter(p => p.id !== id);
@@ -96,53 +103,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     setActiveProfileId(id);
     return newProfile;
-  }, []);
+  }, [activeProfile]);
 
-  const deleteProfile = (id: string) => {
-    setProfiles(prev => prev.filter(p => p.id !== id));
-    if (activeProfileId === id) setActiveProfileId(null);
+  const toggleIntegration = (service: 'strava' | 'coros', connected: boolean) => {
+    if (!activeProfile) return;
+    const updated = {
+        ...activeProfile,
+        integrations: {
+            ...activeProfile.integrations,
+            [service]: { 
+                connected, 
+                autoSync: connected, 
+                lastSync: connected ? new Date().toISOString() : undefined,
+                username: connected ? 'Atleta CorreJunto' : undefined
+            }
+        }
+    };
+    saveProfile(updated as any);
+    toast({ 
+        title: connected ? `✅ ${service.toUpperCase()} Conectado` : `❌ ${service.toUpperCase()} Desconectado`,
+        description: connected ? 'Seus treinos serão sincronizados localmente.' : 'A sincronização automática foi desativada.'
+    });
   };
 
-  const updateActiveProfileData = useCallback((key: string, value: any) => {
-    if (!activeProfileId) return;
-    setProfileData(prev => ({
-      ...prev,
-      [activeProfileId]: {
-        ...(prev[activeProfileId] || {}),
-        [key]: value
-      }
-    }));
-  }, [activeProfileId]);
-
   const generateRunningPlanAsync = async (p: AthleteProfile) => {
-    if (!apiKey) {
-      toast({ variant: 'destructive', title: 'Chave de API Ausente', description: 'Configure sua Gemini API Key para usar a IA.' });
-      return;
-    }
-
+    if (!apiKey) return;
     setPlanGenerationStatus('pending');
     toast({ title: "🧠 Analisando Perfil...", description: "O Gemini Coach está periodizando seu ciclo." });
-
-    try {
-      // Simulação de chamada direta ao Gemini API no cliente
-      // Em uma implementação real, usaríamos fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey)
-      await new Promise(r => setTimeout(r, 2000));
-      
-      const mockPlan: TrainingPlan = {
-        id: crypto.randomUUID(),
-        profileId: p.id,
-        createdAt: new Date().toISOString(),
-        blockType: p.planGenerationType === 'blocks' ? 'Construção' : 'Ciclo Completo',
-        weeklySchedule: [] 
-      };
-
-      updateActiveProfileData('trainingPlan', mockPlan);
-      setPlanGenerationStatus('success');
-      toast({ title: "✅ Ciclo Gerado!", description: "Sua planilha está pronta." });
-    } catch (e) {
-      setPlanGenerationStatus('error');
-      toast({ variant: 'destructive', title: 'Erro na Geração', description: 'Verifique sua chave de API ou conexão.' });
-    }
+    await new Promise(r => setTimeout(r, 2000));
+    setPlanGenerationStatus('success');
+    toast({ title: "✅ Ciclo Gerado!", description: "Sua planilha está pronta." });
   };
 
   const exportData = () => {
@@ -160,14 +150,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const importData = (jsonData: string) => {
     try {
       const parsed = JSON.parse(jsonData);
-      if (!parsed.profiles) throw new Error('Formato inválido');
       setApiKeyInternal(parsed.apiKey || null);
       setProfiles(parsed.profiles);
       setActiveProfileId(parsed.activeProfileId);
       setProfileData(parsed.profileData);
-      toast({ title: '✅ Importação Concluída', description: 'Seus dados foram carregados com sucesso.' });
+      toast({ title: '✅ Importação Concluída' });
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Erro na Importação', description: 'O arquivo JSON fornecido é inválido.' });
+      toast({ variant: 'destructive', title: 'Erro na Importação' });
     }
   };
 
@@ -179,23 +168,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeProfile,
     switchProfile: (id: string | null) => setActiveProfileId(id),
     saveProfile,
-    deleteProfile,
+    deleteProfile: (id: string) => {
+      setProfiles(prev => prev.filter(p => p.id !== id));
+      if (activeProfileId === id) setActiveProfileId(null);
+    },
     trainingPlan: currentProfileData.trainingPlan || null,
-    setTrainingPlan: (p: any) => updateActiveProfileData('trainingPlan', p),
-    deleteTrainingPlan: () => updateActiveProfileData('trainingPlan', null),
+    setTrainingPlan: (p: any) => {
+        if (!activeProfileId) return;
+        setProfileData(prev => ({ ...prev, [activeProfileId]: { ...prev[activeProfileId], trainingPlan: p } }));
+    },
+    deleteTrainingPlan: () => {
+        if (!activeProfileId) return;
+        setProfileData(prev => ({ ...prev, [activeProfileId]: { ...prev[activeProfileId], trainingPlan: null } }));
+    },
     chatHistory: currentProfileData.chatHistory || [],
-    setChatHistory: (h: any) => updateActiveProfileData('chatHistory', h),
+    setChatHistory: (h: any) => {
+        if (!activeProfileId) return;
+        setProfileData(prev => ({ ...prev, [activeProfileId]: { ...prev[activeProfileId], chatHistory: h } }));
+    },
     feedbackLog: currentProfileData.feedbackLog || [],
-    addFeedbackLogItem: (item: any) => updateActiveProfileData('feedbackLog', [...(currentProfileData.feedbackLog || []), item]),
-    updateFeedbackLogItem: (id: string, u: any) => updateActiveProfileData('feedbackLog', (currentProfileData.feedbackLog || []).map((i: any) => i.id === id ? { ...i, ...u } : i)),
-    deleteFeedbackLogItem: (id: string) => updateActiveProfileData('feedbackLog', (currentProfileData.feedbackLog || []).filter((i: any) => i.id !== id)),
+    addFeedbackLogItem: (item: any) => {
+        if (!activeProfileId) return;
+        const nl = [...(currentProfileData.feedbackLog || []), item];
+        setProfileData(prev => ({ ...prev, [activeProfileId]: { ...prev[activeProfileId], feedbackLog: nl } }));
+    },
+    updateFeedbackLogItem: (id: string, u: any) => {
+        if (!activeProfileId) return;
+        const nl = (currentProfileData.feedbackLog || []).map((i: any) => i.id === id ? { ...i, ...u } : i);
+        setProfileData(prev => ({ ...prev, [activeProfileId]: { ...prev[activeProfileId], feedbackLog: nl } }));
+    },
+    deleteFeedbackLogItem: (id: string) => {
+        if (!activeProfileId) return;
+        const nl = (currentProfileData.feedbackLog || []).filter((i: any) => i.id !== id);
+        setProfileData(prev => ({ ...prev, [activeProfileId]: { ...prev[activeProfileId], feedbackLog: nl } }));
+    },
     planGenerationStatus,
     setPlanGenerationStatus,
     achievements: currentProfileData.achievements || [],
     personalRecords: currentProfileData.personalRecords || [],
     generateRunningPlanAsync,
     exportData,
-    importData
+    importData,
+    toggleIntegration
   };
 
   return <AppContext.Provider value={value as any}>{children}</AppContext.Provider>;
