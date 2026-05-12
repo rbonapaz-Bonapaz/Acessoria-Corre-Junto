@@ -10,30 +10,26 @@ O **CorreJunto** é um laboratório de performance para corredores, combinando a
 
 ## 🛠️ Configuração do Firebase (CRÍTICO PARA SINCRONIZAÇÃO)
 
-Para que o login e a sincronização entre PC e Celular funcionem, o Google exige que você autorize o domínio do seu site. Siga estes passos no seu console:
+Para que o login e a sincronização funcionem, você precisa realizar estes dois passos no [Console do Firebase](https://console.firebase.google.com/):
 
-1. Acesse o [Console do Firebase](https://console.firebase.google.com/).
-2. No menu à esquerda, clique em **Build** (Construir) > **Authentication**.
-3. Clique na aba **Settings** (Configurações) no topo da tela.
-4. No menu lateral que aparecerá, clique em **Authorized Domains** (Domínios autorizados).
-5. Clique em **Add Domain** (Adicionar domínio) e adicione: `acessoria-corre-junto.vercel.app`.
+### 1. Ativar a Autenticação (Resolve erro de API)
+1. No menu à esquerda, clique em **Build** > **Authentication**.
+2. Clique no botão **Get Started** (Começar).
+3. Na aba **Sign-in method**, ative o provedor **Google**.
 
-**Nota Importante:** Sem este passo, o login no celular será bloqueado com erro de "Domínio não autorizado".
+### 2. Autorizar o Domínio (Resolve erro de Login)
+1. Ainda em **Authentication**, clique na aba **Settings** (Configurações) no topo.
+2. No menu lateral, clique em **Authorized Domains** (Domínios autorizados).
+3. Clique em **Add Domain** e adicione: `acessoria-corre-junto.vercel.app`.
+
+**Nota:** Após ativar, aguarde cerca de 2 a 5 minutos para que o Google propague as permissões.
 
 ## 🚀 Funcionalidades de Elite
 
 - **Sincronização Nuvem:** Seus atletas e treinos sincronizados em tempo real entre PC e Celular via Firestore.
 - **Motor de Periodização IA:** Geração de ciclos completos baseados no seu VDOT.
 - **Coach Contextual:** Treinador de IA pronto para ajustar treinos ou analisar fotos do Strava/Garmin.
-- **Laboratório Biomecânico:** Extração de métricas avançadas (Razão de Passada, Cadência, TCS).
 - **Calculadoras Calibradas:** Pace, Riegel, Zonas de FC (L2) e Nutrição.
-
-## 🏁 Como Iniciar o Desenvolvimento
-
-1. Clone o repositório.
-2. Instale as dependências: `npm install`.
-3. Rode o ambiente de desenvolvimento: `npm run dev`.
-4. Configure sua **Gemini API Key** no menu do App para ativar a inteligência.
 
 ---
 *Desenvolvido para atletas que buscam transformar dados em performance.*

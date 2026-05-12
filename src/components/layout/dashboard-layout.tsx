@@ -19,8 +19,7 @@ import {
   Info,
   LogOut,
   LogIn,
-  Users,
-  ShieldAlert
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -104,26 +103,27 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ title: "Sincronização Ativa!", description: "Seus dados estão sendo baixados..." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      // Erro específico para domínio não autorizado no Firebase
-      if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
-          toast({ 
-            variant: "destructive", 
-            duration: 10000,
-            title: "Domínio Não Autorizado", 
-            description: "Acesse o Console do Firebase > Authentication > Settings e adicione 'acessoria-corre-junto.vercel.app' aos domínios autorizados." 
-          });
-      } else if (error.code === 'auth/popup-blocked') {
-          toast({ 
-            variant: "destructive", 
-            title: "Pop-up Bloqueado", 
-            description: "Seu navegador bloqueou a janela de login. Por favor, permita pop-ups para este site." 
-          });
+      
+      if (error.message?.includes('identitytoolkit.googleapis.com')) {
+        toast({ 
+          variant: "destructive", 
+          duration: 15000,
+          title: "API de Autenticação Desativada", 
+          description: "Você precisa clicar em 'Começar' na aba Authentication do Console do Firebase para ativar o login." 
+        });
+      } else if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
+        toast({ 
+          variant: "destructive", 
+          duration: 10000,
+          title: "Domínio Não Autorizado", 
+          description: "Adicione 'acessoria-corre-junto.vercel.app' nos Domínios Autorizados nas configurações de Authentication do Firebase." 
+        });
       } else {
-          toast({ 
-            variant: "destructive", 
-            title: "Erro no Login", 
-            description: "Verifique sua conexão ou as configurações do Firebase. (Erro: " + (error.code || 'Desconhecido') + ")" 
-          });
+        toast({ 
+          variant: "destructive", 
+          title: "Erro no Login", 
+          description: error.message || "Verifique sua conexão ou configurações do Firebase." 
+        });
       }
     }
   };
