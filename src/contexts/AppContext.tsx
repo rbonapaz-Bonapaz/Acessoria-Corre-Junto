@@ -40,7 +40,7 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType | null>(null);
 
-const STORAGE_KEY = 'correJunto_local_data_v5';
+const STORAGE_KEY = 'correJunto_local_data_v6';
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
@@ -57,7 +57,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const isSyncingFromCloud = useRef(false);
   const firstCloudSyncDone = useRef(false);
 
-  // 1. Carregamento inicial do LocalStorage (Sempre ocorre primeiro)
+  // 1. Carregamento inicial do LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -76,89 +76,68 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // 2. Sincronização de ENTRADA (Nuvem -> App)
   useEffect(() => {
-    if (!user || !db || !isHydrated) return;
+    if (!user || !db || !isHydrated) {
+      if (!user) firstCloudSyncDone.current = false;
+      return;
+    }
 
     const userDocRef = doc(db, 'user_data', user.uid);
     
-    // Listener em tempo real para mudanças na nuvem
+    // Listener em tempo real
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      isSyncingFromCloud.current = true;
+      
       if (docSnap.exists()) {
         const cloudData = docSnap.data();
         
-        // Ativa flag para evitar que o efeito de saída dispare de volta e crie loop
-        isSyncingFromCloud.current = true;
+        // Sincroniza estados
+        if (cloudData.profiles) setProfiles(cloudData.profiles);
+        if (cloudData.apiKey) setApiKeyInternal(cloudData.apiKey);
+        if (cloudData.activeProfileId !== undefined) setActiveProfileId(cloudData.activeProfileId);
+        if (cloudData.profileData) setProfileData(cloudData.profileData);
         
-        // Se houver perfis na nuvem, eles são a verdade absoluta para o usuário logado
-        if (cloudData.profiles) {
-          setProfiles(cloudData.profiles);
-        }
-        if (cloudData.apiKey) {
-          setApiKeyInternal(cloudData.apiKey);
-        }
-        if (cloudData.activeProfileId !== undefined) {
-          setActiveProfileId(cloudData.activeProfileId);
-        }
-        if (cloudData.profileData) {
-          setProfileData(cloudData.profileData);
-        }
-        
-        // Atualiza o cache local com o que veio da nuvem
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
-        
-        // Marca que o primeiro download foi feito com sucesso
-        firstCloudSyncDone.current = true;
-        
-        // Pequeno atraso para liberar a flag de sync e permitir novas gravações
-        setTimeout(() => { 
-          isSyncingFromCloud.current = false; 
-        }, 1000);
-      } else {
-        // Se o documento não existe na nuvem ainda, marcamos como sincronizado
-        // para permitir que o primeiro upload aconteça
-        firstCloudSyncDone.current = true;
+        // Atualiza cache local
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          apiKey: cloudData.apiKey,
+          profiles: cloudData.profiles,
+          activeProfileId: cloudData.activeProfileId,
+          profileData: cloudData.profileData
+        }));
       }
+      
+      firstCloudSyncDone.current = true;
+      setTimeout(() => { isSyncingFromCloud.current = false; }, 500);
+    }, (err) => {
+      console.error("Erro no onSnapshot:", err);
+      firstCloudSyncDone.current = true; // Libera mesmo com erro para não travar o app
     });
 
     return () => unsubscribe();
   }, [user, db, isHydrated]);
 
-  // 3. Sincronização de SAÍDA (App -> Nuvem + LocalStorage)
+  // 3. Sincronização de SAÍDA (App -> Nuvem)
   useEffect(() => {
-    // Só sincroniza para fora se:
-    // 1. O app estiver hidratado
-    // 2. Não estivermos no meio de um processo de recebimento da nuvem
-    // 3. Já tivermos tentado baixar os dados da nuvem pelo menos uma vez (para não apagar o que já existe lá)
     if (!isHydrated || isSyncingFromCloud.current) return;
 
-    const fullState = { 
-      apiKey, 
-      profiles, 
-      activeProfileId, 
-      profileData, 
-      updatedAt: new Date().toISOString() 
-    };
-    
-    // Salva sempre no LocalStorage para garantir persistência offline
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(fullState));
+    const currentState = { apiKey, profiles, activeProfileId, profileData };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentState));
 
-    // Só sobe para o Firebase se o usuário estiver logado e o sync inicial de entrada terminou
     if (user && db && firstCloudSyncDone.current) {
       const timeoutId = setTimeout(async () => {
-        const userDocRef = doc(db, 'user_data', user.uid);
         try {
-          // Usamos setDoc com merge para garantir persistência total
-          await setDoc(userDocRef, fullState, { merge: true });
+          await setDoc(doc(db, 'user_data', user.uid), {
+            ...currentState,
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
         } catch (e) {
-          console.error("Erro ao sincronizar com Firestore:", e);
+          console.error("Erro ao subir dados:", e);
         }
-      }, 2000); // Debounce de 2 segundos para não sobrecarregar a rede
-
+      }, 1000);
       return () => clearTimeout(timeoutId);
     }
   }, [apiKey, profiles, activeProfileId, profileData, user, db, isHydrated]);
 
   const setApiKey = (key: string | null) => setApiKeyInternal(key);
-
   const switchProfile = (id: string | null) => setActiveProfileId(id);
 
   const saveProfile = (data: any) => {
@@ -172,16 +151,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
     };
     
-    // Atualiza a lista de perfis mantendo a ordem (mais recente primeiro)
     const updatedProfiles = [newProfile, ...profiles.filter(p => p.id !== id)];
     setProfiles(updatedProfiles);
     setActiveProfileId(id);
     
-    toast({ 
-      title: `✅ Perfil ${newProfile.name} Salvo`, 
-      description: 'Sincronizando com seus outros dispositivos...' 
-    });
-    
+    toast({ title: `✅ Perfil ${newProfile.name} Atualizado` });
     return newProfile;
   };
 
@@ -194,26 +168,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       runs: week.runs.map((run: any) => run.id === workoutId ? { ...run, ...updates } : run)
     }));
 
-    setProfileData({
-      ...profileData,
+    setProfileData(prev => ({
+      ...prev,
       [activeProfileId]: {
-        ...profileData[activeProfileId],
+        ...prev[activeProfileId],
         trainingPlan: { ...currentPlan, weeklyPlans: newWeeklyPlans }
       }
-    });
+    }));
   };
 
   const setTrainingPlan = (plan: TrainingPlan | null) => {
     if (!activeProfileId) return;
-    setProfileData({
-      ...profileData,
-      [activeProfileId]: { ...profileData[activeProfileId], trainingPlan: plan }
-    });
+    setProfileData(prev => ({
+      ...prev,
+      [activeProfileId]: { ...prev[activeProfileId], trainingPlan: plan }
+    }));
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
     if (!apiKey) {
-      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua API Key no menu lateral." });
+      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua API Key." });
       return;
     }
 
@@ -242,34 +216,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
         legDay: profile.strengthPreferences?.legDay
       });
 
-      // Garantir IDs únicos para cada treino para evitar problemas de key no React
       result.weeklyPlans.forEach(week => {
         week.runs.forEach(run => { if (!run.id) run.id = crypto.randomUUID(); });
       });
 
       setTrainingPlan(result);
       setPlanGenerationStatus('success');
-      toast({ title: "✅ Ciclo Gerado", description: "Disponível em todos os seus aparelhos." });
+      toast({ title: "✅ Plano Gerado e Sincronizado" });
     } catch (error: any) {
       setPlanGenerationStatus('error');
-      toast({ variant: "destructive", title: "Falha na IA", description: error.message || "Verifique sua chave de API." });
+      toast({ variant: "destructive", title: "Erro na IA", description: error.message });
     }
   };
 
   const toggleIntegration = (service: 'strava' | 'coros', connected: boolean) => {
     const current = profiles.find(p => p.id === activeProfileId);
     if (!current) return;
-
     const updated = {
         ...current,
         integrations: {
             ...current.integrations,
-            [service]: { 
-                ...(current.integrations?.[service] || {}),
-                connected, 
-                autoSync: connected, 
-                ...(service === 'strava' ? STRAVA_OFFICIAL_CONFIG : {})
-            }
+            [service]: { ...(current.integrations?.[service] || {}), connected, autoSync: connected }
         }
     };
     saveProfile(updated);
@@ -277,24 +244,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{
-      isHydrated,
-      apiKey,
-      setApiKey,
-      profiles,
+      isHydrated, apiKey, setApiKey, profiles,
       activeProfile: profiles.find(p => p.id === activeProfileId) || null,
-      switchProfile,
-      saveProfile,
+      switchProfile, saveProfile,
       deleteProfile: (id: string) => {
         setProfiles(prev => prev.filter(p => p.id !== id));
         if (activeProfileId === id) setActiveProfileId(null);
-        toast({ title: 'Perfil removido' });
       },
       trainingPlan: activeProfileId ? profileData[activeProfileId]?.trainingPlan || null : null,
-      setTrainingPlan,
-      updateWorkout,
+      setTrainingPlan, updateWorkout,
       deleteTrainingPlan: () => setTrainingPlan(null),
-      planGenerationStatus,
-      setPlanGenerationStatus,
+      planGenerationStatus, setPlanGenerationStatus,
       generateRunningPlanAsync,
       exportData: () => {
         const data = JSON.stringify({ apiKey, profiles, activeProfileId, profileData });
@@ -308,10 +268,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (p.profiles) setProfiles(p.profiles);
             if (p.activeProfileId) setActiveProfileId(p.activeProfileId);
             if (p.profileData) setProfileData(p.profileData);
-            toast({ title: 'Importação Concluída' });
-        } catch (e) {
-            toast({ variant: 'destructive', title: 'Erro ao importar' });
-        }
+            toast({ title: 'Dados Importados' });
+        } catch (e) { toast({ variant: 'destructive', title: 'Erro na importação' }); }
       },
       toggleIntegration
     }}>

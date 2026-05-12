@@ -19,7 +19,8 @@ import {
   Info,
   LogOut,
   LogIn,
-  Users
+  Users,
+  ShieldAlert
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -92,7 +93,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     if (tempKey.trim()) {
       context?.setApiKey(tempKey.trim());
       setShowKeyModal(false);
-      toast({ title: "IA Ativada!", description: "Sua chave de API foi configurada com sucesso." });
+      toast({ title: "IA Ativada!", description: "Sua chave foi configurada." });
     }
   };
 
@@ -100,20 +101,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      toast({ title: "Bem-vindo!", description: "Sincronização em nuvem ativada." });
+      toast({ title: "Sincronização Ativa!", description: "Seus dados estão sendo baixados..." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      if (error.code === 'auth/unauthorized-domain') {
+      if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized-domain')) {
           toast({ 
             variant: "destructive", 
+            duration: 10000,
             title: "Domínio Não Autorizado", 
-            description: "Adicione 'acessoria-corre-junto.vercel.app' aos domínios autorizados no Firebase Console." 
+            description: "Acesse o Console do Firebase > Authentication > Settings e adicione 'acessoria-corre-junto.vercel.app' aos domínios autorizados." 
           });
       } else {
           toast({ 
             variant: "destructive", 
             title: "Erro no Login", 
-            description: "Não foi possível conectar com o Google. Verifique sua conexão ou as configurações do Firebase." 
+            description: "Verifique sua conexão ou as configurações do Firebase." 
           });
       }
     }
@@ -122,7 +124,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast({ title: "Sessão encerrada", description: "Você está usando apenas o modo local agora." });
+      toast({ title: "Modo Local Ativado", description: "Saindo da sincronização em nuvem." });
     } catch (error) {
       toast({ variant: "destructive", title: "Erro ao sair" });
     }
@@ -175,9 +177,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             {!user ? (
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton className="w-full text-primary hover:bg-primary/10" onClick={handleLogin}>
+                  <SidebarMenuButton className="w-full text-primary hover:bg-primary/10 h-12" onClick={handleLogin}>
                     <LogIn className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Entrar / Sincronizar</span>
+                    <span className="group-data-[collapsible=icon]:hidden font-headline font-black text-[10px] tracking-widest uppercase italic">Entrar e Sincronizar</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -186,7 +188,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <SidebarMenuItem>
                   <SidebarMenuButton className="w-full text-muted-foreground hover:text-white" onClick={() => setShowKeyModal(true)}>
                     <Key className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Configurar IA</span>
+                    <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Chave IA</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -215,19 +217,31 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         </p>
                         <ChevronDown size={12} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
                       </div>
-                      <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">
-                        {user ? 'Sincronizado' : 'Modo Local'}
+                      <p className={cn(
+                        "text-[9px] font-bold uppercase tracking-tighter",
+                        user ? "text-primary" : "text-destructive"
+                      )}>
+                        {user ? 'Sincronizado' : 'Modo Local (Não Sincronizado)'}
                       </p>
                     </div>
-                    <div className="size-9 rounded-full bg-primary flex items-center justify-center font-headline font-black text-black shadow-lg shadow-primary/20 shrink-0">
+                    <div className={cn(
+                      "size-9 rounded-full flex items-center justify-center font-headline font-black text-black shadow-lg shrink-0",
+                      user ? "bg-primary shadow-primary/20" : "bg-destructive shadow-destructive/20"
+                    )}>
                       {(user?.displayName?.[0] || context?.activeProfile?.name?.[0] || 'A')}
                     </div>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 bg-card border-border p-2 rounded-2xl shadow-2xl mt-2">
                   <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Minha Conta
+                    Gerenciamento
                   </DropdownMenuLabel>
+                  {!user && (
+                    <DropdownMenuItem onClick={handleLogin} className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
+                      <LogIn size={18} className="text-primary" />
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Entrar no Google</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
                     <Link href="/profile" className="flex items-center gap-3">
                       <User size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
@@ -240,7 +254,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   >
                     <div className="flex items-center gap-3">
                       <Users size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
-                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Trocar Perfil</span>
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Trocar Atleta</span>
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-border/20" />
@@ -251,7 +265,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     >
                       <div className="flex items-center gap-3">
                         <LogOut size={18} className="text-destructive" />
-                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair da Conta</span>
+                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair da Nuvem</span>
                       </div>
                     </DropdownMenuItem>
                   )}
@@ -266,29 +280,28 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <Dialog open={showKeyModal} onOpenChange={setShowKeyModal}>
-        <DialogContent className="sm:max-w-[425px] bg-card border-border">
+        <DialogContent className="sm:max-w-[425px] bg-card border-border rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-primary font-headline italic font-black uppercase">Configuração de IA</DialogTitle>
+            <DialogTitle className="text-primary font-headline italic font-black uppercase">Ativação de IA</DialogTitle>
             <DialogDescription>
-              Insira sua Gemini API Key para ativar o motor de periodização e o Coach.
+              A chave Gemini é essencial para o Coach e a Planilha Automática.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                1. Gere sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
-                <br/>2. Cole abaixo. Seus dados são salvos de forma segura.
+                Obtenha sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
               </p>
               <Input
-                placeholder="Cole sua API Key aqui..."
+                placeholder="Cole sua API Key..."
                 value={tempKey}
                 onChange={(e) => setTempKey(e.target.value)}
-                className="bg-secondary/50 border-border h-12 font-mono text-sm"
+                className="bg-secondary/50 border-border h-12 font-mono text-sm rounded-xl"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black">Ativar Inteligência</Button>
+            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black h-12 rounded-xl">Ativar Agora</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
