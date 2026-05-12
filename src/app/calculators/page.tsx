@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Select, 
   SelectContent, 
@@ -17,386 +18,626 @@ import {
   Droplets, 
   Heart, 
   Zap, 
-  Lightbulb,
   Copy,
-  Info,
   Clock,
   Target,
-  CheckCircle2
+  Activity,
+  Milestone,
+  TrendingUp,
+  MoveRight,
+  IterationCcw,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AppContext } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CalculatorsPage() {
-  const context = React.useContext(AppContext);
   const { toast } = useToast();
-  const profile = context?.activeProfile;
 
-  // --- Estados Hidratação ---
-  const [weight, setWeight] = React.useState(profile?.currentWeight?.toString() || "75");
-  const [durationH, setDurationH] = React.useState("1");
-  const [durationM, setDurationM] = React.useState("0");
-  const [climate, setClimate] = React.useState("moderado");
-  const [effort, setEffort] = React.useState("moderado");
-  const [hydraRes, setHydraRes] = React.useState<{ total: number; per15: number } | null>(null);
-
-  // --- Estados FC ---
-  const [hrMax, setHrMax] = React.useState("185");
-  const [hrRest, setHrRest] = React.useState(profile?.restingHr?.toString() || "55");
-  const [hrL2, setHrL2] = React.useState(profile?.thresholdHr?.toString() || "165");
-  const [fcZones, setFcZones] = React.useState<any[] | null>(null);
-
-  // --- Estados Estratégia ---
-  const [targetDist, setTargetDist] = React.useState("5");
-  const [targetPace, setTargetPace] = React.useState(profile?.thresholdPace || "05:00");
-  const [strategy, setStrategy] = React.useState<any | null>(null);
-
-  // --- Lógica Hidratação ---
-  const calcHydration = () => {
-    const w = parseFloat(weight);
-    const h = parseFloat(durationH) || 0;
-    const m = parseFloat(durationM) || 0;
-    const totalHours = h + (m / 60);
-    
-    let factor = 8; 
-    if (climate === "quente") factor += 2;
-    if (climate === "muito_quente") factor += 5;
-    if (effort === "intenso") factor += 3;
-    
-    const totalMl = w * factor * totalHours;
-    setHydraRes({
-      total: Math.round(totalMl),
-      per15: Math.round(totalMl / (totalHours * 4))
-    });
+  // --- Funções Auxiliares de Formatação ---
+  const pad = (n: number) => String(Math.floor(n)).padStart(2, '0');
+  
+  const formatPace = (minPerKm: number) => {
+    if (!minPerKm || minPerKm === Infinity) return "00:00";
+    const totalSec = Math.round(minPerKm * 60);
+    return `${pad(totalSec / 60)}:${pad(totalSec % 60)}`;
   };
 
-  // --- Lógica FC ---
-  const calcZones = () => {
-    const l2 = parseInt(hrL2);
-    if (!l2) return;
-
-    const zones = [
-      { id: "Z1", label: "RECUPERAÇÃO", color: "bg-blue-500", range: `< ${Math.round(l2 * 0.80)} bpm` },
-      { id: "Z2", label: "RESISTÊNCIA AERÓBICA", color: "bg-green-500", range: `${Math.round(l2 * 0.80)}-${Math.round(l2 * 0.90)} bpm` },
-      { id: "Z3", label: "POTÊNCIA AERÓBICA", color: "bg-yellow-500", range: `${Math.round(l2 * 0.90)}-${Math.round(l2 * 0.95)} bpm` },
-      { id: "Z4", label: "LIMIAR", color: "bg-orange-500", range: `${Math.round(l2 * 0.95)}-${Math.round(l2 * 1.02)} bpm` },
-      { id: "Z5", label: "RESISTÊNCIA ANAERÓBICA", color: "bg-red-500", range: `${Math.round(l2 * 1.02)}-${Math.round(l2 * 1.06)} bpm` },
-      { id: "Z6", label: "POTÊNCIA ANAERÓBICA", color: "bg-purple-500", range: `> ${Math.round(l2 * 1.06)} bpm` },
-    ];
-    setFcZones(zones);
+  const formatTime = (totalMinutes: number) => {
+    if (!totalMinutes || totalMinutes === Infinity) return "00:00:00";
+    const totalSec = Math.round(totalMinutes * 60);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
   };
 
-  // --- Lógica Estratégia ---
-  const calcStrategy = () => {
-    const dist = parseFloat(targetDist);
-    const [min, sec] = targetPace.split(":").map(Number);
-    const paceInSec = (min * 60) + sec;
+  const copyToClipboard = (text: string, title: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copiado!", description: `${title} enviado para a área de transferência.` });
+  };
 
-    // Simulação de estratégia progressiva (Split Negativo)
-    const seg1Dist = dist * 0.5;
-    const seg2Dist = dist * 0.4;
-    const seg3Dist = dist * 0.1;
+  // --- 1. CALCULADORA DE PACE ---
+  const [pDist, setPDist] = React.useState("10");
+  const [pTimeH, setPTimeH] = React.useState("0");
+  const [pTimeM, setPTimeM] = React.useState("50");
+  const [pTimeS, setPTimeS] = React.useState("00");
+  const [pResult, setPResult] = React.useState<string | null>(null);
 
-    const pace1 = paceInSec + 5; // Início levemente mais lento
-    const pace2 = paceInSec - 5; // Manutenção no alvo/acima
-    const pace3 = paceInSec - 15; // Sprint final
+  const calcPaceAction = () => {
+    const d = parseFloat(pDist);
+    const t = parseInt(pTimeH) * 60 + parseInt(pTimeM) + parseInt(pTimeS) / 60;
+    if (d > 0 && t > 0) setPResult(formatPace(t / d));
+  };
 
-    const formatPace = (s: number) => {
-      const m = Math.floor(s / 60);
-      const sc = Math.round(s % 60);
-      return `${String(m).padStart(2, '0')}:${String(sc).padStart(2, '0')}`;
-    };
+  // --- 2. CALCULADORA DE TEMPO ---
+  const [tDist, setTDist] = React.useState("10");
+  const [tPaceM, setTPaceM] = React.useState("5");
+  const [tPaceS, setTPaceS] = React.useState("00");
+  const [tResult, setTResult] = React.useState<string | null>(null);
 
-    const formatTime = (totalSec: number) => {
-      const h = Math.floor(totalSec / 3600);
-      const m = Math.floor((totalSec % 3600) / 60);
-      const s = Math.round(totalSec % 60);
-      return h > 0 
-        ? `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-        : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    };
+  const calcTimeAction = () => {
+    const d = parseFloat(tDist);
+    const p = parseInt(tPaceM) + parseInt(tPaceS) / 60;
+    if (d > 0 && p > 0) setTResult(formatTime(d * p));
+  };
 
-    const splits = [];
-    let cumulativeTime = 0;
-    for (let i = 1; i <= Math.ceil(dist); i++) {
-      let currentPace = paceInSec;
-      if (i <= seg1Dist) currentPace = pace1;
-      else if (i <= (seg1Dist + seg2Dist)) currentPace = pace2;
-      else currentPace = pace3;
+  // --- 3. CALCULADORA DE DISTÂNCIA ---
+  const [dTimeH, setDTimeH] = React.useState("1");
+  const [dTimeM, setDTimeM] = React.useState("0");
+  const [dTimeS, setDTimeS] = React.useState("0");
+  const [dPaceM, setDPaceM] = React.useState("5");
+  const [dPaceS, setDPaceS] = React.useState("00");
+  const [dResult, setDResult] = React.useState<string | null>(null);
 
-      cumulativeTime += currentPace;
-      splits.push({ km: i, time: formatTime(cumulativeTime), pace: formatPace(currentPace) });
+  const calcDistAction = () => {
+    const t = parseInt(dTimeH) * 60 + parseInt(dTimeM) + parseInt(dTimeS) / 60;
+    const p = parseInt(dPaceM) + parseInt(dPaceS) / 60;
+    if (t > 0 && p > 0) setDResult((t / p).toFixed(2) + " km");
+  };
+
+  // --- 4. CONVERSOR ESTEIRA ---
+  const [ePaceM, setEPaceM] = React.useState("5");
+  const [ePaceS, setEPaceS] = React.useState("00");
+  const [eVel, setEVel] = React.useState("12.0");
+  const [eResPace, setEResPace] = React.useState<string | null>(null);
+  const [eResVel, setEResVel] = React.useState<string | null>(null);
+
+  const calcVelFromPace = () => {
+    const p = parseInt(ePaceM) + parseInt(ePaceS) / 60;
+    if (p > 0) setEResVel((60 / p).toFixed(1) + " km/h");
+  };
+  const calcPaceFromVel = () => {
+    const v = parseFloat(eVel);
+    if (v > 0) setEResPace(formatPace(60 / v));
+  };
+
+  // --- 5. ESTRATÉGIA DE PROVA ---
+  const [sDist, setSDist] = React.useState("21.1");
+  const [sTimeH, setSTimeH] = React.useState("1");
+  const [sTimeM, setSTimeM] = React.useState("45");
+  const [sTimeS, setSTimeS] = React.useState("00");
+  const [sType, setSType] = React.useState<"negative" | "even" | "positive">("negative");
+  const [sResult, setSResult] = React.useState<any | null>(null);
+
+  const calcStrategyAction = () => {
+    const d = parseFloat(sDist);
+    const t = parseInt(sTimeH) * 60 + parseInt(sTimeM) + parseInt(sTimeS) / 60;
+    const ap = t / d;
+    
+    // Lógica de Segmentos
+    let skm = d <= 5.5 ? 0.3 : (d <= 10.5 ? 0.5 : 1);
+    const firstEnd = d / 2;
+    const sprintStart = d - skm;
+    
+    let p1, p2, p3;
+    if (sType === 'negative') {
+      p1 = ap + 8/60; p2 = ap - 8/60; p3 = p2 - 5/60;
+    } else if (sType === 'even') {
+      p1 = ap; p2 = ap; p3 = ap - 5/60;
+    } else {
+      p1 = ap - 8/60; p2 = ap + 8/60; p3 = ap;
     }
 
-    setStrategy({
-      targetPace,
-      segments: [
-        { label: `Início (0 a ${seg1Dist.toFixed(1)}k)`, pace: formatPace(pace1), desc: "Poupe energia, ritmo sob controle." },
-        { label: `Manutenção (${seg1Dist.toFixed(1)}k a ${(seg1Dist + seg2Dist).toFixed(1)}k)`, pace: formatPace(pace2), desc: "Hora de acelerar e buscar o tempo alvo." },
-        { label: `Sprint (${(seg1Dist + seg2Dist).toFixed(1)}k ao fim)`, pace: formatPace(pace3), desc: "Dê tudo de si, sprint total!" }
-      ],
-      splits
-    });
+    const segments = [
+      { label: `Início (0 a ${firstEnd.toFixed(1)}k)`, pace: formatPace(p1), desc: sType === 'negative' ? "Poupe energia, ritmo sob controle." : "Ritmo firme." },
+      { label: `Manutenção (${firstEnd.toFixed(1)}k a ${sprintStart.toFixed(1)}k)`, pace: formatPace(p2), desc: sType === 'negative' ? "Hora de acelerar." : "Mantenha o foco." },
+      { label: `Sprint Final (${sprintStart.toFixed(1)}k ao fim)`, pace: formatPace(p3), desc: "Dê tudo de si!" }
+    ];
+
+    // Gerar Splits KM a KM
+    const splits = [];
+    let cumulative = 0;
+    for (let i = 1; i <= Math.ceil(d); i++) {
+      const mark = i > d ? d : i;
+      const prevMark = i - 1;
+      const distInSplit = mark - prevMark;
+      
+      let splitPace = ap;
+      if (mark <= firstEnd) splitPace = p1;
+      else if (mark <= sprintStart) splitPace = p2;
+      else splitPace = p3;
+
+      cumulative += distInSplit * splitPace;
+      splits.push({ km: mark === d ? d.toFixed(2) : mark, time: formatTime(cumulative), pace: formatPace(splitPace) });
+      if (mark === d) break;
+    }
+
+    setSResult({ avgPace: formatPace(ap), segments, splits });
   };
 
-  const copyToClipboard = () => {
-    if (!strategy) return;
-    const text = `ESTRATÉGIA DE PROVA - CorreJunto\n\n` +
-      `Distância: ${targetDist}k\nPace Alvo: ${targetPace} min/km\n\n` +
-      `SEGMENTOS:\n` +
-      strategy.segments.map((s: any) => `- ${s.label}: ${s.pace} min/km`).join("\n") +
-      `\n\nPARCIAIS:\n` +
-      strategy.splits.map((s: any) => `KM ${s.km}: ${s.time} (${s.pace})`).join("\n");
+  // --- 6. PREVISÃO DE PROVA ---
+  const [prDist, setPRDist] = React.useState("5");
+  const [prTimeH, setPRTimeH] = React.useState("0");
+  const [prTimeM, setPRTimeM] = React.useState("22");
+  const [prTimeS, setPRTimeS] = React.useState("30");
+  const [prRes, setPRRes] = React.useState<any[] | null>(null);
+
+  const calcPredictorAction = () => {
+    const d1 = parseFloat(prDist);
+    const t1 = parseInt(prTimeH) * 60 + parseInt(prTimeM) + parseInt(prTimeS) / 60;
+    if (d1 <= 0 || t1 <= 0) return;
+
+    const targets = [5, 10, 21.097, 42.195];
+    const results = targets.map(d2 => {
+      const t2 = t1 * Math.pow(d2 / d1, 1.06);
+      return { dist: d2 === 21.097 ? "Meia" : d2 === 42.195 ? "Maratona" : d2 + "k", time: formatTime(t2), pace: formatPace(t2 / d2) };
+    });
+    setPRRes(results);
+  };
+
+  // --- 7. ZONAS DE FC ---
+  const [fcMax, setFCMax] = React.useState("185");
+  const [fcRest, setFCRest] = React.useState("");
+  const [fcLthr, setFCLthr] = React.useState("");
+  const [fcZones, setFCZones] = React.useState<any[] | null>(null);
+
+  const calcZonesAction = () => {
+    const max = parseInt(fcMax);
+    const rest = parseInt(fcRest);
+    const lthr = parseInt(fcLthr);
+
+    if (lthr > 0 && rest > 0) {
+      // Modo Limiar (Estilo COROS)
+      setFCZones([
+        { label: "Z1 - Recuperação", range: `< ${Math.round(lthr * 0.80)}`, color: "bg-slate-400" },
+        { label: "Z2 - Resistência Aeróbica", range: `${Math.round(lthr * 0.80)}-${Math.round(lthr * 0.90)}`, color: "bg-emerald-500" },
+        { label: "Z3 - Potência Aeróbica", range: `${Math.round(lthr * 0.90)+1}-${Math.round(lthr * 0.95)}`, color: "bg-yellow-500" },
+        { label: "Z4 - Limiar", range: `${Math.round(lthr * 0.95)+1}-${Math.round(lthr * 1.02)}`, color: "bg-orange-500" },
+        { label: "Z5 - Resistência Anaeróbica", range: `${Math.round(lthr * 1.02)+1}-${Math.round(lthr * 1.06)}`, color: "bg-red-500" },
+        { label: "Z6 - Potência Anaeróbica", range: `> ${Math.round(lthr * 1.06)}`, color: "bg-purple-600" },
+      ]);
+    } else {
+      // Modo Básico (% FC Máx)
+      setFCZones([
+        { label: "Z1 - Recuperação", range: `${Math.round(max * 0.5)}-${Math.round(max * 0.6)}`, color: "bg-slate-400" },
+        { label: "Z2 - Resistência Aeróbica", range: `${Math.round(max * 0.6)+1}-${Math.round(max * 0.7)}`, color: "bg-emerald-500" },
+        { label: "Z3 - Moderado / Ritmo", range: `${Math.round(max * 0.7)+1}-${Math.round(max * 0.8)}`, color: "bg-yellow-500" },
+        { label: "Z4 - Limiar de Lactato", range: `${Math.round(max * 0.8)+1}-${Math.round(max * 0.9)}`, color: "bg-orange-500" },
+        { label: "Z5 - Máxima / VO2 Máx", range: `${Math.round(max * 0.9)+1}-${max}`, color: "bg-red-500" },
+      ]);
+    }
+  };
+
+  // --- 8. HIDRATAÇÃO ---
+  const [hWeight, setHWeight] = React.useState("75");
+  const [hDurH, setHDurH] = React.useState("1");
+  const [hDurM, setHDurM] = React.useState("0");
+  const [hClimate, setHClimate] = React.useState("1.0");
+  const [hInt, setHInt] = React.useState("1.0");
+  const [hRes, setHRes] = React.useState<any | null>(null);
+
+  const calcHidraAction = () => {
+    const w = parseFloat(hWeight);
+    const tH = parseInt(hDurH) + parseInt(hDurM) / 60;
+    const fc = parseFloat(hClimate);
+    const fi = parseFloat(hInt);
     
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copiado!", description: "Estratégia enviada para a área de transferência." });
+    const vol = Math.round(w * 8 * fc * fi * tH);
+    const per15 = Math.round(vol / (tH * 4));
+    const caps = Math.ceil(tH * (fc * fi > 1.3 ? 2 : 1));
+    const carb = Math.round((fi <= 1.0 ? 30 : 50) * tH);
+
+    setHRes({ vol, per15, caps, carb });
   };
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
-          <h1 className="text-3xl md:text-4xl font-headline font-black uppercase italic tracking-tighter">
-            CALCULADORAS
+      <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pb-24">
+        <header className="px-2">
+          <h1 className="text-3xl md:text-5xl font-headline font-black uppercase italic tracking-tighter">
+            <span className="text-white">CENTRAL DE</span> <span className="text-primary">CÁLCULOS</span>
           </h1>
-          <div className="flex items-center gap-3">
-             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary border border-border">
-                <div className="size-6 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-black">A</div>
-                <span className="text-[10px] font-bold uppercase tracking-tight">Atleta <span className="text-muted-foreground font-normal">Perfil Ativo</span></span>
-             </div>
-          </div>
+          <p className="text-muted-foreground text-sm md:text-lg font-medium max-w-2xl mt-2">
+            Ferramentas técnicas para planejar ritmos, estratégias de prova e fisiologia do exercício.
+          </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-2">
-          {/* --- CALCULADORA ESTRATÉGIA --- */}
-          <Card className="bg-card/50 border-border/50 shadow-2xl h-fit">
-            <CardHeader className="border-b border-border/30 pb-4">
-              <CardTitle className="text-sm font-black uppercase italic flex items-center gap-2 text-primary">
-                <Target className="size-4" /> Estratégia de Pacing
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-8 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Distância (km)</Label>
-                  <Select value={targetDist} onValueChange={setTargetDist}>
-                    <SelectTrigger className="bg-secondary/30 h-12">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5 km</SelectItem>
-                      <SelectItem value="10">10 km</SelectItem>
-                      <SelectItem value="21.1">21.1 km</SelectItem>
-                      <SelectItem value="42.2">42.2 km</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Pace Alvo (min/km)</Label>
-                  <Input 
-                    placeholder="05:00" 
-                    value={targetPace} 
-                    onChange={(e) => setTargetPace(e.target.value)}
-                    className="bg-secondary/30 h-12 text-lg font-bold" 
-                  />
-                </div>
-              </div>
-              <Button 
-                onClick={calcStrategy}
-                className="w-full h-14 bg-primary text-black font-black uppercase tracking-widest text-xs"
-              >
-                GERAR ESTRATÉGIA
-              </Button>
+        <Tabs defaultValue="essenciais" className="w-full">
+          <div className="px-2 sticky top-16 z-20 bg-background/95 backdrop-blur-sm py-2">
+            <TabsList className="grid w-full grid-cols-2 bg-secondary/20 p-1 rounded-xl h-auto gap-2 border border-border/30 shadow-lg">
+              <TabsTrigger value="essenciais" className="py-4 font-black text-[10px] md:text-xs uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black">
+                <Target className="size-4" /> Cálculos Essenciais
+              </TabsTrigger>
+              <TabsTrigger value="planejamento" className="py-4 font-black text-[10px] md:text-xs uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black">
+                <TrendingUp className="size-4" /> Planejamento & Apoio
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-              {strategy && (
-                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-                  <div className="p-6 rounded-2xl bg-secondary/20 border border-primary/20 relative">
-                    <Button 
-                      onClick={copyToClipboard}
-                      variant="outline" 
-                      size="sm" 
-                      className="absolute top-4 right-4 bg-black/50 border-white/20 text-white text-[10px] font-bold uppercase"
-                    >
-                      <Copy className="size-3 mr-2" /> COPIAR
-                    </Button>
-                    
-                    <h2 className="text-center font-black uppercase italic text-lg mb-8 tracking-tighter">
-                      PACE MÉDIO ALVO: <span className="text-primary">{strategy.targetPace} MIN/KM</span>
-                    </h2>
-
-                    <div className="space-y-6 mb-10">
-                      <div className="text-[9px] font-black uppercase text-secondary-foreground/50 flex justify-between px-1">
-                        <span>SEGMENTO</span>
-                        <span>PACE ALVO</span>
-                      </div>
-                      {strategy.segments.map((seg: any, i: number) => (
-                        <div key={i} className="flex justify-between items-start border-b border-border/30 pb-4">
-                          <div className="space-y-1">
-                            <h4 className="font-bold text-sm text-white italic">{seg.label}</h4>
-                            <p className="text-[10px] text-muted-foreground italic">{seg.desc}</p>
-                          </div>
-                          <span className="font-headline font-black text-primary italic text-sm">{seg.pace} min/km</span>
-                        </div>
+          {/* --- ABA ESSENCIAIS --- */}
+          <TabsContent value="essenciais" className="mt-8 space-y-8 px-2 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* PACE */}
+              <Card className="bg-card/40 border-border/50 flex flex-col justify-between hover:border-primary/30 transition-all">
+                <CardHeader className="pb-4 border-b border-border/20 mb-4 bg-secondary/10">
+                   <CardTitle className="text-xs font-black uppercase italic text-primary flex items-center gap-2">
+                     <Activity className="size-3" /> Calcular Pace
+                   </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Distância (km)</Label>
+                    <Input type="number" value={pDist} onChange={e => setPDist(e.target.value)} className="bg-black/20 h-10 font-bold" />
+                    <div className="grid grid-cols-4 gap-1 pt-1">
+                      {["5", "10", "21.1", "42.2"].map(v => (
+                        <Button key={v} variant="secondary" size="sm" className="h-6 text-[8px] font-black uppercase" onClick={() => setPDist(v)}>{v === "21.1" ? "Meia" : v === "42.2" ? "Mara" : v + "k"}</Button>
                       ))}
                     </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Tempo Final</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Input type="number" placeholder="H" value={pTimeH} onChange={e => setPTimeH(e.target.value)} className="bg-black/20 text-center px-1" />
+                      <Input type="number" placeholder="M" value={pTimeM} onChange={e => setPTimeM(e.target.value)} className="bg-black/20 text-center px-1" />
+                      <Input type="number" placeholder="S" value={pTimeS} onChange={e => setPTimeS(e.target.value)} className="bg-black/20 text-center px-1" />
+                    </div>
+                  </div>
+                  <Button className="w-full h-12 bg-primary text-black font-black uppercase text-[10px] tracking-widest mt-2" onClick={calcPaceAction}>Calcular</Button>
+                  {pResult && (
+                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95">
+                      <div className="text-[8px] font-black uppercase text-emerald-400 mb-0.5">Pace Médio</div>
+                      <div className="text-xl font-black italic text-emerald-400">{pResult} <small className="text-[9px] font-normal opacity-70">min/km</small></div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-                    <div className="space-y-4">
-                      <h3 className="text-[11px] font-black uppercase italic text-primary tracking-widest px-1">PARCIAIS DE PROVA</h3>
-                      <div className="rounded-xl overflow-hidden border border-border/30 bg-black/20">
-                        <div className="grid grid-cols-3 p-3 bg-secondary/40 text-[9px] font-black text-muted-foreground uppercase">
-                          <span>KM</span>
-                          <span className="text-center text-primary">PASSAGEM</span>
-                          <span className="text-right">PACE</span>
-                        </div>
-                        <div className="divide-y divide-border/20">
-                          {strategy.splits.map((split: any) => (
-                            <div key={split.km} className="grid grid-cols-3 p-4 hover:bg-white/5 transition-colors">
-                              <span className="text-xs font-black text-white italic">KM {split.km}</span>
-                              <span className="text-center text-accent font-headline font-bold">{split.time}</span>
-                              <span className="text-right text-[10px] text-muted-foreground italic">{split.pace} min/km</span>
+              {/* TEMPO */}
+              <Card className="bg-card/40 border-border/50 flex flex-col justify-between hover:border-primary/30 transition-all">
+                <CardHeader className="pb-4 border-b border-border/20 mb-4 bg-secondary/10">
+                   <CardTitle className="text-xs font-black uppercase italic text-primary flex items-center gap-2">
+                     <Clock className="size-3" /> Calcular Tempo
+                   </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Distância (km)</Label>
+                    <Input type="number" value={tDist} onChange={e => setTDist(e.target.value)} className="bg-black/20 h-10 font-bold" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Pace Alvo (min/km)</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input type="number" placeholder="Min" value={tPaceM} onChange={e => setTPaceM(e.target.value)} className="bg-black/20 text-center" />
+                      <Input type="number" placeholder="Seg" value={tPaceS} onChange={e => setTPaceS(e.target.value)} className="bg-black/20 text-center" />
+                    </div>
+                  </div>
+                  <Button className="w-full h-12 bg-primary text-black font-black uppercase text-[10px] tracking-widest mt-2" onClick={calcTimeAction}>Calcular</Button>
+                  {tResult && (
+                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95">
+                      <div className="text-[8px] font-black uppercase text-emerald-400 mb-0.5">Tempo Previsto</div>
+                      <div className="text-xl font-black italic text-emerald-400">{tResult}</div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* DISTÂNCIA */}
+              <Card className="bg-card/40 border-border/50 flex flex-col justify-between hover:border-primary/30 transition-all">
+                <CardHeader className="pb-4 border-b border-border/20 mb-4 bg-secondary/10">
+                   <CardTitle className="text-xs font-black uppercase italic text-primary flex items-center gap-2">
+                     <Milestone className="size-3" /> Calcular Distância
+                   </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Tempo a Correr</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Input type="number" placeholder="H" value={dTimeH} onChange={e => setDTimeH(e.target.value)} className="bg-black/20 text-center px-1" />
+                      <Input type="number" placeholder="M" value={dTimeM} onChange={e => setDTimeM(e.target.value)} className="bg-black/20 text-center px-1" />
+                      <Input type="number" placeholder="S" value={dTimeS} onChange={e => setDTimeS(e.target.value)} className="bg-black/20 text-center px-1" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Pace Médio (min/km)</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input type="number" placeholder="Min" value={dPaceM} onChange={e => setDPaceM(e.target.value)} className="bg-black/20 text-center" />
+                      <Input type="number" placeholder="Seg" value={dPaceS} onChange={e => setDPaceS(e.target.value)} className="bg-black/20 text-center" />
+                    </div>
+                  </div>
+                  <Button className="w-full h-12 bg-primary text-black font-black uppercase text-[10px] tracking-widest mt-2" onClick={calcDistAction}>Calcular</Button>
+                  {dResult && (
+                    <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95">
+                      <div className="text-[8px] font-black uppercase text-emerald-400 mb-0.5">Distância Estimada</div>
+                      <div className="text-xl font-black italic text-emerald-400">{dResult}</div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* ESTEIRA */}
+              <Card className="bg-card/40 border-border/50 flex flex-col justify-between hover:border-primary/30 transition-all">
+                <CardHeader className="pb-4 border-b border-border/20 mb-4 bg-secondary/10">
+                   <CardTitle className="text-xs font-black uppercase italic text-primary flex items-center gap-2">
+                     <Zap className="size-3" /> Conversor Esteira
+                   </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                   <div className="space-y-2">
+                      <Label className="text-[9px] font-bold uppercase text-muted-foreground">Pace (min/km) para km/h</Label>
+                      <div className="flex gap-2">
+                        <Input type="number" placeholder="Min" value={ePaceM} onChange={e => setEPaceM(e.target.value)} className="bg-black/20 text-center" />
+                        <Input type="number" placeholder="Seg" value={ePaceS} onChange={e => setEPaceS(e.target.value)} className="bg-black/20 text-center" />
+                        <Button variant="outline" className="shrink-0 h-10 border-primary/30 text-primary" onClick={calcVelFromPace}><MoveRight size={14} /></Button>
+                      </div>
+                      {eResVel && <div className="text-xs font-black text-center text-primary animate-in fade-in">{eResVel}</div>}
+                   </div>
+                   <div className="space-y-2">
+                      <Label className="text-[9px] font-bold uppercase text-muted-foreground">Velocidade (km/h) para Pace</Label>
+                      <div className="flex gap-2">
+                        <Input type="number" value={eVel} onChange={e => setEVel(e.target.value)} className="bg-black/20 font-bold" />
+                        <Button variant="outline" className="shrink-0 h-10 border-primary/30 text-primary" onClick={calcPaceFromVel}><MoveRight size={14} /></Button>
+                      </div>
+                      {eResPace && <div className="text-xs font-black text-center text-primary animate-in fade-in">{eResPace} min/km</div>}
+                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* --- ABA PLANEJAMENTO --- */}
+          <TabsContent value="planejamento" className="mt-8 space-y-8 px-2 animate-in fade-in duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* ESTRATÉGIA DE PACE */}
+              <Card className="lg:col-span-2 bg-card/40 border-border/50 overflow-hidden shadow-2xl">
+                <CardHeader className="bg-secondary/10 border-b border-border/20">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-sm font-black uppercase italic text-primary flex items-center gap-2">
+                      <Target className="size-4" /> Estratégia de Pacing
+                    </CardTitle>
+                    <div className="flex gap-1">
+                       {["negative", "even", "positive"].map(type => (
+                         <Button key={type} size="sm" variant={sType === type ? "default" : "outline"} className={cn("text-[8px] h-7 font-black uppercase px-2", sType === type && "bg-primary text-black")} onClick={() => setSType(type as any)}>
+                            {type === "negative" ? "Negativo" : type === "even" ? "Constante" : "Positivo"}
+                         </Button>
+                       ))}
+                    </div>
+                  </div>
+                  <CardDescription className="text-[10px] italic mt-2">
+                    {sType === "negative" && "Comece conservador e termine forte (Ideal para Recordes)."}
+                    {sType === "even" && "Mantenha o mesmo ritmo do início ao fim."}
+                    {sType === "positive" && "Comece rápido e controle a queda no final."}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                       <Label className="text-[9px] font-bold uppercase text-muted-foreground">Distância da Prova (km)</Label>
+                       <Input type="number" value={sDist} onChange={e => setSDist(e.target.value)} className="bg-black/20 h-10 font-black text-lg" />
+                    </div>
+                    <div className="space-y-1.5">
+                       <Label className="text-[9px] font-bold uppercase text-muted-foreground">Tempo Alvo</Label>
+                       <div className="grid grid-cols-3 gap-2">
+                          <Input type="number" placeholder="H" value={sTimeH} onChange={e => setSTimeH(e.target.value)} className="bg-black/20 text-center font-bold" />
+                          <Input type="number" placeholder="M" value={sTimeM} onChange={e => setSTimeM(e.target.value)} className="bg-black/20 text-center font-bold" />
+                          <Input type="number" placeholder="S" value={sTimeS} onChange={e => setSTimeS(e.target.value)} className="bg-black/20 text-center font-bold" />
+                       </div>
+                    </div>
+                  </div>
+                  <Button className="w-full h-14 bg-primary text-black font-black uppercase italic tracking-widest" onClick={calcStrategyAction}>Gerar Plano de Prova</Button>
+
+                  {sResult && (
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4">
+                       <div className="p-4 rounded-xl bg-secondary/20 border border-primary/20 relative">
+                          <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-muted-foreground" onClick={() => copyToClipboard(`Estratégia ${sType.toUpperCase()} - Pace Médio: ${sResult.avgPace}`, "Plano")}>
+                            <Copy size={14} />
+                          </Button>
+                          <h3 className="text-center font-black uppercase italic text-sm mb-4">Pace Médio Alvo: <span className="text-primary">{sResult.avgPace} MIN/KM</span></h3>
+                          <div className="space-y-3">
+                             {sResult.segments.map((seg: any, i: number) => (
+                               <div key={i} className="flex justify-between items-center border-b border-border/10 pb-2">
+                                  <div className="text-[10px]">
+                                    <div className="font-bold text-white italic">{seg.label}</div>
+                                    <div className="text-muted-foreground opacity-70 leading-tight">{seg.desc}</div>
+                                  </div>
+                                  <div className="text-primary font-black italic">{seg.pace}</div>
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+
+                       <div className="space-y-3">
+                          <div className="text-[11px] font-black uppercase italic text-primary tracking-widest flex items-center gap-2">
+                            <IterationCcw size={12} /> Parciais Acumuladas
+                          </div>
+                          <div className="rounded-xl border border-border/30 bg-black/20 overflow-hidden">
+                             <div className="grid grid-cols-3 p-3 bg-secondary/50 text-[9px] font-black text-muted-foreground uppercase italic border-b border-border/20">
+                                <span>KM</span>
+                                <span className="text-center">Passagem</span>
+                                <span className="text-right">Ritmo do Trecho</span>
+                             </div>
+                             <div className="divide-y divide-border/10 max-h-[300px] overflow-y-auto">
+                                {sResult.splits.map((split: any, idx: number) => (
+                                  <div key={idx} className="grid grid-cols-3 p-3 hover:bg-white/5 transition-colors">
+                                     <span className="text-[10px] font-bold text-white italic">{split.km}</span>
+                                     <span className="text-center text-primary font-black italic">{split.time}</span>
+                                     <span className="text-right text-[10px] text-muted-foreground italic">{split.pace}</span>
+                                  </div>
+                                ))}
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="space-y-6">
+                {/* PREVISÃO */}
+                <Card className="bg-card/40 border-border/50">
+                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-3 px-4">
+                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2">
+                      <IterationCcw className="size-3" /> Previsão de Performance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                       <div className="space-y-1">
+                          <Label className="text-[8px] font-bold uppercase">Dist. Atual (km)</Label>
+                          <Input type="number" value={prDist} onChange={e => setPRDist(e.target.value)} className="bg-black/20 h-8" />
+                       </div>
+                       <div className="space-y-1">
+                          <Label className="text-[8px] font-bold uppercase">Tempo</Label>
+                          <div className="flex gap-1">
+                            <Input type="number" placeholder="H" value={prTimeH} onChange={e => setPRTimeH(e.target.value)} className="bg-black/20 h-8 text-center px-1" />
+                            <Input type="number" placeholder="M" value={prTimeM} onChange={e => setPRTimeM(e.target.value)} className="bg-black/20 h-8 text-center px-1" />
+                          </div>
+                       </div>
+                    </div>
+                    <Button variant="outline" className="w-full h-8 text-[9px] border-primary/30 text-primary font-bold uppercase italic" onClick={calcPredictorAction}>Simular Projeções</Button>
+                    {prRes && (
+                      <div className="space-y-2 border-t border-border/20 pt-3">
+                        {prRes.map(r => (
+                          <div key={r.dist} className="flex justify-between items-center p-2 rounded bg-black/20 border border-border/10">
+                            <span className="text-[10px] font-black uppercase italic text-muted-foreground">{r.dist}</span>
+                            <div className="text-right">
+                               <div className="text-xs font-black text-white italic">{r.time}</div>
+                               <div className="text-[8px] text-primary italic">{r.pace} min/km</div>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ))}
                       </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* HIDRATAÇÃO */}
+                <Card className="bg-card/40 border-border/50">
+                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-3 px-4">
+                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2">
+                      <Droplets className="size-3" /> Plano de Hidratação
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                       <div className="space-y-1">
+                          <Label className="text-[8px] font-bold uppercase">Peso (kg)</Label>
+                          <Input type="number" value={hWeight} onChange={e => setHWeight(e.target.value)} className="bg-black/20 h-8" />
+                       </div>
+                       <div className="space-y-1">
+                          <Label className="text-[8px] font-bold uppercase">Duração (H/M)</Label>
+                          <div className="flex gap-1">
+                            <Input type="number" value={hDurH} onChange={e => setHDurH(e.target.value)} className="bg-black/20 h-8 text-center px-1" />
+                            <Input type="number" value={hDurM} onChange={e => setHDurM(e.target.value)} className="bg-black/20 h-8 text-center px-1" />
+                          </div>
+                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="space-y-8">
-            {/* --- CALCULADORA HIDRATAÇÃO --- */}
-            <Card className="bg-card/50 border-border/50 shadow-2xl">
-              <CardHeader className="border-b border-border/30 pb-4">
-                <CardTitle className="text-sm font-black uppercase italic flex items-center gap-2 text-primary">
-                  <Droplets className="size-4" /> Plano de Hidratação
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-8 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Peso (kg)</Label>
-                    <Input 
-                      type="number" 
-                      value={weight} 
-                      onChange={(e) => setWeight(e.target.value)}
-                      className="bg-secondary/30 h-12 text-lg font-bold" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Duração (h)</Label>
-                    <Input 
-                      type="number" 
-                      value={durationH} 
-                      onChange={(e) => setDurationH(e.target.value)}
-                      className="bg-secondary/30 h-12 text-lg font-bold" 
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Clima</Label>
-                    <Select value={climate} onValueChange={setClimate}>
-                      <SelectTrigger className="bg-secondary/30 h-12">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="moderado">Moderado</SelectItem>
-                        <SelectItem value="quente">Quente</SelectItem>
-                        <SelectItem value="muito_quente">Muito Quente</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Esforço</Label>
-                    <Select value={effort} onValueChange={setEffort}>
-                      <SelectTrigger className="bg-secondary/30 h-12">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="leve">Leve</SelectItem>
-                        <SelectItem value="moderado">Moderado</SelectItem>
-                        <SelectItem value="intenso">Intenso / Prova</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={calcHydration}
-                  className="w-full h-14 bg-primary text-black font-black uppercase tracking-widest text-xs"
-                >
-                  CALCULAR HIDRATAÇÃO
-                </Button>
-
-                {hydraRes && (
-                  <div className="grid grid-cols-2 gap-4 animate-in zoom-in-95 duration-300">
-                    <div className="p-4 rounded-xl bg-secondary/20 border border-border text-center">
-                      <div className="text-[9px] font-black uppercase text-muted-foreground mb-1">Total</div>
-                      <div className="text-3xl font-black text-primary italic">{hydraRes.total}<small className="text-xs ml-1 font-normal">ml</small></div>
+                    <div className="grid grid-cols-2 gap-3">
+                       <div className="space-y-1">
+                          <Label className="text-[8px] font-bold uppercase">Clima</Label>
+                          <Select value={hClimate} onValueChange={setHClimate}>
+                             <SelectTrigger className="h-8 text-[9px] bg-black/20"><SelectValue /></SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="0.8">Frio</SelectItem>
+                               <SelectItem value="1.0">Moderado</SelectItem>
+                               <SelectItem value="1.25">Quente</SelectItem>
+                               <SelectItem value="1.5">Extremo</SelectItem>
+                             </SelectContent>
+                          </Select>
+                       </div>
+                       <div className="space-y-1">
+                          <Label className="text-[8px] font-bold uppercase">Esforço</Label>
+                          <Select value={hInt} onValueChange={setHInt}>
+                             <SelectTrigger className="h-8 text-[9px] bg-black/20"><SelectValue /></SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="0.8">Leve (Z2)</SelectItem>
+                               <SelectItem value="1.0">Moderado (Z3)</SelectItem>
+                               <SelectItem value="1.2">Intenso (Z4)</SelectItem>
+                               <SelectItem value="1.4">Prova (Max)</SelectItem>
+                             </SelectContent>
+                          </Select>
+                       </div>
                     </div>
-                    <div className="p-4 rounded-xl bg-secondary/20 border border-border text-center">
-                      <div className="text-[9px] font-black uppercase text-muted-foreground mb-1">Cada 15 min</div>
-                      <div className="text-3xl font-black text-primary italic">{hydraRes.per15}<small className="text-xs ml-1 font-normal">ml</small></div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* --- CALCULADORA FC --- */}
-            <Card className="bg-card/50 border-border/50 shadow-2xl">
-              <CardHeader className="border-b border-border/30 pb-4">
-                <CardTitle className="text-sm font-black uppercase italic flex items-center gap-2 text-primary">
-                  <Heart className="size-4" /> Zonas de Esforço (FC)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-8 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">FC Limiar (L2)</Label>
-                    <Input 
-                      type="number" 
-                      value={hrL2} 
-                      onChange={(e) => setHrL2(e.target.value)}
-                      className="bg-secondary/30 h-12 text-lg font-bold border-primary/30" 
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <Button 
-                      onClick={calcZones}
-                      variant="outline"
-                      className="w-full h-12 border-primary text-primary hover:bg-primary hover:text-black font-black uppercase tracking-widest text-xs"
-                    >
-                      GERAR ZONAS
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  {(fcZones || [
-                    { id: "Z1", label: "RECUPERAÇÃO", color: "bg-blue-500", range: "< 132 bpm" },
-                    { id: "Z2", label: "RESISTÊNCIA AERÓBICA", color: "bg-green-500", range: "132-149 bpm" },
-                    { id: "Z3", label: "POTÊNCIA AERÓBICA", color: "bg-yellow-500", range: "150-157 bpm" },
-                    { id: "Z4", label: "LIMIAR", color: "bg-orange-500", range: "158-168 bpm" },
-                    { id: "Z5", label: "RESISTÊNCIA ANAERÓBICA", color: "bg-red-500", range: "169-175 bpm" },
-                    { id: "Z6", label: "POTÊNCIA ANAERÓBICA", color: "bg-purple-500", range: "> 175 bpm" },
-                  ]).map((z) => (
-                    <div key={z.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/10 border border-border/30">
-                      <div className="flex items-center gap-3">
-                        <div className={cn("w-1 h-6 rounded-full", z.color)} />
-                        <span className="text-[10px] font-black text-white italic">{z.id} - {z.label}</span>
+                    <Button variant="outline" className="w-full h-8 text-[9px] border-primary/30 text-primary font-bold uppercase italic" onClick={calcHidraAction}>Calcular Plano</Button>
+                    {hRes && (
+                      <div className="grid grid-cols-2 gap-2 animate-in zoom-in-95">
+                         <div className="p-2 rounded bg-black/20 border border-border/10 text-center">
+                            <div className="text-[7px] font-black uppercase text-muted-foreground">Total</div>
+                            <div className="text-sm font-black text-primary italic">{hRes.vol}ml</div>
+                         </div>
+                         <div className="p-2 rounded bg-black/20 border border-border/10 text-center">
+                            <div className="text-[7px] font-black uppercase text-muted-foreground">/ 15 Min</div>
+                            <div className="text-sm font-black text-primary italic">{hRes.per15}ml</div>
+                         </div>
+                         <div className="col-span-2 p-2 rounded bg-black/20 border border-border/10">
+                            <div className="flex items-center gap-2 text-[9px] mb-1">
+                               <Zap size={10} className="text-yellow-500" /> <span className="font-bold uppercase">Nutrição Sugerida:</span>
+                            </div>
+                            <div className="text-[8px] text-muted-foreground italic leading-tight">
+                               • Sais: {hRes.caps} cápsula(s) de 250mg.<br/>
+                               • Carbos: ~{hRes.carb}g (aprox. {Math.max(1, Math.ceil(hRes.carb / 25))} géis).
+                            </div>
+                         </div>
                       </div>
-                      <span className="text-[11px] font-headline font-black text-primary italic">{z.range}</span>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* ZONAS FC */}
+                <Card className="bg-card/40 border-border/50">
+                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-3 px-4">
+                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2">
+                      <Heart className="size-3" /> Zonas de Esforço
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-4">
+                    <div className="grid grid-cols-3 gap-2">
+                       <div className="space-y-1">
+                          <Label className="text-[7px] font-bold uppercase">FC Máx</Label>
+                          <Input type="number" value={fcMax} onChange={e => setFCMax(e.target.value)} className="bg-black/20 h-8 px-1 text-center" />
+                       </div>
+                       <div className="space-y-1">
+                          <Label className="text-[7px] font-bold uppercase">Repouso</Label>
+                          <Input type="number" placeholder="Opc" value={fcRest} onChange={e => setFCRest(e.target.value)} className="bg-black/20 h-8 px-1 text-center" />
+                       </div>
+                       <div className="space-y-1">
+                          <Label className="text-[7px] font-bold uppercase">Limiar</Label>
+                          <Input type="number" placeholder="L2" value={fcLthr} onChange={e => setFCLthr(e.target.value)} className="bg-black/20 h-8 px-1 text-center" />
+                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                    <Button variant="outline" className="w-full h-8 text-[9px] border-primary/30 text-primary font-bold uppercase italic" onClick={calcZonesAction}>Gerar Zonas</Button>
+                    {fcZones && (
+                      <div className="space-y-1 animate-in fade-in">
+                        {fcZones.map(z => (
+                          <div key={z.label} className="flex items-center justify-between p-1.5 rounded bg-black/10 text-[8px] border border-border/5">
+                             <div className="flex items-center gap-2">
+                                <div className={cn("w-0.5 h-3 rounded-full", z.color)} />
+                                <span className="font-bold text-white uppercase italic">{z.label}</span>
+                             </div>
+                             <span className="font-black text-primary">{z.range} <small className="font-normal opacity-50">bpm</small></span>
+                          </div>
+                        ))}
+                        <p className="text-[7px] text-muted-foreground italic mt-2 flex items-start gap-1">
+                          <Info size={8} /> {fcLthr && fcRest ? "Cálculo baseado em Limiar de Lactato (Evolab)." : "Cálculo básico por % de FC Máxima."}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
