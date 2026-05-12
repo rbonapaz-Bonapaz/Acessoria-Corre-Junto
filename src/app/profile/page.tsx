@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useState, useEffect, useRef } from 'react';
@@ -21,7 +20,7 @@ import {
     FormLabel, 
     FormMessage, 
     FormDescription 
-} from '@/components/ui/form';
+} from '@/form';
 import { Input } from '@/components/ui/input';
 import { 
     Select, 
@@ -34,6 +33,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { 
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
     Loader2, 
     Zap, 
@@ -51,7 +56,8 @@ import {
     User as UserIcon,
     Flame,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    Info
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
@@ -153,6 +159,21 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 type TabID = 'perfil' | 'corrida' | 'alimentacao' | 'musculacao';
 
+const InfoIcon = ({ text }: { text: string }) => (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center ml-1 cursor-help text-muted-foreground/60 hover:text-primary transition-colors">
+          <Info size={13} />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-[250px] bg-secondary border-border text-[11px] leading-relaxed p-3 shadow-xl">
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
+
 export default function ProfilePage() {
   const context = useContext(AppContext);
   const { toast } = useToast();
@@ -239,7 +260,7 @@ export default function ProfilePage() {
 
     const tabFields: Record<TabID, (keyof ProfileFormValues)[]> = {
         perfil: ['name', 'birthDate', 'gender', 'currentWeight', 'height', 'location', 'avatarUrl'],
-        corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType'],
+        corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType', 'vo2Max'],
         alimentacao: ['aestheticGoal', 'trainingTiming', 'mealCount', 'supplements', 'allergies', 'preferredFoods', 'excludedFoods'],
         musculacao: ['strengthSplit', 'strengthObjective', 'strengthFrequency', 'strengthDays', 'strengthEquipment', 'strengthFocus', 'legDay', 'limitations', 'prBench', 'prSquat', 'prDeadlift']
     };
@@ -304,7 +325,7 @@ export default function ProfilePage() {
   const handleGenerate = async (type: 'all' | 'running') => {
     if (!context) return;
     
-    const isValid = await trigger(['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory']);
+    const isValid = await trigger(['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'vo2Max']);
     
     if (!isValid) {
         toast({
@@ -456,27 +477,42 @@ export default function ProfilePage() {
                                 <Card className="bg-card/50">
                                     <CardHeader>
                                       <CardTitle className="font-headline text-xl md:text-2xl uppercase italic text-primary">Inteligência de Corrida</CardTitle>
-                                      <CardDescription className="text-xs">Configure seus dias de treino e metas para a periodização.</CardDescription>
+                                      <CardDescription className="text-xs">Configure seus dados fisiológicos para a periodização.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-8 pt-6 border-t border-border/50">
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                             <FormField control={form.control} name="restingHr" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">FC Repouso</FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase">
+                                                      FC Repouso <InfoIcon text="Frequência cardíaca medida em repouso absoluto (ex: ao acordar). Indica seu nível de condicionamento cardiovascular." />
+                                                    </FormLabel>
                                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="vo2Max" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs font-bold uppercase">
+                                                      VO2 Máx <InfoIcon text="Capacidade máxima do seu corpo de consumir oxigênio. É o 'teto' do seu motor aeróbico." />
+                                                    </FormLabel>
+                                                    <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="thresholdPace" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Pace Limiar (T-Pace)</FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase">
+                                                      Pace Limiar <InfoIcon text="O ritmo mais rápido que você consegue sustentar por cerca de uma hora. Essencial para prescrever treinos de qualidade." />
+                                                    </FormLabel>
                                                     <FormControl><Input placeholder="05:00" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="thresholdHr" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">FC Limiar (L2)</FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase">
+                                                      FC Limiar (L2) <InfoIcon text="Frequência cardíaca no Limiar de Lactato. Ponto onde o esforço passa de aeróbico para anaeróbico." />
+                                                    </FormLabel>
                                                     <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -519,7 +555,7 @@ export default function ProfilePage() {
                                             <FormDescription className="text-[9px] italic">Selecione os dias em que pode treinar corrida.</FormDescription>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-t pt-6">
                                             <FormField control={form.control} name="longRunDay" render={({field}) => (
                                                 <FormItem>
                                                     <FormLabel className="text-xs font-bold uppercase">Dia de Longão</FormLabel>
@@ -529,6 +565,20 @@ export default function ProfilePage() {
                                                             {weekDays.map(d => (
                                                                 <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>
                                                             ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="planGenerationType" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs font-bold uppercase">
+                                                      Estratégia Ciclo <InfoIcon text="'Full' gera o ciclo até a data da prova; 'Blocks' gera apenas as próximas 4 semanas focadas em uma fase específica." />
+                                                    </FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="blocks">Blocos (4 Semanas)</SelectItem>
+                                                            <SelectItem value="full">Completo (Até a Prova)</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </FormItem>
@@ -590,7 +640,9 @@ export default function ProfilePage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <FormField control={form.control} name="aestheticGoal" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Objetivo Principal</FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase">
+                                                      Objetivo Principal <InfoIcon text="Define a estratégia nutricional (perda de gordura, ganho de massa ou manutenção para performance)." />
+                                                    </FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
                                                         <SelectContent>
@@ -713,7 +765,9 @@ export default function ProfilePage() {
                                             )} />
                                             <FormField control={form.control} name="strengthSplit" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-bold uppercase">Divisão de Treino</FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase">
+                                                      Divisão de Treino <InfoIcon text="Organização dos grupos musculares ao longo da semana para otimizar a recuperação e o foco." />
+                                                    </FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                         <SelectContent>
@@ -730,7 +784,8 @@ export default function ProfilePage() {
                                             <FormField control={form.control} name="legDay" render={({field}) => (
                                                 <FormItem>
                                                     <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase">
-                                                        <CalendarDays className="h-4 w-4 text-primary" /> Dia de Perna (Leg Day)
+                                                        <CalendarDays className="h-4 w-4 text-primary" /> 
+                                                        Dia de Perna (Leg Day) <InfoIcon text="A IA evitará agendar treinos intensos de corrida (Tiros/Longões) no dia seguinte a este dia para prevenir sobrecarga." />
                                                     </FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
