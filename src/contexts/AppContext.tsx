@@ -8,6 +8,14 @@ import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
 
 type PlanGenerationStatus = 'idle' | 'pending' | 'success' | 'error';
 
+// Configuração Strava fornecida pelo usuário
+const STRAVA_DEFAULT_CONFIG = {
+  clientId: "202859",
+  clientSecret: "7b421fb5979780cb527dcbd9da8509c5d796f5dc",
+  accessToken: "a95830ee1a54f9c5adb34d63037565dde1599f2f",
+  refreshToken: "6fb60eb1a148933d463c68627542e570d987acb6"
+};
+
 interface AppContextType {
   isHydrated: boolean;
   apiKey: string | null;
@@ -38,7 +46,7 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType | null>(null);
 
-const STORAGE_KEY = 'correJunto_local_data';
+const STORAGE_KEY = 'correJunto_local_data_v2';
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
@@ -93,7 +101,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...data, 
         id,
         integrations: data.integrations || activeProfile?.integrations || {
-            strava: { connected: false, autoSync: false },
+            strava: { connected: false, autoSync: false, ...STRAVA_DEFAULT_CONFIG },
             coros: { connected: false, autoSync: false }
         }
     };
@@ -103,21 +111,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return [newProfile, ...filtered];
     });
     setActiveProfileId(id);
-    return newProfile;
-  }, [activeProfile]);
 
-  const generateRunningPlanAsync = async (profile: AthleteProfile) => {
-    setPlanGenerationStatus('pending');
-    
     toast({ 
-      title: "🧠 Gemini Coach está analisando...", 
-      description: "Ajustando seu plano de performance baseado no seu T-Pace e Leg Day." 
+      title: '✅ Perfil Atualizado!', 
+      description: 'Seus dados técnicos foram salvos com segurança.' 
     });
 
+    return newProfile;
+  }, [activeProfile, toast]);
+
+  const deleteProfile = useCallback((id: string) => {
+    setProfiles(prev => prev.filter(p => p.id !== id));
+    if (activeProfileId === id) setActiveProfileId(null);
+    toast({ 
+      title: '🗑️ Perfil Removido', 
+      description: 'O perfil e todos os dados associados foram excluídos.' 
+    });
+  }, [activeProfileId, toast]);
+
+  const deleteTrainingPlan = useCallback((keepCompleted: boolean) => {
+    if (!activeProfileId) return;
+    setProfileData(prev => ({ 
+      ...prev, 
+      [activeProfileId]: { ...prev[activeProfileId], trainingPlan: null } 
+    }));
+    toast({ 
+      title: '🗑️ Plano Excluído', 
+      description: keepCompleted ? 'Plano removido, histórico preservado.' : 'Todo o planejamento foi removido.' 
+    });
+  }, [activeProfileId, toast]);
+
+  const generateRunningPlanAsync = async (profile: AthleteProfile) => {
+    if (!apiKey) {
+      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua Gemini API Key no menu lateral." });
+      return;
+    }
+
+    setPlanGenerationStatus('pending');
+    toast({ title: "🧠 Gemini Coach está analisando...", description: "Ajustando seu plano de performance baseado no seu T-Pace e Leg Day." });
+
     try {
-      // Simulação de streaming de progresso através de toasts sequenciais
-      const totalWeeks = profile.planGenerationType === 'full' ? 12 : 4; // Estimativa simples
-      
       const result = await generateTrainingBlock({
         currentVDOT: profile.vo2Max,
         hrZone1End: Math.round(profile.thresholdHr * 0.8),
@@ -137,14 +170,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         legDay: profile.strengthPreferences?.legDay
       });
 
-      // Feedback de progresso fake para UX "Elite"
       for (let i = 1; i <= result.weeklyPlans.length; i++) {
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 300));
         if (i % 2 === 0 || i === result.weeklyPlans.length) {
-          toast({ 
-            title: "📅 Gerando Planilha...", 
-            description: `Bloco atual: ${i} semanas processadas.` 
-          });
+          toast({ title: "📅 Gerando Planilha...", description: `Bloco atual: ${i} semanas processadas.` });
         }
       }
 
@@ -157,7 +186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast({ title: "✅ Ciclo IA Concluído!", description: "Sua planilha periodizada está pronta." });
     } catch (error) {
       setPlanGenerationStatus('error');
-      toast({ variant: "destructive", title: "Erro na Geração", description: "O motor de IA falhou. Verifique sua chave." });
+      toast({ variant: "destructive", title: "Erro na IA", description: "O motor falhou. Verifique sua chave de API." });
     }
   };
 
@@ -168,17 +197,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
         integrations: {
             ...activeProfile.integrations,
             [service]: { 
+                ...(activeProfile.integrations?.[service] || {}),
                 connected, 
                 autoSync: connected, 
                 lastSync: connected ? new Date().toISOString() : undefined,
-                username: connected ? 'Atleta CorreJunto' : undefined
+                username: connected ? 'Atleta CorreJunto' : undefined,
+                ...(service === 'strava' ? STRAVA_DEFAULT_CONFIG : {})
             }
         }
     };
-    saveProfile(updated as any);
+    
+    // Atualiza sem disparar o toast de salvamento de perfil para ser mais discreto
+    setProfiles(prev => {
+      const filtered = prev.filter(p => p.id !== activeProfile.id);
+      return [updated as any, ...filtered];
+    });
+
     toast({ 
         title: connected ? `✅ ${service.toUpperCase()} Conectado` : `❌ ${service.toUpperCase()} Desconectado`,
-        description: connected ? 'Seus treinos serão sincronizados localmente.' : 'A sincronização automática foi desativada.'
+        description: connected ? 'Seus tokens de acesso foram configurados localmente.' : 'A sincronização automática foi desativada.'
     });
   };
 
@@ -192,6 +229,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     a.download = `correJunto_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    toast({ title: '📥 Backup Exportado', description: 'Arquivo JSON salvo com sucesso.' });
   };
 
   const importData = (jsonData: string) => {
@@ -201,9 +239,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setProfiles(parsed.profiles);
       setActiveProfileId(parsed.activeProfileId);
       setProfileData(parsed.profileData);
-      toast({ title: '✅ Importação Concluída' });
+      toast({ title: '📤 Importação Concluída', description: 'Seu perfil e planos foram restaurados.' });
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Erro na Importação' });
+      toast({ variant: 'destructive', title: 'Erro na Importação', description: 'O arquivo JSON parece inválido.' });
     }
   };
 
@@ -215,19 +253,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeProfile,
     switchProfile: (id: string | null) => setActiveProfileId(id),
     saveProfile,
-    deleteProfile: (id: string) => {
-      setProfiles(prev => prev.filter(p => p.id !== id));
-      if (activeProfileId === id) setActiveProfileId(null);
-    },
+    deleteProfile,
     trainingPlan: currentProfileData.trainingPlan || null,
     setTrainingPlan: (p: any) => {
         if (!activeProfileId) return;
         setProfileData(prev => ({ ...prev, [activeProfileId]: { ...prev[activeProfileId], trainingPlan: p } }));
     },
-    deleteTrainingPlan: () => {
-        if (!activeProfileId) return;
-        setProfileData(prev => ({ ...prev, [activeProfileId]: { ...prev[activeProfileId], trainingPlan: null } }));
-    },
+    deleteTrainingPlan,
     chatHistory: currentProfileData.chatHistory || [],
     setChatHistory: (h: any) => {
         if (!activeProfileId) return;

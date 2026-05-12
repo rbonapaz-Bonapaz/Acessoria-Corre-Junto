@@ -30,6 +30,10 @@ export interface IntegrationData {
   lastSync?: string;
   username?: string;
   autoSync: boolean;
+  clientId?: string;
+  clientSecret?: string;
+  accessToken?: string;
+  refreshToken?: string;
 }
 
 export interface AthleteProfile {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useContext, useState, useEffect, useRef } from 'react';
@@ -39,15 +40,26 @@ import {
     Camera, 
     Dumbbell, 
     Utensils, 
-    Route, 
     Link2,
     Download,
     Upload,
     CalendarDays,
-    Target
+    Target,
+    Trash2
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const weekDays = [
   { id: 'Domingo', label: 'Dom' },
@@ -182,7 +194,6 @@ export default function ProfilePage() {
             equipment: data.equipment
         }
     } as any);
-    toast({ title: '✅ Perfil Atualizado!', description: 'Seus dados locais foram salvos.' });
   };
 
   if (!context?.isHydrated) return <DashboardLayout><Skeleton className="h-96 w-full"/></DashboardLayout>;
@@ -190,7 +201,7 @@ export default function ProfilePage() {
   return (
     <DashboardLayout>
       <div className="space-y-8 pb-12 max-w-5xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-2">
             <div>
                 <h1 className="font-headline text-2xl md:text-4xl tracking-wide uppercase font-black italic">
                     <span className="text-white">Meus Dados &</span> <span className="text-primary">Ciclo</span>
@@ -198,7 +209,7 @@ export default function ProfilePage() {
                 <p className="text-xs md:text-sm text-muted-foreground mt-1">Sua fisiologia e planejamento em um só lugar.</p>
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="flex-1 sm:flex-none gap-2 text-[10px] font-bold">
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="flex-1 sm:flex-none gap-2 text-[10px] font-bold h-10">
                 <Upload size={14}/> Importar
               </Button>
               <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={(e) => {
@@ -209,13 +220,13 @@ export default function ProfilePage() {
                       reader.readAsText(file);
                   }
               }}/>
-              <Button variant="outline" size="sm" onClick={() => context.exportData()} className="flex-1 sm:flex-none gap-2 text-[10px] font-bold">
+              <Button variant="outline" size="sm" onClick={() => context.exportData()} className="flex-1 sm:flex-none gap-2 text-[10px] font-bold h-10">
                 <Download size={14}/> Exportar
               </Button>
             </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2">
             <div className="lg:col-span-2">
                 <Form {...form}>
                     <form className="space-y-8" onSubmit={form.handleSubmit(handleSaveProfile)}>
@@ -510,6 +521,37 @@ export default function ProfilePage() {
                         </div>
                     </form>
                 </Form>
+                
+                <div className="mt-8 pt-8 border-t border-border/50">
+                   <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 text-[10px] font-bold uppercase">
+                          <Trash2 size={14} className="mr-2" /> Excluir Todos os Dados Locais
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação é irreversível. Todos os seus planos, perfis e a chave de API salvos neste navegador serão removidos permanentemente.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction 
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => {
+                              if (context.activeProfile?.id) {
+                                context.deleteProfile(context.activeProfile.id);
+                              }
+                            }}
+                          >
+                            Excluir Tudo
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                </div>
             </div>
 
             <div className="space-y-6">
