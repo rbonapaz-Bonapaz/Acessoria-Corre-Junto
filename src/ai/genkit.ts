@@ -1,9 +1,10 @@
+
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * Retorna uma instância do Genkit configurada com uma chave de API específica.
- * O modelo gemini-1.5-flash é utilizado por ser estável e rápido.
+ * Utilizamos o modelo gemini-1.5-flash que é altamente estável para estas tarefas.
  */
 export const getAiWithKey = (apiKey?: string) => {
   return genkit({
