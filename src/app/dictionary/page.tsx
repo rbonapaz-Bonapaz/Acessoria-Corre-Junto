@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { 
   Activity, 
   Heart, 
-  Info, 
   Brain,
   Zap,
   TrendingUp,
@@ -98,15 +97,12 @@ export default function DictionaryPage() {
 
         <Tabs defaultValue="treinos" className="w-full">
           <div className="px-2">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-secondary/20 p-1.5 rounded-xl h-auto gap-2">
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 bg-secondary/20 p-1.5 rounded-xl h-auto gap-2">
               <TabsTrigger value="treinos" className="py-3 font-black text-[10px] md:text-xs uppercase italic gap-2">
                 <Activity className="size-4 text-primary" /> Treinos
               </TabsTrigger>
               <TabsTrigger value="zonas" className="py-3 font-black text-[10px] md:text-xs uppercase italic gap-2">
                 <Heart className="size-4" /> Zonas FC
-              </TabsTrigger>
-              <TabsTrigger value="guia" className="py-3 font-black text-[10px] md:text-xs uppercase italic gap-2">
-                <Info className="size-4" /> Guia da Calc.
               </TabsTrigger>
               <TabsTrigger value="conceitos" className="py-3 font-black text-[10px] md:text-xs uppercase italic gap-2">
                 <Brain className="size-4" /> Conceitos
@@ -168,35 +164,6 @@ export default function DictionaryPage() {
                    </CardContent>
                  </Card>
                ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="guia" className="mt-8 px-2 animate-in fade-in">
-            <div className="max-w-2xl space-y-6">
-              <div className="space-y-1">
-                <h2 className="text-xl md:text-2xl font-headline font-black uppercase italic text-white">Como usar a Calculadora</h2>
-                <p className="text-muted-foreground text-xs md:text-sm italic">Entenda as ferramentas de planejamento do app.</p>
-              </div>
-              <div className="grid gap-6">
-                <div className="flex gap-4">
-                  <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                    <Target className="size-5 text-primary" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-black italic text-sm text-white uppercase tracking-tight">Cálculo de Pace</h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">Insira sua distância e tempo alvo para saber exatamente a velocidade média que deve manter por quilômetro.</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                    <TrendingUp className="size-5 text-primary" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-black italic text-sm text-white uppercase tracking-tight">Estratégia de Splits</h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">Determine se sua prova será com Split Negativo (acelerando no fim) ou Constante para evitar a quebra.</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </TabsContent>
 
