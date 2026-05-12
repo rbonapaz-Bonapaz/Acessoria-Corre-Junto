@@ -6,13 +6,10 @@ import {
   Area, 
   AreaChart, 
   ResponsiveContainer, 
-  Tooltip, 
+  Tooltip as RechartsTooltip, 
   XAxis, 
   YAxis, 
-  Bar, 
-  BarChart, 
-  CartesianGrid,
-  Legend
+  AreaProps
 } from "recharts";
 import { 
   Activity, 
@@ -21,11 +18,18 @@ import {
   Milestone, 
   ArrowUpRight, 
   Zap,
-  Calendar
+  Calendar,
+  Info
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const data = [
   { day: "Dom", previsto: 0, real: 0 },
@@ -38,10 +42,34 @@ const data = [
 ];
 
 const stats = [
-  { label: "Volume Semanal", value: "86.7 km", change: "+4.2%", icon: Milestone },
-  { label: "VDOT Atual", value: "54.2", change: "+0.8", icon: Zap },
-  { label: "FC Média", value: "142 bpm", change: "-2.1%", icon: Activity },
-  { label: "Score de Recuperação", value: "88%", change: "Ideal", icon: Clock },
+  { 
+    label: "Volume Semanal", 
+    value: "86.7 km", 
+    change: "+4.2%", 
+    icon: Milestone,
+    info: "Distância total percorrida nos últimos 7 dias."
+  },
+  { 
+    label: "VDOT Atual", 
+    value: "54.2", 
+    change: "+0.8", 
+    icon: Zap,
+    info: "O VDOT é um índice que mede sua aptidão aeróbica atual e define seus ritmos de treino com base em performance."
+  },
+  { 
+    label: "FC Média", 
+    value: "142 bpm", 
+    change: "-2.1%", 
+    icon: Activity,
+    info: "Frequência cardíaca média durante seus treinos da semana."
+  },
+  { 
+    label: "Score de Recuperação", 
+    value: "88%", 
+    change: "Ideal", 
+    icon: Clock,
+    info: "Indicador baseado em variabilidade da FC e qualidade do sono para evitar overtraining."
+  },
 ];
 
 export default function Home() {
@@ -49,26 +77,38 @@ export default function Home() {
     <DashboardLayout>
       <div className="space-y-8 animate-in fade-in duration-500">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat) => (
-            <Card key={stat.label} className="bg-card border-border hover:border-accent/50 transition-colors shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.label}
-                </CardTitle>
-                <stat.icon className="h-4 w-4 text-accent" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-headline font-bold">{stat.value}</div>
-                <p className={cn(
-                  "text-xs mt-1 flex items-center",
-                  stat.change.startsWith("+") || stat.change === "Ideal" ? "text-accent" : "text-muted-foreground"
-                )}>
-                  {stat.change}
-                  <ArrowUpRight className="ml-1 h-3 w-3" />
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+          <TooltipProvider>
+            {stats.map((stat) => (
+              <Card key={stat.label} className="bg-card border-border hover:border-accent/50 transition-colors shadow-sm relative overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                  <div className="flex items-center gap-1.5">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      {stat.label}
+                    </CardTitle>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="size-3 text-muted-foreground/50 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-[200px] text-[10px] leading-relaxed">
+                        {stat.info}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <stat.icon className="h-4 w-4 text-accent" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-headline font-bold">{stat.value}</div>
+                  <p className={cn(
+                    "text-xs mt-1 flex items-center",
+                    stat.change.startsWith("+") || stat.change === "Ideal" ? "text-accent" : "text-muted-foreground"
+                  )}>
+                    {stat.change}
+                    <ArrowUpRight className="ml-1 h-3 w-3" />
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </TooltipProvider>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -94,7 +134,7 @@ export default function Home() {
                     </defs>
                     <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip 
+                    <RechartsTooltip 
                       contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem' }}
                       itemStyle={{ color: 'hsl(var(--foreground))' }}
                     />
@@ -134,7 +174,9 @@ export default function Home() {
                   <div className="h-full bg-accent w-[45%]" />
                 </div>
               </div>
-              <Button className="w-full bg-primary hover:bg-primary/90">Ver Plano Completo</Button>
+              <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                <a href="/training">Ver Plano Completo</a>
+              </Button>
             </CardContent>
           </Card>
         </div>

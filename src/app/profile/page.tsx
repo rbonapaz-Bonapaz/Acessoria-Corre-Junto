@@ -30,7 +30,7 @@ import {
     SelectValue 
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { 
@@ -491,7 +491,7 @@ export default function ProfilePage() {
                                         <FormField control={form.control} name="vo2Max" render={({field}) => (
                                             <FormItem>
                                                 <FormLabel className="text-xs font-bold uppercase">
-                                                  VO2 Máx <InfoIcon text="Capacidade máxima do seu corpo de consumir oxigênio. Indica seu 'teto' aeróbico." />
+                                                  VDOT / VO2 Máx <InfoIcon text="O VDOT é um índice que mede sua aptidão aeróbica atual. Ele traduz sua performance em um número para prescrever ritmos de treino exatos." />
                                                 </FormLabel>
                                                 <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
                                                 <FormMessage />
