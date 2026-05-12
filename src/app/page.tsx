@@ -28,13 +28,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const data = [
+  { day: "Dom", previsto: 0, real: 0 },
   { day: "Seg", previsto: 5, real: 4.8 },
   { day: "Ter", previsto: 8, real: 8.2 },
   { day: "Qua", previsto: 0, real: 0 },
   { day: "Qui", previsto: 12, real: 11.5 },
   { day: "Sex", previsto: 6, real: 7.0 },
   { day: "Sáb", previsto: 22, real: 22.4 },
-  { day: "Dom", previsto: 0, real: 0 },
 ];
 
 const stats = [

@@ -73,13 +73,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const weekDays = [
+  { id: 'Domingo', label: 'DOM' },
   { id: 'Segunda', label: 'SEG' },
   { id: 'Terça', label: 'TER' },
   { id: 'Quarta', label: 'QUA' },
   { id: 'Quinta', label: 'QUI' },
   { id: 'Sexta', label: 'SEX' },
   { id: 'Sábado', label: 'SÁB' },
-  { id: 'Domingo', label: 'DOM' },
 ] as const;
 
 const focusAreasOptions = [
