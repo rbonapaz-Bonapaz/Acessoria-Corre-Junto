@@ -49,7 +49,8 @@ import {
     Activity,
     User as UserIcon,
     Flame,
-    CheckCircle2
+    CheckCircle2,
+    AlertCircle
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
@@ -147,10 +148,12 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
+type TabID = 'perfil' | 'corrida' | 'alimentacao' | 'musculacao';
+
 export default function ProfilePage() {
   const context = useContext(AppContext);
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("perfil");
+  const [activeTab, setActiveTab] = useState<string>("perfil");
   const avatarFileRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -179,7 +182,7 @@ export default function ProfilePage() {
     }
   });
 
-  const { reset, watch, setValue, trigger } = form;
+  const { reset, watch, setValue, trigger, getValues } = form;
 
   useEffect(() => {
     if (context?.isHydrated && context.activeProfile) {
@@ -204,9 +207,8 @@ export default function ProfilePage() {
             prSquat: p.strengthPreferences?.prSquat || 0,
             prDeadlift: p.strengthPreferences?.prDeadlift || 0,
         } as any);
-        trigger();
     }
-  }, [context?.isHydrated, context?.activeProfile, reset, trigger]);
+  }, [context?.isHydrated, context?.activeProfile, reset]);
 
   const watchTrainingDays = watch('trainingDays') || [];
   const watchAvatarUrl = watch('avatarUrl');
@@ -223,13 +225,40 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSaveProfile = async (data: ProfileFormValues) => {
+  const handleSaveActiveTab = async () => {
     if (!context) return;
     setIsSaving(true);
+
+    // Mapeamento de campos por aba para validação parcial
+    const tabFields: Record<TabID, (keyof ProfileFormValues)[]> = {
+        perfil: ['name', 'birthDate', 'gender', 'currentWeight', 'height', 'location', 'avatarUrl'],
+        corrida: ['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory', 'planGenerationType'],
+        alimentacao: ['aestheticGoal', 'trainingTiming', 'mealCount', 'supplements', 'allergies', 'preferredFoods', 'excludedFoods'],
+        musculacao: ['strengthSplit', 'strengthFrequency', 'strengthEquipment', 'strengthFocus', 'legDay', 'limitations', 'prBench', 'prSquat', 'prDeadlift']
+    };
+
+    const currentTabId = activeTab as TabID;
+    const fieldsToValidate = tabFields[currentTabId];
+
+    const isValid = await trigger(fieldsToValidate);
+
+    if (!isValid) {
+        setIsSaving(false);
+        toast({
+            variant: "destructive",
+            title: "Dados Incompletos",
+            description: `Existem erros de preenchimento na aba ${activeTab.toUpperCase()}. Corrija para salvar.`,
+        });
+        return;
+    }
+
     try {
+        const data = getValues();
         context.saveProfile({
+            ...context.activeProfile,
             ...data,
             dietPreferences: {
+                ...context.activeProfile?.dietPreferences,
                 aestheticGoal: data.aestheticGoal,
                 trainingTiming: data.trainingTiming,
                 mealCount: data.mealCount,
@@ -239,6 +268,7 @@ export default function ProfilePage() {
                 excludedFoods: data.excludedFoods
             },
             strengthPreferences: {
+                ...context.activeProfile?.strengthPreferences,
                 splitPreference: data.strengthSplit,
                 frequency: data.strengthFrequency,
                 equipment: data.strengthEquipment,
@@ -250,22 +280,33 @@ export default function ProfilePage() {
                 prDeadlift: data.prDeadlift
             }
         } as any);
+        
+        toast({ 
+            title: `✅ ${activeTab.toUpperCase()} Salvo`, 
+            description: 'Alterações registradas com sucesso.' 
+        });
+    } catch (err) {
+        toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Não foi possível persistir os dados.' });
     } finally {
         setTimeout(() => setIsSaving(false), 500);
     }
   };
 
-  const onInvalid = (errors: any) => {
-    console.error("Validation Errors:", errors);
-    toast({
-        variant: "destructive",
-        title: "Dados Incompletos",
-        description: "Verifique se todos os campos obrigatórios (incluindo abas Corrida e Perfil) foram preenchidos corretamente.",
-    });
-  };
-
   const handleGenerate = async (type: 'all' | 'running') => {
     if (!context) return;
+    
+    const isValid = await trigger(['restingHr', 'thresholdPace', 'thresholdHr', 'trainingDays', 'longRunDay', 'experienceLevel', 'raceDistance', 'raceDate', 'trainingHistory']);
+    
+    if (!isValid) {
+        toast({
+            variant: "destructive",
+            title: "Planilha não gerada",
+            description: "Preencha todos os dados da aba CORRIDA antes de gerar o ciclo.",
+        });
+        setActiveTab('corrida');
+        return;
+    }
+
     setIsProcessing(true);
     try {
         const data = form.getValues();
@@ -319,7 +360,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2">
             <div className="lg:col-span-2">
                 <Form {...form}>
-                    <form className="space-y-8" onSubmit={form.handleSubmit(handleSaveProfile, onInvalid)}>
+                    <div className="space-y-8">
                         <Tabs defaultValue="perfil" className="w-full" value={activeTab} onValueChange={setActiveTab}>
                             <TabsList className="grid w-full grid-cols-4 h-auto bg-secondary/20 p-1 rounded-xl overflow-x-auto">
                                 <TabsTrigger value="perfil" className="py-2.5 font-bold text-[10px] uppercase">Perfil</TabsTrigger>
@@ -683,9 +724,15 @@ export default function ProfilePage() {
                         </Tabs>
 
                         <div className="flex flex-col sm:flex-row gap-3">
-                            <Button type="submit" size="lg" disabled={isSaving} className="flex-1 h-12 font-black uppercase tracking-widest bg-white text-black hover:bg-white/90 text-xs">
+                            <Button 
+                                type="button" 
+                                size="lg" 
+                                disabled={isSaving} 
+                                className="flex-1 h-12 font-black uppercase tracking-widest bg-white text-black hover:bg-white/90 text-xs"
+                                onClick={handleSaveActiveTab}
+                            >
                                 {isSaving ? <Loader2 className="animate-spin mr-2 size-4" /> : <CheckCircle2 className="mr-2 size-4" />}
-                                {isSaving ? "SALVANDO..." : "SALVAR PERFIL"}
+                                {isSaving ? "SALVANDO..." : `SALVAR ${activeTab.toUpperCase()}`}
                             </Button>
                             <div className="flex flex-1 rounded-md shadow-lg overflow-hidden">
                                 <Button 
@@ -712,7 +759,7 @@ export default function ProfilePage() {
                                 </DropdownMenu>
                             </div>
                         </div>
-                    </form>
+                    </div>
                 </Form>
                 
                 <div className="mt-8 pt-8 border-t border-border/50">
