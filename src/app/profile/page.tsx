@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useContext, useState, useEffect, useRef } from 'react';
@@ -49,14 +50,10 @@ import {
     Download,
     Upload,
     CalendarDays,
-    Target,
     Trash2,
     ChevronDown,
     Activity,
-    User as UserIcon,
-    Flame,
     CheckCircle2,
-    AlertCircle,
     Info
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -954,30 +951,6 @@ export default function ProfilePage() {
                                 DIRECIONAR PARA CONECTAR
                               </Button>
                             )}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-card/30">
-                    <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2 font-headline uppercase italic tracking-tight">
-                            <Target className="size-5 text-primary" /> Status do Motor
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <div className="p-3 rounded-xl bg-secondary/20 border border-border space-y-2">
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tight text-primary italic">
-                                <span>Pace Limiar</span>
-                                <span className="text-white">{watch('thresholdPace')}</span>
-                            </div>
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tight text-primary italic">
-                                <span>Dias Treino</span>
-                                <span className="text-white">{watchTrainingDays.length}x / sem</span>
-                            </div>
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-tight text-primary italic">
-                                <span>Leg Day</span>
-                                <span className="text-white">{watch('legDay')}</span>
-                            </div>
                         </div>
                     </CardContent>
                 </Card>
