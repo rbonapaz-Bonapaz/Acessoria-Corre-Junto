@@ -1,0 +1,76 @@
+
+{
+  "entities": {
+    "AthleteProfile": {
+      "title": "Perfil do Atleta",
+      "description": "Dados completos do atleta incluindo fisiologia, nutrição e força.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "location": { "type": "string" },
+        "birthDate": { "type": "string", "format": "date" },
+        "gender": { "type": "string", "enum": ["male", "female", "other"] },
+        "currentWeight": { "type": "number" },
+        "height": { "type": "number" },
+        "restingHr": { "type": "number" },
+        "vo2Max": { "type": "number" },
+        "thresholdPace": { "type": "string" },
+        "thresholdHr": { "type": "number" },
+        "raceName": { "type": "string" },
+        "raceDistance": { "type": "string" },
+        "raceDate": { "type": "string", "format": "date" },
+        "raceGoal": { "type": "string" },
+        "trainingDays": { "type": "array", "items": { "type": "string" } },
+        "longRunDay": { "type": "string" },
+        "planGenerationType": { "type": "string", "enum": ["full", "blocks"] },
+        "experienceLevel": { "type": "string", "enum": ["run_walk", "beginner", "intermediate", "advanced"] },
+        "trainingHistory": { "type": "string" },
+        "dietPreferences": { "$ref": "#/backend/entities/DietPreferences" },
+        "strengthPreferences": { "$ref": "#/backend/entities/StrengthPreferences" }
+      }
+    },
+    "DietPreferences": {
+      "title": "Preferências Dieta",
+      "type": "object",
+      "properties": {
+        "aestheticGoal": { "type": "string", "enum": ["cutting", "bulking", "recomp", "performance"] },
+        "trainingTiming": { "type": "string", "enum": ["jejum", "manha", "meio-dia", "tarde", "noite"] },
+        "mealCount": { "type": "number" },
+        "supplements": { "type": "string" },
+        "allergies": { "type": "string" },
+        "preferredFoods": { "type": "string" },
+        "excludedFoods": { "type": "string" }
+      }
+    },
+    "StrengthPreferences": {
+      "title": "Preferências Força",
+      "type": "object",
+      "properties": {
+        "splitPreference": { "type": "string", "enum": ["full_body", "upper_lower", "ppl"] },
+        "frequency": { "type": "number" },
+        "equipment": { "type": "array", "items": { "type": "string" } },
+        "focusAreas": { "type": "array", "items": { "type": "string" } },
+        "legDay": { "type": "string" },
+        "limitations": { "type": "string" },
+        "prBench": { "type": "number" },
+        "prSquat": { "type": "number" },
+        "prDeadlift": { "type": "number" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "object",
+      "description": "Metadados de assinatura e conta do usuário."
+    },
+    "/user_data/{userId}": {
+      "schema": "object",
+      "description": "Documento central de dados do atleta (perfis, planos, logs)."
+    }
+  }
+}

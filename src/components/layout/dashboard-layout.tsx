@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -100,9 +99,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background/80 backdrop-blur-md z-30">
             <SidebarTrigger />
             <div className="flex-1 flex justify-between items-center px-4">
-              <h1 className="font-headline font-semibold text-lg">
-                {items.find(i => i.url === pathname)?.title || "CorreJunto"}
-              </h1>
+              <div className="font-headline font-semibold text-lg flex items-center gap-1">
+                <span className="text-white">Corre</span>
+                <span className="text-primary">Junto</span>
+                <span className="mx-2 text-muted-foreground/30">|</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                   {items.find(i => i.url === pathname)?.title || "Dashboard"}
+                </span>
+              </div>
               <div className="flex items-center gap-4">
                 <Button variant="outline" size="sm" className="hidden md:flex bg-secondary">
                   Conectar Garmin

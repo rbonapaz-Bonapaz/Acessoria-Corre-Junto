@@ -50,3 +50,56 @@ export interface AthleteProfile {
   dietPreferences?: DietPreferences;
   strengthPreferences?: StrengthPreferences;
 }
+
+export interface Workout {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  distance?: string;
+  duration?: string;
+  paceZone?: string;
+  completed: boolean;
+  feedback?: string;
+}
+
+export interface WeeklySchedule {
+  weekNumber: number;
+  focus: string;
+  workouts: Workout[];
+}
+
+export interface TrainingPlan {
+  id: string;
+  profileId: string;
+  createdAt: string;
+  blockType: string;
+  weeklySchedule: WeeklySchedule[];
+}
+
+export interface ChatMessage {
+  role: 'user' | 'model';
+  parts: string;
+}
+
+export interface FeedbackLogItem {
+  id: string;
+  date: string;
+  workoutId: string;
+  perceivedEffort: number;
+  notes: string;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  unlockedAt: string;
+}
+
+export interface PersonalRecord {
+  id: string;
+  distance: string;
+  time: string;
+  date: string;
+}

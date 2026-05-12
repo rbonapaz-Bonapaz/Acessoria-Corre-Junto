@@ -258,7 +258,7 @@ export default function ProfilePage() {
         const raceDistance = data.raceDistancePreset === 'other' ? `${data.customRaceDistance}k` : data.raceDistancePreset;
         const profileData = {
             ...data,
-            id: context.activeProfile?.id || Math.random().toString(36).substr(2, 9),
+            id: context.activeProfile?.id,
             raceDistance,
             dietPreferences: { 
                 aestheticGoal: data.aestheticGoal, 
@@ -303,7 +303,7 @@ export default function ProfilePage() {
       
       const profileToSave = { 
           ...data, 
-          id: context.activeProfile?.id || Math.random().toString(36).substr(2, 9), 
+          id: context.activeProfile?.id, 
           raceDistance,
           dietPreferences: { 
             aestheticGoal: data.aestheticGoal, 
