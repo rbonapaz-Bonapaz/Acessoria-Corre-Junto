@@ -60,7 +60,12 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
 
   // 2. Sincronização Cloud
   useEffect(() => {
-    if (authLoading || !isHydrated || !user) return;
+    if (authLoading || !isHydrated) return;
+
+    if (!user) {
+      // Se deslogado, os dados locais permanecem
+      return;
+    }
 
     const docRef = doc(firestore, 'user_data', user.uid);
     
@@ -73,7 +78,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
           if (data.trainingPlan) setTrainingPlan(data.trainingPlan);
           if (data.apiKey) setApiKeyInternal(data.apiKey);
         } else {
-          // Migração Local -> Cloud
+          // Migração Local -> Cloud se a conta cloud estiver vazia
           const migrationData: any = {};
           if (activeProfile) migrationData.profile = activeProfile;
           if (trainingPlan) migrationData.trainingPlan = trainingPlan;
@@ -108,14 +113,16 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (e) {
-      toast({ variant: 'destructive', title: "Erro no Login" });
+      toast({ variant: 'destructive', title: "Erro no Login", description: "Verifique sua conexão e tente novamente." });
     }
   };
 
   const logout = async () => {
     try {
       await signOut(auth);
-      // Limpa dados locais ao deslogar se desejado, ou mantém para modo convidado
+      // Limpamos o estado para que o próximo usuário não veja dados do anterior se trocar no mesmo PC
+      setActiveProfile(null);
+      setTrainingPlan(null);
       toast({ title: "Sessão encerrada" });
     } catch (e) {
       toast({ variant: 'destructive', title: "Erro ao sair" });
@@ -166,14 +173,9 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
-    // Busca a chave mais atualizada (estado ou storage)
-    const currentKey = apiKey || localStorage.getItem(STORAGE_KEYS.API_KEY);
+    // Chave do estado ou storage
+    const currentKey = apiKey || localStorage.getItem(STORAGE_KEYS.API_KEY) || undefined;
     
-    if (!currentKey || currentKey.trim() === "") {
-      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua Gemini API Key para gerar o ciclo." });
-      return;
-    }
-
     setPlanGenerationStatus('pending');
     toast({ title: "Gerando Ciclo IA...", description: "Analisando seu perfil biométrico e prova alvo." });
 
@@ -214,8 +216,8 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       toast({ title: "Plano Gerado!", description: "Sua planilha técnica está pronta para visualização." });
     } catch (error: any) {
       setPlanGenerationStatus('error');
-      console.error(error);
-      toast({ variant: "destructive", title: "Erro na IA", description: error.message || "Falha na comunicação com o Gemini." });
+      console.error("ERRO IA:", error);
+      toast({ variant: "destructive", title: "Erro na Geração", description: error.message || "Falha na comunicação com o Gemini." });
     }
   };
 

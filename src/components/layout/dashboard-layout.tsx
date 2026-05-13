@@ -19,7 +19,9 @@ import {
   Loader2,
   LogIn,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  ChevronDown,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -49,6 +51,14 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const items = [
   { title: "DASHBOARD", url: "/", icon: LayoutDashboard },
@@ -72,7 +82,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (context?.apiKey) setTempKey(context.apiKey);
-    // Expor a função para abrir o modal globalmente para facilitar o acesso do Perfil
     (window as any).showKeyModal = () => setShowKeyModal(true);
   }, [context?.apiKey]);
 
@@ -92,7 +101,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isIAActive = context?.apiKey && context.apiKey.trim() !== "";
+  const isIAActive = (context?.apiKey && context.apiKey.trim() !== "") || true; // Fallback ativo
 
   return (
     <SidebarProvider>
@@ -178,30 +187,61 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center gap-4">
-              {!user && (
-                <Button variant="ghost" size="sm" onClick={() => context?.login()} className="text-[10px] font-black uppercase italic tracking-widest text-primary border border-primary/30 rounded-full px-4 h-8">
-                  Sincronizar Nuvem <ShieldCheck className="ml-2 size-3" />
-                </Button>
-              )}
               <div className="flex items-center gap-3 pl-4">
-                <div className="text-right hidden md:block leading-none">
-                  <p className="text-[10px] font-black text-white tracking-widest uppercase italic">
-                    {context?.activeProfile?.name || user?.displayName?.split(' ')[0] || 'CONVIDADO'}
-                  </p>
-                  <p className={cn(
-                    "text-[9px] font-bold uppercase tracking-tighter",
-                    user ? "text-primary" : "text-muted-foreground"
-                  )}>
-                    {user ? "Sincronizado" : "Modo Local"}
-                  </p>
-                </div>
-                <div className="size-9 rounded-full bg-secondary border-2 border-border flex items-center justify-center font-headline font-black text-white shadow-lg overflow-hidden">
-                  {user?.photoURL ? (
-                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    context?.activeProfile?.name?.[0] || '?'
-                  )}
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-3 focus:outline-none group">
+                      <div className="text-right hidden md:block leading-none">
+                        <p className="text-[10px] font-black text-white tracking-widest uppercase italic group-hover:text-primary transition-colors">
+                          {context?.activeProfile?.name || user?.displayName?.split(' ')[0] || 'CONVIDADO'}
+                        </p>
+                        <p className={cn(
+                          "text-[9px] font-bold uppercase tracking-tighter",
+                          user ? "text-primary" : "text-muted-foreground"
+                        )}>
+                          {user ? "Sincronizado" : "Modo Local"}
+                        </p>
+                      </div>
+                      <div className="size-9 rounded-full bg-secondary border-2 border-border flex items-center justify-center font-headline font-black text-white shadow-lg overflow-hidden group-hover:border-primary transition-all">
+                        {user?.photoURL ? (
+                          <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full bg-secondary">
+                            {context?.activeProfile?.name?.[0] || <UserIcon size={16} />}
+                          </div>
+                        )}
+                      </div>
+                      <ChevronDown size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-card border-border shadow-2xl rounded-2xl p-2">
+                    <DropdownMenuLabel className="font-headline font-black uppercase italic text-[10px] tracking-widest px-2 py-1.5 text-muted-foreground">Meu Laboratório</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-border/50" />
+                    <DropdownMenuItem asChild className="rounded-xl focus:bg-primary focus:text-black cursor-pointer">
+                      <Link href="/profile" className="flex items-center gap-2 font-bold text-xs uppercase italic py-2.5">
+                        <UserIcon className="size-4" /> Perfil Atleta
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setShowKeyModal(true)} className="rounded-xl focus:bg-primary focus:text-black cursor-pointer flex items-center gap-2 font-bold text-xs uppercase italic py-2.5">
+                      <Key className="size-4" /> Configurar IA
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-border/50" />
+                    {user ? (
+                      <>
+                        <DropdownMenuItem onClick={() => context?.login()} className="rounded-xl focus:bg-primary focus:text-black cursor-pointer flex items-center gap-2 font-bold text-xs uppercase italic py-2.5">
+                          <LogIn className="size-4" /> Trocar Perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => context?.logout()} className="rounded-xl focus:bg-destructive/10 focus:text-destructive cursor-pointer flex items-center gap-2 font-bold text-xs uppercase italic text-destructive py-2.5">
+                          <LogOut className="size-4" /> Sair da Conta
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <DropdownMenuItem onClick={() => context?.login()} className="rounded-xl focus:bg-primary focus:text-black cursor-pointer flex items-center gap-2 font-bold text-xs uppercase italic text-primary py-2.5">
+                        <LogIn className="size-4" /> Entrar / Sincronizar
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </header>
@@ -212,24 +252,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <Dialog open={showKeyModal} onOpenChange={setShowKeyModal}>
-        <DialogContent className="sm:max-w-[425px] bg-card border-border">
+        <DialogContent className="sm:max-w-[425px] bg-card border-border rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-primary font-headline italic font-black uppercase">Configuração de IA</DialogTitle>
-            <DialogDescription>
-              Sua Gemini API Key é salva localmente e sincronizada ao entrar.
+            <DialogTitle className="text-primary font-headline italic font-black uppercase tracking-tighter text-2xl">Inteligência de Elite</DialogTitle>
+            <DialogDescription className="text-xs uppercase font-bold tracking-widest text-muted-foreground">
+              Configure sua chave para processamento cloud.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                1. Gere sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
-                <br/>2. Cole abaixo.
+              <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+                Sua Gemini API Key é salva localmente e sincronizada ao entrar. Para gerar seu ciclo de performance, precisamos deste motor ativo.
               </p>
               <Input
                 placeholder="Cole sua API Key aqui..."
                 value={tempKey}
                 onChange={(e) => setTempKey(e.target.value)}
-                className="bg-secondary/50 border-border h-14 font-mono text-sm rounded-xl focus:border-primary text-center"
+                className="bg-secondary/50 border-border h-14 font-mono text-xs rounded-xl focus:border-primary text-center"
               />
             </div>
           </div>

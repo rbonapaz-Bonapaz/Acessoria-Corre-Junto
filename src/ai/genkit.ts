@@ -3,11 +3,16 @@ import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 /**
+ * Chave de API padrão fornecida pelo usuário para testes e fallback.
+ */
+const DEFAULT_KEY = "AIzaSyDPO6BpCQC9jHhuavasgY2OhkJvleHL8v0";
+
+/**
  * Instância padrão do Genkit.
- * Utiliza a chave definida no .env (GOOGLE_GENAI_API_KEY) como fallback global.
+ * Utiliza a chave definida no .env ou a chave padrão de elite.
  */
 export const ai = genkit({
-  plugins: [googleAI()],
+  plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY || DEFAULT_KEY })],
   model: 'googleai/gemini-1.5-flash',
 });
 
@@ -24,6 +29,6 @@ export const getAiWithKey = (userApiKey?: string) => {
     });
   }
   
-  // Caso contrário, retorna a instância padrão que já possui a chave do .env
+  // Caso contrário, retorna a instância padrão
   return ai;
 };

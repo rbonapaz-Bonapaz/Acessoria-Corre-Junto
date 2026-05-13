@@ -272,29 +272,10 @@ export default function ProfilePage() {
 
   if (!context?.isHydrated) return <DashboardLayout><Skeleton className="h-96 w-full bg-secondary/20 rounded-3xl"/></DashboardLayout>;
 
-  const isIAActive = context?.apiKey && context.apiKey.trim() !== "";
-
   return (
     <DashboardLayout>
       <TooltipProvider>
         <div className="space-y-8 pb-20 max-w-5xl mx-auto animate-in fade-in duration-700">
-          {!isIAActive && (
-            <div className="mx-2 bg-primary/10 border border-primary/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4">
-              <div className="flex items-center gap-4">
-                <div className="size-10 rounded-full bg-primary flex items-center justify-center text-black">
-                  <Key size={20} />
-                </div>
-                <div>
-                  <p className="font-headline font-black uppercase italic text-sm tracking-tighter">IA em Modo Fallback (Servidor)</p>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase">Usando chave do sistema. Para maior privacidade, configure a sua.</p>
-                </div>
-              </div>
-              <Button variant="outline" className="text-[10px] font-black uppercase italic tracking-widest border-primary/30 text-primary hover:bg-primary/20" onClick={() => (window as any).showKeyModal?.()}>
-                CONFIGURAR MINHA CHAVE
-              </Button>
-            </div>
-          )}
-
           <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-2">
             <div className="flex items-center gap-4">
               <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
@@ -313,10 +294,10 @@ export default function ProfilePage() {
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-8">
               <Tabs defaultValue="perfil" value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-4 h-auto bg-secondary/20 p-1.5 rounded-2xl gap-2 shadow-inner">
-                  <TabsTrigger value="perfil" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">PERFIL</TabsTrigger>
-                  <TabsTrigger value="corrida" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">CORRIDA</TabsTrigger>
-                  <TabsTrigger value="alimentacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">DIETA</TabsTrigger>
-                  <TabsTrigger value="musculacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">FORÇA</TabsTrigger>
+                  <TabsTrigger value="perfil" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl uppercase">PERFIL</TabsTrigger>
+                  <TabsTrigger value="corrida" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl uppercase">CORRIDA</TabsTrigger>
+                  <TabsTrigger value="alimentacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl uppercase">DIETA</TabsTrigger>
+                  <TabsTrigger value="musculacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl uppercase">FORÇA</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="perfil" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
