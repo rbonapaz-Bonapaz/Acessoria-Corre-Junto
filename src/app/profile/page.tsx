@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useContext, useState, useEffect, useRef, useMemo } from 'react';
@@ -145,6 +146,25 @@ export default function ProfilePage() {
       const p = context.activeProfile;
       reset({
         ...p,
+        name: p.name || '',
+        avatarUrl: p.avatarUrl || '',
+        birthDate: p.birthDate || '',
+        currentWeight: p.currentWeight || 70,
+        height: p.height || 175,
+        restingHr: p.restingHr || 50,
+        vo2Max: p.vo2Max || 45,
+        thresholdPace: p.thresholdPace || '4:50',
+        thresholdHr: p.thresholdHr || 165,
+        weeklyMileageGoal: p.weeklyMileageGoal || 60,
+        raceName: p.raceName || '',
+        raceDistance: p.raceDistance || '10k',
+        raceDate: p.raceDate || '',
+        targetPace: p.targetPace || '',
+        targetTime: p.targetTime || '',
+        trainingDays: p.trainingDays || ['Segunda', 'Quarta', 'Sexta'],
+        longRunDay: p.longRunDay || 'Domingo',
+        planGenerationType: p.planGenerationType || 'blocks',
+        experienceLevel: p.experienceLevel || 'beginner',
         aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
         trainingTiming: p.dietPreferences?.trainingTiming || 'manha',
         mealCount: p.dietPreferences?.mealCount || 4,
@@ -265,12 +285,12 @@ export default function ProfilePage() {
                   <Key size={20} />
                 </div>
                 <div>
-                  <p className="font-headline font-black uppercase italic text-sm tracking-tighter">Inteligência Artificial Inativa</p>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase">Configure sua Gemini API Key para desbloquear o Coach IA.</p>
+                  <p className="font-headline font-black uppercase italic text-sm tracking-tighter">IA em Modo Fallback (Servidor)</p>
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase">Usando chave do sistema. Para maior privacidade, configure a sua.</p>
                 </div>
               </div>
               <Button variant="outline" className="text-[10px] font-black uppercase italic tracking-widest border-primary/30 text-primary hover:bg-primary/20" onClick={() => (window as any).showKeyModal?.()}>
-                CONFIGURAR AGORA
+                CONFIGURAR MINHA CHAVE
               </Button>
             </div>
           )}
@@ -403,10 +423,10 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                              <CalendarIcon className="size-4 text-primary" />
-                             <span className="text-[10px] font-black uppercase text-white italic tracking-widest">DISPONIBILIDADE (DOMINGO FIRST)</span>
+                             <span className="text-[10px] font-black uppercase text-white italic tracking-widest">DISPONIBILIDADE (DOMINGO É O 1º DIA)</span>
                           </div>
                           <span className="text-[9px] font-black uppercase text-primary italic tracking-widest bg-primary/10 px-3 py-1 rounded-full">
-                            {watchTrainingDays.length} DIAS ATIVOS
+                            {watchTrainingDays.length} DIAS / SEMANA
                           </span>
                         </div>
                         
@@ -457,7 +477,7 @@ export default function ProfilePage() {
 
                           <FormField control={form.control} name="weeklyMileageGoal" render={({field}) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-[10px] font-black uppercase text-white italic">VOLUME SEMANAL (KM)</FormLabel>
+                              <FormLabel className="text-[10px] font-black uppercase text-white italic">DISTÂNCIA SEMANAL (KM)</FormLabel>
                               <FormControl><Input type="number" {...field} value={field.value ?? 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                             </FormItem>
                           )} />

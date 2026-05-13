@@ -1,9 +1,10 @@
+
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * Instância padrão do Genkit.
- * Tenta usar a chave de ambiente do servidor como fallback.
+ * Utiliza a chave definida no .env (GOOGLE_GENAI_API_KEY) como fallback global.
  */
 export const ai = genkit({
   plugins: [googleAI()],
@@ -12,17 +13,17 @@ export const ai = genkit({
 
 /**
  * Retorna uma instância do Genkit configurada com uma chave de API específica.
- * Essencial para permitir que atletas usem suas próprias chaves ou a do treinador (fallback).
+ * Essencial para permitir que atletas usem suas próprias chaves ou a do servidor (fallback).
  */
 export const getAiWithKey = (userApiKey?: string) => {
-  // Se o usuário forneceu uma chave, usa ela. 
-  // Caso contrário, o Genkit usará a GOOGLE_GENAI_API_KEY definida no ambiente.
-  if (userApiKey && userApiKey.trim() !== "") {
+  // Se o usuário forneceu uma chave válida, usa ela.
+  if (userApiKey && userApiKey.trim() !== "" && userApiKey.startsWith("AIza")) {
     return genkit({
       plugins: [googleAI({ apiKey: userApiKey })],
       model: 'googleai/gemini-1.5-flash',
     });
   }
   
+  // Caso contrário, retorna a instância padrão que já possui a chave do .env
   return ai;
 };

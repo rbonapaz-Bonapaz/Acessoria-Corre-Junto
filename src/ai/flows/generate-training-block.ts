@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
@@ -102,8 +103,10 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
 
   if (!output) throw new Error('A Inteligência Artificial falhou ao construir o plano. Verifique sua conexão ou API Key.');
   
-  // Garantir IDs únicos para cada treino
+  // Garantir IDs únicos e ordenação por dia começando no Domingo
+  const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {
+    week.runs.sort((a, b) => order.indexOf(a.day) - order.indexOf(b.day));
     week.runs.forEach(run => {
       if (!run.id) run.id = Math.random().toString(36).substring(2, 11);
     });
