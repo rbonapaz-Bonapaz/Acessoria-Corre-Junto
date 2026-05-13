@@ -402,28 +402,43 @@ export default function ProfilePage() {
 
                   <Card className="bg-card/50 border-border/50 rounded-2xl overflow-hidden">
                     <CardHeader className="bg-secondary/20 border-b border-border/50">
-                       <div className="flex items-center gap-3"><CalendarCheck className="text-primary size-5"/><h3 className="text-xs font-black uppercase italic tracking-widest">Disponibilidade Semanal</h3></div>
+                       <div className="flex items-center gap-3"><CalendarCheck className="text-primary size-5"/><h3 className="text-xs font-black uppercase italic tracking-widest">Disponibilidade & Longão</h3></div>
                     </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="flex flex-wrap gap-3">
-                        {weekDays.map((day) => (
-                          <FormField key={day.id} control={form.control} name="trainingDays" render={({ field }) => (
-                            <FormItem key={day.id} className="flex flex-row items-center space-x-3 space-y-0 p-3 rounded-xl border bg-black/20 hover:bg-primary/5 transition-colors">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(day.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...field.value, day.id])
-                                      : field.onChange(field.value?.filter((value) => value !== day.id))
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="text-xs font-black italic cursor-pointer uppercase">{day.label}</FormLabel>
-                            </FormItem>
-                          )} />
-                        ))}
+                    <CardContent className="pt-6 space-y-6">
+                      <div className="space-y-4">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Dias Disponíveis</FormLabel>
+                        <div className="flex flex-wrap gap-3">
+                          {weekDays.map((day) => (
+                            <FormField key={day.id} control={form.control} name="trainingDays" render={({ field }) => (
+                              <FormItem key={day.id} className="flex flex-row items-center space-x-3 space-y-0 p-3 rounded-xl border bg-black/20 hover:bg-primary/5 transition-colors">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(day.id)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, day.id])
+                                        : field.onChange(field.value?.filter((value) => value !== day.id))
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-xs font-black italic cursor-pointer uppercase">{day.label}</FormLabel>
+                              </FormItem>
+                            )} />
+                          ))}
+                        </div>
                       </div>
+
+                      <FormField control={form.control} name="longRunDay" render={({field}) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Dia do Longão (LSD)</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger className="bg-black/30 h-14 font-black rounded-xl border-border/40"><SelectValue placeholder="Selecione o dia..." /></SelectTrigger></FormControl>
+                            <SelectContent>
+                              {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )} />
                     </CardContent>
                   </Card>
 
