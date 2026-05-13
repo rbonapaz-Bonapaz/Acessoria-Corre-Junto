@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -105,7 +104,7 @@ export default function Home() {
                   <ShieldCheck className="text-primary size-5" />
                   <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Minha Gestão (Treinador)</h3>
                 </div>
-                {myAthletes.length > 0 && <Badge variant="outline" className="text-[10px] uppercase font-black">{myAthletes.length} Atletas</Badge>}
+                {myAthletes.length > 0 && <Badge variant="outline" className="text-[10px] uppercase font-black">{myAthletes.length} Perfis</Badge>}
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
                 {myAthletes.map((profile) => (
@@ -125,7 +124,7 @@ export default function Home() {
               <div className="space-y-6 pt-6 border-t border-border/20">
                 <div className="flex items-center gap-2 px-2">
                   <UserIcon className="text-accent size-5" />
-                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Meus Treinos (Vinculado por Treinador)</h3>
+                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Meus Treinos (Assessoria)</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
                   {linkedProfiles.map((profile) => (
@@ -144,7 +143,7 @@ export default function Home() {
                   <h4 className="font-headline font-black uppercase italic text-white">Nenhum perfil encontrado</h4>
                   <p className="text-xs text-muted-foreground max-w-xs italic">Crie seu próprio perfil de atleta ou peça para seu treinador vincular seu e-mail.</p>
                 </div>
-                <Button asChild size="lg" className="bg-primary text-black font-black uppercase shadow-xl shadow-primary/20">
+                <Button asChild size="lg" className="bg-primary text-black font-black uppercase shadow-xl shadow-primary/20 rounded-2xl h-14 px-10">
                    <Link href="/profile">CRIAR MEU PRIMEIRO PERFIL</Link>
                 </Button>
               </div>
@@ -226,7 +225,7 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground italic">"Treino leve para recuperação e base aeróbica."</p>
                 <div className="pt-2"><Badge variant="secondary">Fase Ativa</Badge></div>
               </div>
-              <Button asChild className="w-full bg-primary hover:bg-primary/90 text-black font-black uppercase">
+              <Button asChild className="w-full bg-primary hover:bg-primary/90 text-black font-black uppercase h-12 rounded-xl">
                 <Link href="/training">Ver Planilha</Link>
               </Button>
             </CardContent>

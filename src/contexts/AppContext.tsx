@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useState, useEffect, ReactNode, useRef } from 'react';
@@ -160,7 +159,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const trainerData = await getDoc(doc(db, 'user_data', profile.ownerUid));
         effectiveApiKey = trainerData.data()?.apiKey || null;
         if (effectiveApiKey) {
-          toast({ title: "Sincronização de IA", description: "Usando inteligência da assessoria." });
+          toast({ title: "Inteligência de Assessoria", description: "Usando a chave de API do seu treinador." });
         }
       } catch (e) {
         console.error("Erro ao buscar chave do treinador", e);

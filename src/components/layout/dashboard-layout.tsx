@@ -82,8 +82,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [tempKey, setTempKey] = React.useState("");
 
   React.useEffect(() => {
+    // Se o usuário não tem chave e não está logado, ou se é um novo atleta
+    // Mas por enquanto, mostramos apenas se ele quiser ativar sua própria IA
     if (context?.isHydrated && !context.apiKey) {
-      setShowKeyModal(true);
+      // Opcional: mostrar modal automaticamente
     }
   }, [context?.isHydrated, context?.apiKey]);
 
@@ -91,7 +93,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     if (tempKey.trim()) {
       context?.setApiKey(tempKey.trim());
       setShowKeyModal(false);
-      toast({ title: "IA Ativada!", description: "Sua chave foi configurada." });
+      toast({ title: "Sua IA está ativa!", description: "O sistema agora usará sua própria cota do Google." });
     }
   };
 
@@ -102,31 +104,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ title: "Sincronização Ativa!", description: "Baixando seus dados da nuvem..." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      const errorCode = error.code || "";
-      const errorMessage = error.message || "";
-      
-      if (errorCode.includes('project-not-found') || errorCode.includes('invalid-api-key')) {
-        toast({ 
-          variant: "destructive", 
-          duration: 15000,
-          title: "Configuração Inválida", 
-          description: "O código está apontando para um projeto que não existe. Verifique se o projectId no arquivo src/firebase/config.ts é o mesmo do seu console." 
-        });
-      } else if (errorMessage.includes('identitytoolkit') || errorCode.includes('api-not-activated')) {
-        toast({ 
-          variant: "destructive", 
-          duration: 20000,
-          title: "API em Ativação", 
-          description: "O Google está processando seu e-mail de suporte. Aguarde 5 minutos. Se persistir, verifique os 'Domínios Autorizados' nas configurações de Authentication." 
-        });
-      } else {
-        toast({ 
-          variant: "destructive", 
-          duration: 10000,
-          title: "Erro de Login", 
-          description: error.message 
-        });
-      }
+      toast({ variant: "destructive", title: "Erro de Login", description: error.message });
     }
   };
 
@@ -194,7 +172,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem>
                 <SidebarMenuButton className="w-full text-muted-foreground hover:text-white" onClick={() => setShowKeyModal(true)}>
                   <Key className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Chave IA</span>
+                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Minha Chave IA</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
@@ -290,9 +268,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <Dialog open={showKeyModal} onOpenChange={setShowKeyModal}>
         <DialogContent className="sm:max-w-[425px] bg-card border-border rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-primary font-headline italic font-black uppercase">Ativação de IA</DialogTitle>
+            <DialogTitle className="text-primary font-headline italic font-black uppercase">Sua Chave Gemini</DialogTitle>
             <DialogDescription>
-              A chave Gemini é essencial para o Coach e a Planilha Automática.
+              Por padrão, usamos a inteligência da sua assessoria. Se quiser usar sua própria cota gratuita do Google, insira sua chave abaixo.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -301,7 +279,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 Obtenha sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
               </p>
               <Input
-                placeholder="Cole sua API Key..."
+                placeholder="Cole sua API Key aqui..."
                 value={tempKey}
                 onChange={(e) => setTempKey(e.target.value)}
                 className="bg-secondary/50 border-border h-12 font-mono text-sm rounded-xl"
@@ -309,7 +287,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black h-12 rounded-xl">Ativar Agora</Button>
+            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black h-12 rounded-xl">Ativar Minha Chave</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

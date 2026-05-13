@@ -167,6 +167,7 @@ export default function ProfilePage() {
   const trainingDays = watch('trainingDays') || [];
   
   const availableLongRunDays = useMemo(() => {
+    // Mantém a ordem do array weekDays (Domingo primeiro)
     return weekDays.filter(day => trainingDays.includes(day.id));
   }, [trainingDays]);
 
@@ -527,7 +528,7 @@ export default function ProfilePage() {
                                             <FormField control={form.control} name="longRunDay" render={({field}) => (
                                                 <FormItem>
                                                     <FormLabel className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-primary">
-                                                      <CalendarCheck size={14}/> DIA DO LONGÃO (FILTRADO)
+                                                      <CalendarCheck size={14}/> DIA DO LONGÃO
                                                     </FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl>
@@ -543,7 +544,7 @@ export default function ProfilePage() {
                                                             )}
                                                         </SelectContent>
                                                     </Select>
-                                                    <FormDescription className="text-[9px] font-medium italic opacity-70">A IA só permite agendar o longão em dias que você marcou que pode correr.</FormDescription>
+                                                    <FormDescription className="text-[9px] font-medium italic opacity-70">A IA agenda o volume principal baseado na sua disponibilidade.</FormDescription>
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="experienceLevel" render={({field}) => (
