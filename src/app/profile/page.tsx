@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useState, useEffect, useRef } from 'react';
@@ -33,7 +32,6 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { 
     Loader2, 
@@ -44,7 +42,6 @@ import {
     CheckCircle2,
     ShieldCheck,
     Utensils,
-    Flame,
     Target,
     Activity,
     Trophy,
@@ -69,15 +66,6 @@ const equipmentOptions = [
   'Elásticos / Mini-bands',
   'Peso do Corpo (Calistenia)',
   'Barra Fixa / Paralelas',
-];
-
-const focusAreasOptions = [
-  'Mobilidade / Alongamento',
-  'Core / Estabilidade',
-  'Glúteos / Posteriores',
-  'Quadríceps / Força',
-  'Panturrilha / Tendões',
-  'Braços / Ombros',
 ];
 
 const profileSchema = z.object({
@@ -471,13 +459,14 @@ export default function ProfilePage() {
                                                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Ritmo Pretendido (min/km)</FormLabel>
                                                         <FormControl><Input placeholder="04:15" {...field} value={field.value ?? ''} className="bg-primary/5 border-primary/20 h-12 text-lg font-black" /></FormControl>
                                                     </FormItem>
-                                                )} ) : (
+                                                )} />
+                                            ) : (
                                                 <FormField control={form.control} name="targetTime" render={({field}) => (
                                                     <FormItem>
                                                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Tempo Pretendido (HH:MM:SS)</FormLabel>
                                                         <FormControl><Input placeholder="03:30:00" {...field} value={field.value ?? ''} className="bg-primary/5 border-primary/20 h-12 text-lg font-black" /></FormControl>
                                                     </FormItem>
-                                                )}
+                                                )} />
                                             )}
                                         </div>
                                     </div>
@@ -692,27 +681,22 @@ export default function ProfilePage() {
                                         <FormLabel className="text-[10px] font-bold uppercase">Equipamentos Disponíveis</FormLabel>
                                         <div className="flex flex-wrap gap-2">
                                             {equipmentOptions.map(opt => (
-                                                <FormField key={opt} control={form.control} name="strengthEquipment" render={({ field }) => (
-                                                    <FormItem className="space-y-0">
-                                                        <FormControl>
-                                                            <div 
-                                                                onClick={() => {
-                                                                    const current = field.value || [];
-                                                                    if (current.includes(opt)) field.onChange(current.filter(o => o !== opt));
-                                                                    else field.onChange([...current, opt]);
-                                                                }}
-                                                                className={cn(
-                                                                    "px-4 py-2 rounded-full border text-[10px] font-black uppercase cursor-pointer transition-all",
-                                                                    field.value?.includes(opt) 
-                                                                        ? "bg-purple-500 border-purple-500 text-white" 
-                                                                        : "border-border/50 bg-black/10 text-muted-foreground hover:border-purple-500/50"
-                                                                )}
-                                                            >
-                                                                {opt}
-                                                            </div>
-                                                        </FormControl>
-                                                    </FormItem>
-                                                )} />
+                                                <div 
+                                                    key={opt}
+                                                    onClick={() => {
+                                                        const current = getValues('strengthEquipment') || [];
+                                                        if (current.includes(opt)) setValue('strengthEquipment', current.filter(o => o !== opt));
+                                                        else setValue('strengthEquipment', [...current, opt]);
+                                                    }}
+                                                    className={cn(
+                                                        "px-4 py-2 rounded-full border text-[10px] font-black uppercase cursor-pointer transition-all",
+                                                        watch('strengthEquipment')?.includes(opt) 
+                                                            ? "bg-purple-500 border-purple-500 text-white" 
+                                                            : "border-border/50 bg-black/10 text-muted-foreground hover:border-purple-500/50"
+                                                    )}
+                                                >
+                                                    {opt}
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
@@ -730,19 +714,19 @@ export default function ProfilePage() {
                                                 <FormField control={form.control} name="prBench" render={({field}) => (
                                                     <FormItem>
                                                         <FormLabel className="text-[9px] font-bold uppercase opacity-60">Supino (kg)</FormLabel>
-                                                        <FormControl><Input type="number" {...field} className="bg-black/10 h-10 text-center font-black" /></FormControl>
+                                                        <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-black/10 h-10 text-center font-black" /></FormControl>
                                                     </FormItem>
                                                 )} />
                                                 <FormField control={form.control} name="prSquat" render={({field}) => (
                                                     <FormItem>
                                                         <FormLabel className="text-[9px] font-bold uppercase opacity-60">Agacham. (kg)</FormLabel>
-                                                        <FormControl><Input type="number" {...field} className="bg-black/10 h-10 text-center font-black" /></FormControl>
+                                                        <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-black/10 h-10 text-center font-black" /></FormControl>
                                                     </FormItem>
                                                 )} />
                                                 <FormField control={form.control} name="prDeadlift" render={({field}) => (
                                                     <FormItem>
                                                         <FormLabel className="text-[9px] font-bold uppercase opacity-60">Terra (kg)</FormLabel>
-                                                        <FormControl><Input type="number" {...field} className="bg-black/10 h-10 text-center font-black" /></FormControl>
+                                                        <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-black/10 h-10 text-center font-black" /></FormControl>
                                                     </FormItem>
                                                 )} />
                                             </div>
@@ -775,6 +759,7 @@ export default function ProfilePage() {
                                                   <Input 
                                                     placeholder="exemplo@gmail.com" 
                                                     {...field} 
+                                                    value={field.value ?? ''}
                                                     disabled={!isOwner}
                                                     className="bg-black/30 h-12 border-border/50 focus:border-primary font-medium" 
                                                   />
