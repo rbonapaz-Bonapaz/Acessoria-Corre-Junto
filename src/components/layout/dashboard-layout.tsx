@@ -16,8 +16,6 @@ import {
   Key,
   Link2,
   Info,
-  LogOut,
-  LogIn,
   Users,
   AlertCircle
 } from "lucide-react";
@@ -97,11 +95,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <Sidebar collapsible="icon" className="border-r border-border/50">
           <SidebarHeader className="py-8 px-4 flex items-center justify-center overflow-hidden">
             <div className="flex items-center gap-2">
-              <span className="font-headline font-black text-2xl tracking-tighter italic group-data-[state=expanded]:block group-data-[state=collapsed]:hidden transition-all">
-                <span className="text-white">CORRE</span><span className="text-primary">JUNTO</span>
-              </span>
-              <span className="font-headline font-black text-2xl tracking-tighter italic group-data-[state=collapsed]:block group-data-[state=expanded]:hidden transition-all">
-                <span className="text-white">C</span><span className="text-primary">J</span>
+              <span className="font-headline font-black text-2xl tracking-tighter italic group-data-[state=expanded]:block group-data-[state=collapsed]:hidden transition-all text-white">
+                CORREJUNTO
               </span>
             </div>
           </SidebarHeader>
