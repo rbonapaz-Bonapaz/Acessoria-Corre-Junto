@@ -19,7 +19,6 @@ import {
   Loader2,
   LogIn,
   LogOut,
-  Sparkles,
   ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -50,7 +49,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 
 const items = [
   { title: "DASHBOARD", url: "/", icon: LayoutDashboard },
@@ -71,7 +69,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useUser();
   const [showKeyModal, setShowKeyModal] = React.useState(false);
   const [tempKey, setTempKey] = React.useState("");
-  const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (context?.apiKey) setTempKey(context.apiKey);
+  }, [context?.apiKey]);
 
   const handleSaveKey = () => {
     if (tempKey.trim() && context) {
@@ -123,6 +124,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </SidebarGroup>
           </SidebarContent>
           <SidebarFooter className="p-4 border-t border-border/20 space-y-2">
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                className={cn(
+                  "w-full h-12 border transition-all rounded-xl",
+                  context?.apiKey ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground border-border/20"
+                )} 
+                onClick={() => setShowKeyModal(true)}
+              >
+                <Key className="size-4" />
+                <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">
+                  {context?.apiKey ? "IA ATIVA" : "Configurar IA"}
+                </span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
             {!user ? (
                <SidebarMenuItem>
                 <SidebarMenuButton 
@@ -134,31 +150,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ) : (
-              <>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    className={cn(
-                      "w-full h-12 border transition-all rounded-xl",
-                      context?.apiKey ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground border-border/20"
-                    )} 
-                    onClick={() => setShowKeyModal(true)}
-                  >
-                    <Key className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">
-                      {context?.apiKey ? "IA ATIVA" : "Configurar IA"}
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    className="w-full h-12 text-muted-foreground border border-border/20 rounded-xl hover:bg-destructive/10 hover:text-destructive" 
-                    onClick={() => context?.logout()}
-                  >
-                    <LogOut className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Sair</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  className="w-full h-12 text-muted-foreground border border-border/20 rounded-xl hover:bg-destructive/10 hover:text-destructive" 
+                  onClick={() => context?.logout()}
+                >
+                  <LogOut className="size-4" />
+                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Sair</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             )}
           </SidebarFooter>
         </Sidebar>
@@ -212,7 +212,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <DialogHeader>
             <DialogTitle className="text-primary font-headline italic font-black uppercase">Configuração de IA</DialogTitle>
             <DialogDescription>
-              Sua Gemini API Key será salva na nuvem para uso em todos os seus dispositivos.
+              Sua Gemini API Key é salva localmente e sincronizada ao entrar.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">

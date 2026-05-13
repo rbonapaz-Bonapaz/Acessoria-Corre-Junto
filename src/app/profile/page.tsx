@@ -45,7 +45,8 @@ import {
     Activity,
     User,
     Calendar,
-    Target
+    Target,
+    Key
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -89,13 +90,11 @@ const profileSchema = z.object({
   experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']).optional().default('beginner'),
   trainingHistory: z.string().optional(),
   referenceDocumentUri: z.string().optional(),
-  // Dieta
   aestheticGoal: z.enum(['performance', 'cutting', 'bulking', 'recomp']).optional(),
   trainingTiming: z.enum(['jejum', 'manha', 'meio-dia', 'tarde', 'noite']).optional(),
   mealCount: z.coerce.number().optional().default(4),
   supplements: z.string().optional(),
   allergies: z.string().optional(),
-  // Força
   legDay: z.string().optional(),
   strengthSplit: z.enum(['full_body', 'upper_lower', 'ppl']).optional(),
   strengthObjective: z.enum(['strength', 'hypertrophy', 'performance', 'endurance']).optional(),
@@ -236,6 +235,7 @@ export default function ProfilePage() {
       };
       
       await context.saveProfile(profileData);
+      toast({ title: "Dados Salvos", description: "Configurações atualizadas com sucesso." });
     } catch (error) {
       console.error(error);
       toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Não foi possível salvar seus dados.' });
@@ -247,6 +247,15 @@ export default function ProfilePage() {
   const handleGenerate = async () => {
     if (!context) return;
     
+    if (!context.apiKey) {
+      toast({ 
+        variant: "destructive", 
+        title: "Gemini API Key Ausente", 
+        description: "Configure sua chave no menu lateral ou no aviso acima para gerar o ciclo." 
+      });
+      return;
+    }
+
     const isValid = await form.trigger();
     if (!isValid) {
       toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha o nome e campos obrigatórios." });
@@ -257,10 +266,8 @@ export default function ProfilePage() {
     setIsProcessing(true);
 
     try {
-      // 1. Save data first to ensure AI uses latest
       await onSave(formData);
       
-      // 2. Map form data to the profile object expected by AI flow
       const tempProfile: AthleteProfile = {
         ...formData,
         id: context.activeProfile?.id || 'profile',
@@ -293,6 +300,21 @@ export default function ProfilePage() {
     <DashboardLayout>
       <TooltipProvider>
         <div className="space-y-8 pb-20 max-w-5xl mx-auto animate-in fade-in duration-700">
+          {!context?.apiKey && (
+            <div className="mx-2 bg-primary/10 border border-primary/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4">
+              <div className="flex items-center gap-4">
+                <div className="size-10 rounded-full bg-primary flex items-center justify-center text-black">
+                  <Key size={20} />
+                </div>
+                <div>
+                  <p className="font-headline font-black uppercase italic text-sm tracking-tighter">Inteligência Artificial Inativa</p>
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase">Configure sua Gemini API Key para desbloquear o Coach IA.</p>
+                </div>
+              </div>
+              <p className="text-[10px] italic text-muted-foreground max-w-xs text-center md:text-right">A chave está localizada no menu lateral inferior.</p>
+            </div>
+          )}
+
           <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-2">
             <div className="flex items-center gap-4">
               <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
