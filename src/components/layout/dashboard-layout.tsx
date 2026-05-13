@@ -100,10 +100,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ title: "Sincronização Ativa!", description: "Acessando seu laboratório de performance." });
     } catch (error: any) {
       console.error("Auth Error:", error);
+      
+      let description = "Certifique-se de autorizar este domínio no Firebase Console.";
+      if (error.code === 'auth/identity-toolkit-api-has-not-been-used-in-project') {
+        description = "A API Identity Toolkit não está ativa. Por favor, ative 'Authentication' no Console do Firebase e tente novamente.";
+      }
+      
       toast({ 
         variant: "destructive", 
         title: "Erro de Autenticação", 
-        description: "Certifique-se de autorizar este domínio no Firebase Console."
+        description
       });
     }
   };

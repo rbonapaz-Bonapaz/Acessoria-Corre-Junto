@@ -23,7 +23,6 @@ import {
   Info,
   Plus,
   ChevronRight,
-  Users,
   ShieldCheck,
   User as UserIcon,
   Lock
@@ -252,7 +251,7 @@ function ProfileCard({ profile, onSwitch, isLinked = false }: { profile: any, on
           isLinked ? "border-accent/40 group-hover:border-accent" : "border-transparent group-hover:border-primary"
         )}>
           <AvatarImage src={profile.avatarUrl} className="object-cover" />
-          <AvatarFallback className="bg-secondary text-3xl font-black italic">{profile.name[0]}</AvatarFallback>
+          <AvatarFallback className="bg-secondary text-3xl font-black italic">{profile.name?.[0] || '?'}</AvatarFallback>
         </Avatar>
         <div className={cn(
           "absolute inset-0 opacity-0 group-hover:opacity-100 rounded-3xl transition-opacity flex items-center justify-center",
