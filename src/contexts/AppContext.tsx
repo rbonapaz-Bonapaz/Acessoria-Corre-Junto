@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
@@ -39,7 +40,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
 
-  // Carregamento inicial (Local-First)
   useEffect(() => {
     const savedProfiles = localStorage.getItem(STORAGE_KEY_PROFILES);
     const savedApiKey = localStorage.getItem(STORAGE_KEY_API_KEY);
@@ -52,7 +52,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true);
   }, []);
 
-  // Persistência automática
   useEffect(() => {
     if (isHydrated) {
       localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(profiles));
@@ -70,7 +69,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newProfile = {
       ...data,
       id,
-      ownerUid: 'local-user', // No modo local, o UID é fixo
+      ownerUid: data.ownerUid || 'local-user',
     } as AthleteProfile;
 
     setProfiles(prev => {
@@ -119,6 +118,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setPlanGenerationStatus('pending');
     try {
+      // Ajusta o volume semanal baseado na nova categorização de experiência por distância
+      let weeklyMileageGoal = 30;
+      if (profile.experienceLevel === 'beginner') weeklyMileageGoal = 25;
+      else if (profile.experienceLevel === 'intermediate') weeklyMileageGoal = 45;
+      else if (profile.experienceLevel === 'advanced') weeklyMileageGoal = 75;
+
       const result = await generateTrainingBlock({
         apiKey,
         raceName: profile.raceName,
@@ -131,13 +136,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         trainingBlockType: 'Construction',
         planGenerationType: profile.planGenerationType,
         raceDate: profile.raceDate,
-        weeklyMileageGoal: profile.experienceLevel === 'beginner' ? 30 : profile.experienceLevel === 'intermediate' ? 50 : 80,
+        weeklyMileageGoal,
         targetRaceDistance: profile.raceDistance,
         targetPace: profile.targetPace,
         targetTime: profile.targetTime,
         currentLongRunDistance: 10,
         weeklyAvailability: profile.trainingDays.join(', '),
-        injuryHistory: 'Nenhuma reportada',
+        injuryHistory: profile.trainingHistory || 'Nenhuma reportada',
         preferredWorkoutDays: profile.trainingDays.slice(0, 2).join(', '),
         legDay: profile.strengthPreferences?.legDay
       });

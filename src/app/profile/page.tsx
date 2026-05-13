@@ -131,7 +131,7 @@ export default function ProfilePage() {
     defaultValues: {
         name: '', 
         athleteEmail: '',
-        trainingDays: ['Segunda', 'Quarta', 'Sexta'], 
+        trainingDays: ['Domingo', 'Terça', 'Quinta', 'Sábado'], 
         raceGoalType: 'pace',
         planGenerationType: 'blocks',
         experienceLevel: 'beginner'
@@ -141,7 +141,6 @@ export default function ProfilePage() {
   const { reset, watch, setValue, getValues } = form;
   const trainingDays = watch('trainingDays') || [];
   
-  // Filtra o Dia do Longão baseado nos dias de treino selecionados
   const availableLongRunDays = useMemo(() => {
     return weekDays.filter(day => trainingDays.includes(day.id));
   }, [trainingDays]);
@@ -177,7 +176,6 @@ export default function ProfilePage() {
   const watchAvatarUrl = watch('avatarUrl');
   const watchGoalType = watch('raceGoalType');
 
-  // Verifica se o usuário logado é o treinador (dono)
   const isOwner = context?.activeProfile?.ownerUid === user?.uid || context?.activeProfile?.ownerUid === 'local-user';
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -459,7 +457,6 @@ export default function ProfilePage() {
                                                         if (current.includes(day.id)) next = current.filter(d => d !== day.id);
                                                         else next = [...current, day.id];
                                                         setValue('trainingDays', next);
-                                                        // Limpa o longão se o dia for desmarcado
                                                         if (current.includes(day.id) && getValues('longRunDay') === day.id) setValue('longRunDay', '');
                                                     }}
                                                     className={cn(
@@ -503,9 +500,9 @@ export default function ProfilePage() {
                                                     <FormControl><SelectTrigger className="bg-black/30 h-14 font-black rounded-xl"><SelectValue/></SelectTrigger></FormControl>
                                                     <SelectContent className="bg-card border-border">
                                                         <SelectItem value="run_walk">Corrida & Caminhada</SelectItem>
-                                                        <SelectItem value="beginner">Iniciante (0-2 anos)</SelectItem>
-                                                        <SelectItem value="intermediate">Intermediário (2-5 anos)</SelectItem>
-                                                        <SelectItem value="advanced">Avançado (Elite / Competidor)</SelectItem>
+                                                        <SelectItem value="beginner">Iniciante (Até 25km/semana)</SelectItem>
+                                                        <SelectItem value="intermediate">Intermediário (25-50km/semana)</SelectItem>
+                                                        <SelectItem value="advanced">Avançado (+50km/semana)</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </FormItem>
