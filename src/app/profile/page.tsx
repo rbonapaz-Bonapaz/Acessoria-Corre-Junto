@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useContext, useState, useEffect, useRef, useMemo } from 'react';
@@ -11,7 +12,7 @@ import { fileToDataURI, cn } from "@/lib/utils";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
     Form, 
     FormControl, 
@@ -143,7 +144,7 @@ export default function ProfilePage() {
     }
   });
 
-  const { reset, watch, setValue, handleSubmit } = form;
+  const { reset, watch, setValue } = form;
 
   useEffect(() => {
     if (context?.isHydrated && context.activeProfile) {
@@ -246,10 +247,9 @@ export default function ProfilePage() {
   const handleGenerate = async () => {
     if (!context) return;
     
-    // Validar formulário antes
     const isValid = await form.trigger();
     if (!isValid) {
-      toast({ variant: "destructive", title: "Dados Incompletos", description: "Por favor, preencha o seu nome e os campos obrigatórios." });
+      toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha o nome e campos obrigatórios." });
       return;
     }
 
@@ -257,10 +257,10 @@ export default function ProfilePage() {
     setIsProcessing(true);
 
     try {
-      // 1. Salvar primeiro
+      // 1. Save data first to ensure AI uses latest
       await onSave(formData);
       
-      // 2. Gerar o ciclo
+      // 2. Map form data to the profile object expected by AI flow
       const tempProfile: AthleteProfile = {
         ...formData,
         id: context.activeProfile?.id || 'profile',
@@ -344,26 +344,26 @@ export default function ProfilePage() {
                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic flex items-center gap-2">
                             <User className="size-3" /> Nome do Atleta
                           </FormLabel>
-                          <FormControl><Input {...field} className="bg-black/30 h-10 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4" /></FormControl>
+                          <FormControl><Input {...field} value={field.value || ''} className="bg-black/30 h-10 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4" /></FormControl>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="birthDate" render={({field}) => (
                         <FormItem className="space-y-2">
                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Data de Nascimento</FormLabel>
-                          <FormControl><Input type="date" {...field} className="bg-black/30 h-10 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4 text-center" /></FormControl>
+                          <FormControl><Input type="date" {...field} value={field.value || ''} className="bg-black/30 h-10 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4 text-center" /></FormControl>
                         </FormItem>
                       )} />
                       <div className="grid grid-cols-2 gap-4">
                         <FormField control={form.control} name="currentWeight" render={({field}) => (
                           <FormItem className="space-y-2">
                             <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Peso (kg)</FormLabel>
-                            <FormControl><Input type="number" step="0.1" {...field} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                            <FormControl><Input type="number" step="0.1" {...field} value={field.value || 0} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="height" render={({field}) => (
                           <FormItem className="space-y-2">
                             <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Altura (cm)</FormLabel>
-                            <FormControl><Input type="number" {...field} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                            <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
                           </FormItem>
                         )} />
                       </div>
@@ -380,7 +380,6 @@ export default function ProfilePage() {
                     </CardHeader>
                     
                     <CardContent className="p-8 space-y-10">
-                      {/* Grid Fisiologia */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <FormField control={form.control} name="restingHr" render={({field}) => (
                           <FormItem className="space-y-1.5">
@@ -388,7 +387,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">FC REPOUSO</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Batimentos por minuto ao acordar.</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="vo2Max" render={({field}) => (
@@ -397,7 +396,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">VO2 MÁX / VDOT</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Seu índice de performance atual.</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input type="number" step="0.1" {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input type="number" step="0.1" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="thresholdPace" render={({field}) => (
@@ -406,7 +405,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">PACE LIMIAR</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Seu ritmo de limiar de lactato (T-Pace).</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input {...field} value={field.value || ''} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="thresholdHr" render={({field}) => (
@@ -415,12 +414,11 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">FC LIMIAR (L2)</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">FC no ponto de transição anaeróbica.</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                       </div>
 
-                      {/* Disponibilidade Semanal */}
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -460,7 +458,6 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Experiência e Planejamento */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                           <FormField control={form.control} name="experienceLevel" render={({field}) => (
@@ -481,7 +478,7 @@ export default function ProfilePage() {
                           <FormField control={form.control} name="weeklyMileageGoal" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">DISTÂNCIA SEMANAL (KM)</FormLabel>
-                              <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
+                              <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                             </FormItem>
                           )} />
                         </div>
@@ -518,7 +515,6 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Bloco de Prova Alvo */}
                       <div className="pt-8 border-t border-border/20 space-y-6">
                         <div className="flex items-center gap-2">
                            <Trophy className="text-primary size-5" />
@@ -529,13 +525,13 @@ export default function ProfilePage() {
                            <FormField control={form.control} name="raceName" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">NOME DO EVENTO</FormLabel>
-                              <FormControl><Input placeholder="Ex: Maratona de SP" {...field} className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm" /></FormControl>
+                              <FormControl><Input placeholder="Ex: Maratona de SP" {...field} value={field.value || ''} className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm" /></FormControl>
                             </FormItem>
                           )} />
                           <FormField control={form.control} name="raceDate" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">DATA DA LARGADA</FormLabel>
-                              <FormControl><Input type="date" {...field} className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-center text-sm" /></FormControl>
+                              <FormControl><Input type="date" {...field} value={field.value || ''} className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-center text-sm" /></FormControl>
                             </FormItem>
                           )} />
                           <FormField control={form.control} name="raceDistance" render={({field}) => (
@@ -554,7 +550,6 @@ export default function ProfilePage() {
                           )} />
                         </div>
 
-                        {/* Metas de Performance - Tabs Discretas */}
                         <div className="bg-primary/5 p-6 rounded-xl border border-primary/10 space-y-4">
                            <div className="flex items-center gap-2">
                              <Target className="size-4 text-primary" />
@@ -571,13 +566,13 @@ export default function ProfilePage() {
                                 {targetType === 'pace' ? (
                                   <FormField control={form.control} name="targetPace" render={({field}) => (
                                     <FormItem className="space-y-2">
-                                      <FormControl><Input placeholder="Ex: 4:15 min/km" {...field} className="bg-black/50 border-border/40 h-10 text-center font-bold text-sm rounded-xl focus:border-primary" /></FormControl>
+                                      <FormControl><Input placeholder="Ex: 4:15 min/km" {...field} value={field.value || ''} className="bg-black/50 border-border/40 h-10 text-center font-bold text-sm rounded-xl focus:border-primary" /></FormControl>
                                     </FormItem>
                                   )} />
                                 ) : (
                                   <FormField control={form.control} name="targetTime" render={({field}) => (
                                     <FormItem className="space-y-2">
-                                      <FormControl><Input placeholder="Ex: 03:30:00" {...field} className="bg-black/50 border-border/40 h-10 text-center font-bold text-sm rounded-xl focus:border-primary" /></FormControl>
+                                      <FormControl><Input placeholder="Ex: 03:30:00" {...field} value={field.value || ''} className="bg-black/50 border-border/40 h-10 text-center font-bold text-sm rounded-xl focus:border-primary" /></FormControl>
                                     </FormItem>
                                   )} />
                                 )}
@@ -588,7 +583,6 @@ export default function ProfilePage() {
                     </CardContent>
                   </Card>
 
-                  {/* Documento de Referência */}
                   <Card className="bg-card/40 border-border/50 rounded-2xl overflow-hidden shadow-xl">
                     <CardHeader className="bg-secondary/20 border-b border-border/10 py-4 px-8">
                        <div className="flex items-center gap-3"><FileText className="text-primary size-5"/><h3 className="text-[10px] font-black uppercase italic tracking-[0.2em]">IA REFERENCE (PDF / PLANO)</h3></div>

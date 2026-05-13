@@ -41,18 +41,26 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Carregamento inicial do cache para resposta imediata
+    const cachedKey = localStorage.getItem(`corre_junto_api_key_${user.uid}`);
+    if (cachedKey) setApiKeyInternal(cachedKey);
+
     const docRef = doc(firestore, 'user_data', user.uid);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setActiveProfile(data.profile || null);
         setTrainingPlan(data.trainingPlan || null);
-        setApiKeyInternal(data.apiKey || null);
+        
+        if (data.apiKey) {
+          setApiKeyInternal(data.apiKey);
+          localStorage.setItem(`corre_junto_api_key_${user.uid}`, data.apiKey);
+        }
       }
       setIsHydrated(true);
     }, (error) => {
       console.error("Erro no Sync Real-time:", error);
-      toast({ variant: 'destructive', title: 'Erro de Sincronização', description: 'Não foi possível conectar ao banco de dados.' });
+      setIsHydrated(true);
     });
 
     return () => unsubscribe();
@@ -64,7 +72,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     
     try {
       await setDoc(docRef, { profile: data }, { merge: true });
-      toast({ title: '✅ Sincronizado', description: 'Perfil atualizado em todos os seus dispositivos.' });
+      toast({ title: '✅ Sincronizado', description: 'Perfil atualizado na nuvem.' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Verifique sua conexão.' });
     }
@@ -90,14 +98,35 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
 
   const setApiKey = async (key: string) => {
     if (!user || !firestore) return;
+    const cleanKey = key.trim();
     const docRef = doc(firestore, 'user_data', user.uid);
-    await setDoc(docRef, { apiKey: key }, { merge: true });
-    setApiKeyInternal(key);
+    
+    // Update local immediately
+    setApiKeyInternal(cleanKey);
+    localStorage.setItem(`corre_junto_api_key_${user.uid}`, cleanKey);
+    
+    try {
+      await setDoc(docRef, { apiKey: cleanKey }, { merge: true });
+    } catch (e) {
+      console.error("Erro ao salvar chave na nuvem:", e);
+    }
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
-    if (!apiKey) {
-      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua Gemini API Key no menu lateral." });
+    // Check both state and localStorage just in case of race conditions
+    const currentKey = apiKey || (user ? localStorage.getItem(`corre_junto_api_key_${user.uid}`) : null);
+
+    if (!currentKey) {
+      toast({ 
+        variant: "destructive", 
+        title: "IA Desativada", 
+        description: "Configure sua Gemini API Key no menu lateral." 
+      });
+      return;
+    }
+
+    if (!profile.thresholdHr || profile.thresholdHr <= 0) {
+      toast({ variant: "destructive", title: "Fisiologia Incompleta", description: "Informe seu FC Limiar no perfil." });
       return;
     }
 
@@ -106,24 +135,24 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
 
     try {
       const result = await generateTrainingBlock({
-        apiKey,
+        apiKey: currentKey,
         raceName: profile.raceName,
-        currentVDOT: profile.vo2Max,
+        currentVDOT: profile.vo2Max || 40,
         hrZone1End: Math.round(profile.thresholdHr * 0.8),
         hrZone2End: Math.round(profile.thresholdHr * 0.9),
         hrZone3End: Math.round(profile.thresholdHr * 0.95),
         hrZone4End: profile.thresholdHr,
         hrMax: profile.thresholdHr + 20,
         trainingBlockType: 'Construction',
-        planGenerationType: profile.planGenerationType,
-        raceDate: profile.raceDate,
+        planGenerationType: profile.planGenerationType || 'blocks',
+        raceDate: profile.raceDate || new Date().toISOString(),
         weeklyMileageGoal: profile.weeklyMileageGoal || 60,
-        targetRaceDistance: profile.raceDistance,
+        targetRaceDistance: profile.raceDistance || '10k',
         targetPace: profile.targetPace,
         targetTime: profile.targetTime,
         currentLongRunDistance: 15,
         weeklyAvailability: profile.trainingDays.join(', '),
-        injuryHistory: 'Nenhuma reportada',
+        injuryHistory: profile.trainingHistory || 'Nenhuma reportada',
         preferredWorkoutDays: profile.trainingDays.slice(0, 2).join(', '),
         legDay: profile.strengthPreferences?.legDay,
         referenceFileDataUri: profile.referenceDocumentUri
@@ -135,9 +164,9 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       
       setPlanGenerationStatus('success');
       toast({ title: "✅ Ciclo IA Concluído!", description: "Planilha sincronizada na nuvem." });
-    } catch (error) {
+    } catch (error: any) {
       setPlanGenerationStatus('error');
-      toast({ variant: "destructive", title: "Erro na IA", description: "Falha ao gerar plano." });
+      toast({ variant: "destructive", title: "Erro na IA", description: error.message || "Falha ao gerar plano." });
     }
   };
 
