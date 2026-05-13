@@ -279,7 +279,7 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                {/* ABA CORRIDA - RESTAURADA COM TODOS OS CAMPOS */}
+                {/* ABA CORRIDA */}
                 <TabsContent value="corrida" className="mt-6 space-y-6">
                   <Card className="bg-card/50 border-border/50">
                     <CardHeader className="bg-primary/5 border-b border-border/50">
