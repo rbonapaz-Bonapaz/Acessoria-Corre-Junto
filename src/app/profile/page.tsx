@@ -38,7 +38,6 @@ import {
     ShieldCheck,
     Utensils,
     Trophy,
-    CalendarCheck,
     Info,
     FileText,
     Upload,
@@ -71,8 +70,8 @@ const profileSchema = z.object({
   avatarUrl: z.string().optional(),
   birthDate: z.string().optional(),
   gender: z.enum(['male', 'female', 'other']).optional(),
-  currentWeight: z.coerce.number().optional(),
-  height: z.coerce.number().optional(),
+  currentWeight: z.coerce.number().optional().default(70),
+  height: z.coerce.number().optional().default(175),
   restingHr: z.coerce.number().optional().default(50),
   vo2Max: z.coerce.number().optional().default(45),
   thresholdPace: z.string().optional().default('4:50'),
@@ -92,7 +91,7 @@ const profileSchema = z.object({
   // Dieta
   aestheticGoal: z.enum(['performance', 'cutting', 'bulking', 'recomp']).optional(),
   trainingTiming: z.enum(['jejum', 'manha', 'meio-dia', 'tarde', 'noite']).optional(),
-  mealCount: z.coerce.number().optional(),
+  mealCount: z.coerce.number().optional().default(4),
   supplements: z.string().optional(),
   allergies: z.string().optional(),
   // Força
@@ -154,8 +153,8 @@ export default function ProfilePage() {
         name: p.name || '',
         avatarUrl: p.avatarUrl || '',
         birthDate: p.birthDate || '',
-        currentWeight: p.currentWeight || 0,
-        height: p.height || 0,
+        currentWeight: p.currentWeight || 70,
+        height: p.height || 175,
         restingHr: p.restingHr || 50,
         vo2Max: p.vo2Max || 45,
         thresholdPace: p.thresholdPace || '4:50',
@@ -236,6 +235,9 @@ export default function ProfilePage() {
       };
       
       await context.saveProfile(profileData);
+    } catch (error) {
+      console.error(error);
+      toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Não foi possível salvar seus dados.' });
     } finally {
       setIsSaving(false);
     }
@@ -244,14 +246,45 @@ export default function ProfilePage() {
   const handleGenerate = async () => {
     if (!context) return;
     
-    // Primeiro salva para garantir que a IA tenha os dados mais recentes
-    await handleSubmit(onSave)();
-    
-    setIsProcessing(true);
-    if (context.activeProfile) {
-        await context.generateRunningPlanAsync(context.activeProfile);
+    // Validar formulário antes
+    const isValid = await form.trigger();
+    if (!isValid) {
+      toast({ variant: "destructive", title: "Dados Incompletos", description: "Por favor, preencha o seu nome e os campos obrigatórios." });
+      return;
     }
-    setIsProcessing(false);
+
+    const formData = form.getValues();
+    setIsProcessing(true);
+
+    try {
+      // 1. Salvar primeiro
+      await onSave(formData);
+      
+      // 2. Gerar o ciclo
+      const tempProfile: AthleteProfile = {
+        ...formData,
+        id: context.activeProfile?.id || 'profile',
+        ownerUid: context.activeProfile?.ownerUid || '',
+        dietPreferences: {
+          aestheticGoal: formData.aestheticGoal,
+          trainingTiming: formData.trainingTiming,
+          mealCount: formData.mealCount,
+          supplements: formData.supplements,
+          allergies: formData.allergies,
+        },
+        strengthPreferences: {
+          splitPreference: formData.strengthSplit,
+          objective: formData.strengthObjective,
+          legDay: formData.legDay,
+        }
+      } as any;
+
+      await context.generateRunningPlanAsync(tempProfile);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (!context?.isHydrated) return <DashboardLayout><Skeleton className="h-96 w-full bg-secondary/20 rounded-3xl"/></DashboardLayout>;
@@ -660,7 +693,7 @@ export default function ProfilePage() {
                   size="lg" 
                   className="flex-1 h-12 font-black uppercase tracking-widest italic bg-primary text-black shadow-xl rounded-2xl transition-all hover:scale-[1.02] hover:bg-white"
                   onClick={handleGenerate}
-                  disabled={isProcessing || !context.activeProfile}
+                  disabled={isProcessing}
                 >
                   {isProcessing ? <Loader2 className="animate-spin mr-3 size-5" /> : <Zap className="mr-3 size-5" />} 
                   GERAR CICLO IA
