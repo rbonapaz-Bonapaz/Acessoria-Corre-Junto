@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useState, useEffect, useRef, useMemo } from 'react';
@@ -49,9 +48,10 @@ import {
     History as HistoryIcon,
     Link2,
     CalendarCheck,
-    Users
+    Users,
+    User as UserIcon
 } from 'lucide-react';
-import { Skeleton } from '@/skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const weekDays = [
   { id: 'Domingo', label: 'DOM' },
@@ -166,7 +166,6 @@ export default function ProfilePage() {
 
   const trainingDays = watch('trainingDays') || [];
   
-  // Filtra os dias disponíveis para o longão baseado nos dias de corrida marcados
   const availableLongRunDays = useMemo(() => {
     return weekDays.filter(day => trainingDays.includes(day.id));
   }, [trainingDays]);
@@ -392,7 +391,6 @@ export default function ProfilePage() {
                                   </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-12 pt-10">
-                                    {/* Fisiologia */}
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                         <FormField control={form.control} name="restingHr" render={({field}) => (
                                             <FormItem>
@@ -420,7 +418,6 @@ export default function ProfilePage() {
                                         )} />
                                     </div>
 
-                                    {/* Prova Alvo */}
                                     <div className="space-y-8 border-t border-border/20 pt-10">
                                         <div className="flex items-center gap-3">
                                             <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Trophy size={18}/></div>
@@ -486,7 +483,6 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
 
-                                    {/* Calendário */}
                                     <div className="space-y-8 border-t border-border/20 pt-10">
                                         <div className="flex items-center gap-3">
                                             <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Target size={18}/></div>
@@ -541,7 +537,7 @@ export default function ProfilePage() {
                                                         </FormControl>
                                                         <SelectContent className="bg-card border-border">
                                                             {availableLongRunDays.length > 0 ? (
-                                                              availableLongRunDays.map(d => <SelectItem key={d.id} value={d.id} className="font-bold italic uppercase">{d.id}</SelectItem>)
+                                                              availableLongRunDays.map(d => <SelectItem key={d.id} value={d.id} className="font-bold uppercase italic">{d.id}</SelectItem>)
                                                             ) : (
                                                               <div className="p-4 text-[10px] text-muted-foreground italic font-medium">Você precisa marcar quais dias você corre no calendário acima antes de definir o longão.</div>
                                                             )}
@@ -567,7 +563,6 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
 
-                                    {/* Comentários/Histórico */}
                                     <div className="space-y-4 border-t border-border/20 pt-10">
                                         <div className="flex items-center gap-3">
                                             <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><HistoryIcon size={18}/></div>
@@ -832,7 +827,6 @@ export default function ProfilePage() {
                         </TabsContent>
                     </Tabs>
 
-                    {/* --- BOTÕES DE AÇÃO --- */}
                     <div className="flex flex-col sm:flex-row gap-4 pt-10 border-t border-border/50 px-2 pb-10">
                         <Button 
                             type="button" 
