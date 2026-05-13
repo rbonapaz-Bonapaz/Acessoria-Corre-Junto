@@ -1,10 +1,27 @@
 
 'use client';
 
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import type { AthleteProfile, TrainingPlan, Workout } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
+import { 
+  useFirestore, 
+  useUser, 
+  useCollection, 
+  useDoc 
+} from '@/firebase';
+import { 
+  doc, 
+  setDoc, 
+  deleteDoc, 
+  collection, 
+  query, 
+  where, 
+  updateDoc 
+} from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type PlanGenerationStatus = 'idle' | 'pending' | 'success' | 'error';
 
@@ -28,77 +45,96 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType | null>(null);
 
-const STORAGE_KEY_PROFILES = 'corre_junto_profiles_v2';
-const STORAGE_KEY_API_KEY = 'corre_junto_api_key_v2';
-const STORAGE_KEY_ACTIVE_ID = 'corre_junto_active_id_v2';
-
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [apiKey, setApiKeyInternal] = useState<string | null>(null);
-  const [profiles, setProfiles] = useState<AthleteProfile[]>([]);
+  const db = useFirestore();
+  const { user } = useUser();
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
 
-  useEffect(() => {
-    // Sincronização inicial com o LocalStorage
-    const savedProfiles = localStorage.getItem(STORAGE_KEY_PROFILES);
-    const savedApiKey = localStorage.getItem(STORAGE_KEY_API_KEY);
-    const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_ID);
+  // 1. Chave de API persistida no Firestore
+  const userConfigRef = useMemo(() => user ? doc(db, 'user_data', user.uid) : null, [db, user]);
+  const { data: userConfig, loading: loadingConfig } = useDoc<any>(userConfigRef);
+  const apiKey = userConfig?.apiKey || null;
 
-    if (savedProfiles) {
-      try {
-        setProfiles(JSON.parse(savedProfiles));
-      } catch (e) {
-        console.error("Falha ao parsear perfis do storage", e);
-      }
+  const setApiKey = (key: string | null) => {
+    if (!user || !userConfigRef) {
+      toast({ variant: "destructive", title: "Erro", description: "Faça login para salvar a chave." });
+      return;
     }
-    if (savedApiKey) setApiKeyInternal(savedApiKey);
-    if (savedActiveId) setActiveProfileId(savedActiveId);
+    setDoc(userConfigRef, { apiKey: key }, { merge: true }).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: userConfigRef.path,
+        operation: 'update',
+        requestResourceData: { apiKey: key }
+      }));
+    });
+  };
 
-    setIsHydrated(true);
-  }, []);
+  // 2. Perfis onde sou o Treinador (Dono)
+  const coachProfilesQuery = useMemo(() => {
+    if (!user) return null;
+    return query(collection(db, 'athletes'), where('ownerUid', '==', user.uid));
+  }, [db, user]);
+  const { data: coachProfiles } = useCollection<AthleteProfile>(coachProfilesQuery);
 
-  // Sempre que os dados mudarem, salvamos no storage
-  useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(profiles));
-      if (apiKey) localStorage.setItem(STORAGE_KEY_API_KEY, apiKey);
-      if (activeProfileId) localStorage.setItem(STORAGE_KEY_ACTIVE_ID, activeProfileId);
-      else localStorage.removeItem(STORAGE_KEY_ACTIVE_ID);
-    }
-  }, [profiles, apiKey, activeProfileId, isHydrated]);
+  // 3. Perfis onde sou o Atleta (Vinculado)
+  const athleteProfilesQuery = useMemo(() => {
+    if (!user?.email) return null;
+    return query(collection(db, 'athletes'), where('athleteEmail', '==', user.email));
+  }, [db, user]);
+  const { data: athleteProfiles } = useCollection<AthleteProfile>(athleteProfilesQuery);
 
-  const setApiKey = (key: string | null) => setApiKeyInternal(key);
+  // Combinar perfis sem duplicatas
+  const profiles = useMemo(() => {
+    const map = new Map<string, AthleteProfile>();
+    (coachProfiles || []).forEach(p => map.set(p.id, p));
+    (athleteProfiles || []).forEach(p => map.set(p.id, p));
+    return Array.from(map.values());
+  }, [coachProfiles, athleteProfiles]);
+
+  const activeProfile = useMemo(() => profiles.find(p => p.id === activeProfileId) || null, [profiles, activeProfileId]);
 
   const switchProfile = (id: string | null) => setActiveProfileId(id);
 
   const saveProfile = async (data: Partial<AthleteProfile>) => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Ação Negada", description: "Faça login para salvar perfis na nuvem." });
+      throw new Error("No user");
+    }
+
     const id = data.id || crypto.randomUUID();
+    const docRef = doc(db, 'athletes', id);
     const newProfile = {
       ...data,
       id,
-      ownerUid: data.ownerUid || 'local-user',
+      ownerUid: data.ownerUid || user.uid,
     } as AthleteProfile;
 
-    setProfiles(prev => {
-      const exists = prev.find(p => p.id === id);
-      if (exists) {
-        return prev.map(p => p.id === id ? { ...p, ...newProfile } : p);
-      }
-      return [...prev, newProfile];
+    setDoc(docRef, newProfile, { merge: true }).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'write',
+        requestResourceData: newProfile
+      }));
     });
 
     return newProfile;
   };
 
   const deleteProfile = async (id: string) => {
-    setProfiles(prev => prev.filter(p => p.id !== id));
-    if (activeProfileId === id) setActiveProfileId(null);
-    toast({ title: "Atleta removido com sucesso!" });
+    if (!user) return;
+    const docRef = doc(db, 'athletes', id);
+    deleteDoc(docRef).then(() => {
+      if (activeProfileId === id) setActiveProfileId(null);
+      toast({ title: "Atleta removido com sucesso!" });
+    }).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'delete'
+      }));
+    });
   };
-
-  const activeProfile = profiles.find(p => p.id === activeProfileId) || null;
 
   const updateWorkout = (workoutId: string, updates: Partial<Workout>) => {
     if (!activeProfile) return;
@@ -111,16 +147,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       runs: week.runs.map((run) => run.id === workoutId ? { ...run, ...updates } : run)
     }));
 
-    const updatedProfile = {
-      ...activeProfile,
+    const docRef = doc(db, 'athletes', activeProfile.id);
+    updateDoc(docRef, {
       trainingPlan: { ...currentPlan, weeklyPlans: newWeeklyPlans }
-    };
-
-    saveProfile(updatedProfile);
+    }).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'update'
+      }));
+    });
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
-    if (!apiKey || apiKey.trim() === "") {
+    if (!apiKey) {
       toast({ variant: "destructive", title: "Configuração Pendente", description: "Insira sua Gemini API Key no menu lateral." });
       return;
     }
@@ -159,11 +198,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         week.runs.forEach(run => { if (!run.id) run.id = crypto.randomUUID(); });
       });
 
-      const updatedProfile = { ...profile, trainingPlan: result };
-      await saveProfile(updatedProfile);
+      await saveProfile({ ...profile, trainingPlan: result });
       
       setPlanGenerationStatus('success');
-      toast({ title: "Ciclo Calibrado!", description: "Os novos treinos já estão disponíveis localmente." });
+      toast({ title: "Ciclo Calibrado!", description: "Os novos treinos já estão sincronizados." });
     } catch (error: any) {
       setPlanGenerationStatus('error');
       toast({ variant: "destructive", title: "Erro no Motor de IA", description: error.message });
@@ -172,7 +210,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{
-      isHydrated, apiKey, setApiKey, profiles,
+      isHydrated: !loadingConfig, apiKey, setApiKey, profiles,
       activeProfile,
       switchProfile, saveProfile, deleteProfile,
       trainingPlan: activeProfile?.trainingPlan || null,
@@ -182,14 +220,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       exportData: () => {
         const data = JSON.stringify({ profiles, apiKey });
         const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
-        const a = document.createElement('a'); a.href = url; a.download = `corre_junto_backup.json`; a.click();
+        const a = document.createElement('a'); a.href = url; a.download = `corre_junto_cloud_backup.json`; a.click();
       },
-      importData: (json: string) => {
+      importData: async (json: string) => {
         try {
             const data = JSON.parse(json);
-            if (data.profiles) setProfiles(data.profiles);
-            if (data.apiKey) setApiKeyInternal(data.apiKey);
-            toast({ title: 'Dados Importados com Sucesso' });
+            if (data.profiles) {
+              for (const p of data.profiles) {
+                await saveProfile(p);
+              }
+            }
+            toast({ title: 'Dados Importados para a Nuvem' });
         } catch (e) { toast({ variant: 'destructive', title: 'Erro na importação' }); }
       },
       toggleIntegration: (service, connected) => {

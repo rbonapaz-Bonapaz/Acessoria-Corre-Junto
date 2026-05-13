@@ -25,7 +25,8 @@ import {
   ChevronRight,
   Users,
   ShieldCheck,
-  User as UserIcon
+  User as UserIcon,
+  Lock
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,14 +62,14 @@ const stats = [
 
 export default function Home() {
   const context = React.useContext(AppContext);
-  const { user } = useUser();
+  const { user, loading: authLoading } = useUser();
   const activeProfile = context?.activeProfile;
   const profiles = context?.profiles || [];
 
-  const myAthletes = profiles.filter(p => p.ownerUid === user?.uid || p.ownerUid === 'local-user');
-  const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid && p.athleteEmail === user?.email && p.ownerUid !== 'local-user');
+  const myAthletes = profiles.filter(p => p.ownerUid === user?.uid);
+  const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid && p.athleteEmail === user?.email);
 
-  if (!context?.isHydrated) {
+  if (!context?.isHydrated || authLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-8 animate-pulse">
@@ -81,17 +82,37 @@ export default function Home() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center space-y-8">
+        <div className="font-headline font-black text-6xl md:text-8xl italic tracking-tighter uppercase">
+          <span className="text-white">CORRE</span><span className="text-primary">JUNTO</span>
+        </div>
+        <p className="text-muted-foreground max-w-md text-lg italic font-medium">
+          Seu laboratório de performance na nuvem. Faça login para acessar seus atletas e treinos em qualquer dispositivo.
+        </p>
+        <div className="bg-card border p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full space-y-6">
+          <Lock className="size-12 text-primary mx-auto" />
+          <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Área Restrita</p>
+          <Button asChild className="w-full h-14 bg-primary text-black font-black uppercase italic rounded-2xl shadow-lg shadow-primary/20">
+            <Link href="/about">Saiba Mais</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!activeProfile) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-1000">
-        <div className="max-w-5xl w-full space-y-12">
+      <DashboardLayout>
+        <div className="max-w-5xl w-full mx-auto space-y-12 animate-in fade-in duration-700">
           <div className="text-center space-y-4">
-            <h1 className="text-5xl md:text-7xl font-headline font-black uppercase italic tracking-tighter">
+            <h1 className="text-4xl md:text-6xl font-headline font-black uppercase italic tracking-tighter leading-none">
               <span className="text-white">LABORATÓRIO</span> <br/>
               <span className="text-white">CORRE</span><span className="text-primary">JUNTO</span>
             </h1>
-            <p className="text-muted-foreground text-sm md:text-xl font-medium max-w-2xl mx-auto italic">
-              Selecione um perfil para gerenciar sua assessoria ou visualizar seu plano de atleta.
+            <p className="text-muted-foreground text-sm md:text-lg font-medium max-w-2xl mx-auto italic">
+              Bem-vindo, <span className="text-white">{user.displayName}</span>. Escolha um perfil para gerenciar ou visualizar seu plano.
             </p>
           </div>
 
@@ -102,7 +123,7 @@ export default function Home() {
                   <ShieldCheck className="text-primary size-5" />
                   <h3 className="text-xs font-black uppercase italic tracking-widest text-white">Minha Gestão (Treinador)</h3>
                 </div>
-                {myAthletes.length > 0 && <Badge variant="outline" className="text-[10px] uppercase font-black">{myAthletes.length} Atletas</Badge>}
+                <Badge variant="outline" className="text-[10px] uppercase font-black">{myAthletes.length} Atletas</Badge>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
                 {myAthletes.map((profile) => (
@@ -112,7 +133,7 @@ export default function Home() {
                   <div className="size-24 md:size-32 rounded-3xl bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
                     <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white">Novo Perfil</span>
+                  <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white">Novo Atleta</span>
                 </Link>
               </div>
             </div>
@@ -132,7 +153,7 @@ export default function Home() {
             )}
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
