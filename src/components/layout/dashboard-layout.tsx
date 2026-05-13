@@ -20,7 +20,8 @@ import {
   Users,
   AlertCircle,
   LogOut,
-  Settings
+  Settings,
+  ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ 
         variant: "destructive", 
         title: "Erro de Autenticação", 
-        description: "Verifique os domínios autorizados no Firebase Console."
+        description: "Certifique-se de autorizar este domínio no Firebase Console (Authentication > Settings > Authorized Domains)."
       });
     }
   };

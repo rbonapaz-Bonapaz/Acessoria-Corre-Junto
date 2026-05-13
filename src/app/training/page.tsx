@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -32,6 +33,8 @@ import type { Workout } from "@/lib/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+const dayOrder = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
 export default function TrainingPage() {
   const context = React.useContext(AppContext);
   const router = useRouter();
@@ -46,6 +49,13 @@ export default function TrainingPage() {
 
   const profile = context?.activeProfile;
   const plan = context?.trainingPlan;
+
+  const sortedWorkouts = React.useMemo(() => {
+    if (!plan) return [];
+    return plan.weeklyPlans.flatMap(week => week.runs).sort((a, b) => {
+      return dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day);
+    });
+  }, [plan]);
 
   const handleGenerate = async () => {
     if (!profile) {
@@ -156,7 +166,7 @@ export default function TrainingPage() {
 
         {plan && !loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in duration-500 px-2">
-            {plan.weeklyPlans.flatMap(week => week.runs).map((w: any) => (
+            {sortedWorkouts.map((w: any) => (
               <Card 
                 key={w.id} 
                 className={cn(

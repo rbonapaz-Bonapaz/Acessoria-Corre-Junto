@@ -67,7 +67,7 @@ export default function Home() {
 
   // Lógica de papéis: 
   // Treinador (Dono): Perfis que ele criou
-  // Atleta (Vinculado): Perfis onde o email dele foi inserido pelo treinador
+  // Atleta (Vinculado): Perfis onde o email dele foi inserido pelo treinador na aba Vínculo
   const myAthletes = profiles.filter(p => p.ownerUid === user?.uid || p.ownerUid === 'local-user');
   const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid && p.athleteEmail === user?.email && p.ownerUid !== 'local-user');
 
@@ -84,7 +84,7 @@ export default function Home() {
     );
   }
 
-  // Tela de Seleção de Perfil (Diferenciação de Gestão vs Treino)
+  // Tela de Seleção de Perfil
   if (!activeProfile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-1000">
@@ -153,7 +153,7 @@ export default function Home() {
     );
   }
 
-  // Dashboard do Atleta/Treinador Selecionado
+  // Dashboard do Atleta Selecionado
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-in fade-in duration-500">
