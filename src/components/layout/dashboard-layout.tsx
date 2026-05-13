@@ -19,7 +19,8 @@ import {
   Info,
   Users,
   AlertCircle,
-  LogOut
+  LogOut,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useSidebar } from "@/components/ui/sidebar";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { useAuth, useUser } from "@/firebase";
 
 const items = [
   { title: "DASHBOARD", url: "/", icon: LayoutDashboard },
@@ -69,7 +70,7 @@ const items = [
   { title: "CALCULADORAS", url: "/calculators", icon: Calculator },
   { title: "DICIONÁRIO", url: "/dictionary", icon: BookOpen },
   { title: "INTEGRAÇÕES", url: "/integrations", icon: Link2 },
-  { title: "MEU PERFIL", url: "/profile", icon: User },
+  { title: "PERFIL ATLETA", url: "/profile", icon: User },
   { title: "SOBRE", url: "/about", icon: Info },
 ];
 
@@ -78,6 +79,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const context = React.useContext(AppContext);
   const auth = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   const [showKeyModal, setShowKeyModal] = React.useState(false);
   const [tempKey, setTempKey] = React.useState("");
@@ -94,13 +96,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      toast({ title: "Sincronização Ativa!", description: "Baixando seus dados da nuvem..." });
+      toast({ title: "Sincronização Ativa!", description: "Acessando seu laboratório de performance." });
     } catch (error: any) {
       console.error("Auth Error:", error);
       toast({ 
         variant: "destructive", 
         title: "Erro de Autenticação", 
-        description: "Verifique o suporte de e-mail e os domínios autorizados no Firebase Console."
+        description: "Verifique os domínios autorizados no Firebase Console."
       });
     }
   };
@@ -109,7 +111,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     try {
       await signOut(auth);
       context?.switchProfile(null);
-      toast({ title: "Sessão Encerrada", description: "Você está agora no Modo Local." });
+      toast({ title: "Sessão Encerrada", description: "Você está no Modo Local." });
       router.push('/');
     } catch (error) {
       toast({ variant: "destructive", title: "Erro ao sair" });
@@ -169,6 +171,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {!user && (
+              <Button onClick={handleLogin} variant="outline" className="w-full h-10 font-headline font-black text-[10px] uppercase italic border-primary/30 text-primary hover:bg-primary hover:text-black">
+                Entrar com Google
+              </Button>
+            )}
           </SidebarFooter>
         </Sidebar>
         <SidebarInset className="flex-1 flex flex-col min-w-0">
@@ -193,22 +200,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         </p>
                         <ChevronDown size={12} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
                       </div>
-                      <p className="text-[9px] font-bold uppercase tracking-tighter text-accent">Modo Local</p>
+                      <p className="text-[9px] font-bold uppercase tracking-tighter text-accent">
+                        {user ? 'Sincronizado' : 'Modo Local'}
+                      </p>
                     </div>
                     <div className="size-9 rounded-full flex items-center justify-center font-headline font-black text-black bg-primary shadow-lg shadow-primary/20 shrink-0">
-                      {(context?.activeProfile?.name?.[0] || 'L')}
+                      {(context?.activeProfile?.name?.[0] || user?.displayName?.[0] || 'L')}
                     </div>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 bg-card border-border p-2 rounded-2xl shadow-2xl mt-2">
                   <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Local-First Browser
+                    {user ? user.email : 'Local Browser'}
                   </DropdownMenuLabel>
                   
                   <DropdownMenuItem asChild className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
                     <Link href="/profile" className="flex items-center gap-3">
-                      <User size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
-                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Meus Dados</span>
+                      <Settings size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Gestão do Atleta</span>
                     </Link>
                   </DropdownMenuItem>
                   
@@ -224,15 +233,27 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
                   <DropdownMenuSeparator className="bg-border/20" />
                   
-                  <DropdownMenuItem 
-                    className="p-3 focus:bg-destructive/10 text-destructive cursor-pointer rounded-xl group transition-all"
-                    onClick={handleLogout}
-                  >
-                    <div className="flex items-center gap-3">
-                      <LogOut size={18} className="text-destructive" />
-                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
-                    </div>
-                  </DropdownMenuItem>
+                  {user ? (
+                    <DropdownMenuItem 
+                      className="p-3 focus:bg-destructive/10 text-destructive cursor-pointer rounded-xl group transition-all"
+                      onClick={handleLogout}
+                    >
+                      <div className="flex items-center gap-3">
+                        <LogOut size={18} className="text-destructive" />
+                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
+                      </div>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem 
+                      className="p-3 focus:bg-primary/10 text-primary cursor-pointer rounded-xl group transition-all"
+                      onClick={handleLogin}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Users size={18} className="text-primary" />
+                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Entrar com Google</span>
+                      </div>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -289,8 +310,9 @@ function LogoDisplay() {
   }
 
   return (
-    <div className="font-headline font-black text-2xl italic tracking-tighter flex items-center gap-2">
-      <span className="text-white">CORREJUNTO</span>
+    <div className="font-headline font-black text-2xl italic tracking-tighter flex flex-col items-center">
+      <span className="text-white leading-none">CORRE</span>
+      <span className="text-primary leading-none">JUNTO</span>
     </div>
   );
 }

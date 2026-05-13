@@ -46,13 +46,13 @@ import {
     Activity,
     Trophy,
     History as HistoryIcon,
-    Link2,
     CalendarCheck,
     Users
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
 
+// Domingo como primeiro dia da semana
 const weekDays = [
   { id: 'Domingo', label: 'DOM' },
   { id: 'Segunda', label: 'SEG' },
@@ -140,6 +140,8 @@ export default function ProfilePage() {
 
   const { reset, watch, setValue, getValues } = form;
   const trainingDays = watch('trainingDays') || [];
+  
+  // Filtra o Dia do Longão baseado nos dias de treino selecionados
   const availableLongRunDays = useMemo(() => {
     return weekDays.filter(day => trainingDays.includes(day.id));
   }, [trainingDays]);
@@ -175,6 +177,7 @@ export default function ProfilePage() {
   const watchAvatarUrl = watch('avatarUrl');
   const watchGoalType = watch('raceGoalType');
 
+  // Verifica se o usuário logado é o treinador (dono)
   const isOwner = context?.activeProfile?.ownerUid === user?.uid || context?.activeProfile?.ownerUid === 'local-user';
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,7 +223,7 @@ export default function ProfilePage() {
                 prDeadlift: data.prDeadlift
             }
         } as any);
-        toast({ title: `Dados Salvos` });
+        toast({ title: `Aba ${activeTab.toUpperCase()} Salva!` });
     } finally {
         setTimeout(() => setIsSaving(false), 300);
     }
@@ -456,6 +459,7 @@ export default function ProfilePage() {
                                                         if (current.includes(day.id)) next = current.filter(d => d !== day.id);
                                                         else next = [...current, day.id];
                                                         setValue('trainingDays', next);
+                                                        // Limpa o longão se o dia for desmarcado
                                                         if (current.includes(day.id) && getValues('longRunDay') === day.id) setValue('longRunDay', '');
                                                     }}
                                                     className={cn(
@@ -738,8 +742,8 @@ export default function ProfilePage() {
                                             </FormControl>
                                             <FormDescription className="text-[10px] font-medium italic mt-4">
                                                 {isOwner 
-                                                    ? "Insira o e-mail Google do seu aluno para que ele visualize este perfil."
-                                                    : "Apenas o dono deste perfil pode gerenciar o e-mail de vínculo."}
+                                                    ? "Insira o e-mail Google do seu aluno para que ele visualize este perfil ao logar."
+                                                    : "Apenas o treinador (dono deste perfil) pode alterar o vínculo."}
                                             </FormDescription>
                                         </FormItem>
                                     )} />
@@ -758,7 +762,7 @@ export default function ProfilePage() {
                         onClick={handleSaveActiveTab}
                     >
                         {isSaving ? <Loader2 className="animate-spin mr-3 size-6" /> : <CheckCircle2 className="mr-3 size-6" />}
-                        SALVAR ABA ATUAL
+                        SALVAR {activeTab.toUpperCase()}
                     </Button>
                     
                     {isOwner && (

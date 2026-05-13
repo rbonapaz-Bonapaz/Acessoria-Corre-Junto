@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -64,11 +65,11 @@ export default function Home() {
   const activeProfile = context?.activeProfile;
   const profiles = context?.profiles || [];
 
-  // Perfis que EU criei (Sou o Treinador/Dono)
-  const myAthletes = profiles.filter(p => p.ownerUid === user?.uid);
-  
-  // Perfis onde meu e-mail foi vinculado por OUTRO treinador (Sou o Atleta)
-  const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid && p.athleteEmail === user?.email);
+  // Lógica de papéis: 
+  // Treinador (Dono): Perfis que ele criou
+  // Atleta (Vinculado): Perfis onde o email dele foi inserido pelo treinador
+  const myAthletes = profiles.filter(p => p.ownerUid === user?.uid || p.ownerUid === 'local-user');
+  const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid && p.athleteEmail === user?.email && p.ownerUid !== 'local-user');
 
   if (!context?.isHydrated) {
     return (
@@ -83,6 +84,7 @@ export default function Home() {
     );
   }
 
+  // Tela de Seleção de Perfil (Diferenciação de Gestão vs Treino)
   if (!activeProfile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-1000">
@@ -97,14 +99,14 @@ export default function Home() {
           </div>
 
           <div className="space-y-12">
-            {/* Seção: Gestão de Atletas (Visão do Treinador) */}
+            {/* Seção de Gestão (Treinador) */}
             <div className="space-y-6">
-              <div className="flex items-center justify-between px-2">
+              <div className="flex items-center justify-between px-2 border-b border-border/20 pb-4">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="text-primary size-5" />
-                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Minha Gestão (Treinador)</h3>
+                  <h3 className="text-xs font-black uppercase italic tracking-widest text-white">Minha Gestão (Treinador)</h3>
                 </div>
-                {myAthletes.length > 0 && <Badge variant="outline" className="text-[10px] uppercase font-black">{myAthletes.length} Perfis</Badge>}
+                {myAthletes.length > 0 && <Badge variant="outline" className="text-[10px] uppercase font-black">{myAthletes.length} Atletas</Badge>}
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
                 {myAthletes.map((profile) => (
@@ -119,12 +121,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Seção: Planilhas Vinculadas (Visão do Atleta) */}
+            {/* Seção de Atleta (Perfis Vinculados) */}
             {linkedProfiles.length > 0 && (
-              <div className="space-y-6 pt-6 border-t border-border/20">
-                <div className="flex items-center gap-2 px-2">
+              <div className="space-y-6 pt-6">
+                <div className="flex items-center gap-2 px-2 border-b border-border/20 pb-4">
                   <UserIcon className="text-accent size-5" />
-                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Meus Treinos (Assessoria)</h3>
+                  <h3 className="text-xs font-black uppercase italic tracking-widest text-white">Meus Treinos (Atleta)</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
                   {linkedProfiles.map((profile) => (
@@ -134,18 +136,15 @@ export default function Home() {
               </div>
             )}
 
-            {profiles.length === 0 && (
+            {profiles.length === 0 && !user && (
               <div className="flex flex-col items-center gap-6 pt-10">
                 <div className="p-8 rounded-full bg-secondary/20 border-2 border-dashed border-border">
                   <Users className="size-12 text-muted-foreground" />
                 </div>
                 <div className="text-center space-y-2">
-                  <h4 className="font-headline font-black uppercase italic text-white">Nenhum perfil encontrado</h4>
-                  <p className="text-xs text-muted-foreground max-w-xs italic">Crie seu próprio perfil de atleta ou peça para seu treinador vincular seu e-mail.</p>
+                  <h4 className="font-headline font-black uppercase italic text-white">Nenhum perfil disponível</h4>
+                  <p className="text-xs text-muted-foreground max-w-xs italic">Crie seu perfil local ou entre com o Google para ver perfis vinculados pelo seu treinador.</p>
                 </div>
-                <Button asChild size="lg" className="bg-primary text-black font-black uppercase shadow-xl shadow-primary/20 rounded-2xl h-14 px-10">
-                   <Link href="/profile">CRIAR MEU PRIMEIRO PERFIL</Link>
-                </Button>
               </div>
             )}
           </div>
@@ -154,6 +153,7 @@ export default function Home() {
     );
   }
 
+  // Dashboard do Atleta/Treinador Selecionado
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-in fade-in duration-500">
@@ -267,7 +267,7 @@ function ProfileCard({ profile, onSwitch, isLinked = false }: { profile: any, on
           {profile.name}
         </span>
         <span className="text-[8px] font-bold uppercase tracking-tighter opacity-50 block">
-          {isLinked ? 'Atleta Vinculado' : 'Meu Atleta'}
+          {isLinked ? 'Meu Treino' : 'Gestão Atleta'}
         </span>
       </div>
     </button>
