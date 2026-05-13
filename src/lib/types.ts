@@ -64,6 +64,7 @@ export interface AthleteProfile {
   planGenerationType: PlanGenerationType;
   experienceLevel: ExperienceLevel;
   trainingHistory: string;
+  referenceDocumentUri?: string; // Novo campo para PDF/Print de referência
   trainingPlan?: TrainingPlan;
   dietPreferences?: DietPreferences;
   strengthPreferences?: StrengthPreferences;

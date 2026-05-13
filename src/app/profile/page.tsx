@@ -50,7 +50,10 @@ import {
     Users,
     Info,
     Trash2,
-    AlertTriangle
+    AlertTriangle,
+    FileText,
+    Upload,
+    X
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -115,6 +118,7 @@ const profileSchema = z.object({
   planGenerationType: z.enum(['full', 'blocks']).default('blocks'),
   experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']).optional(),
   trainingHistory: z.string().optional().or(z.literal('')),
+  referenceDocumentUri: z.string().optional().or(z.literal('')),
   aestheticGoal: z.enum(['cutting', 'bulking', 'recomp', 'performance']).optional(),
   trainingTiming: z.enum(['jejum', 'manha', 'meio-dia', 'tarde', 'noite']).optional(),
   mealCount: z.coerce.number().optional(),
@@ -143,6 +147,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("perfil");
   const avatarFileRef = useRef<HTMLInputElement>(null);
+  const refDocFileRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -155,7 +160,8 @@ export default function ProfilePage() {
         trainingDays: ['Domingo', 'Terça', 'Quinta', 'Sábado'], 
         raceGoalType: 'pace',
         planGenerationType: 'blocks',
-        experienceLevel: 'beginner'
+        experienceLevel: 'beginner',
+        referenceDocumentUri: ''
     }
   });
 
@@ -182,6 +188,7 @@ export default function ProfilePage() {
             experienceLevel: p.experienceLevel || 'beginner',
             planGenerationType: p.planGenerationType || 'blocks',
             trainingHistory: p.trainingHistory || '',
+            referenceDocumentUri: p.referenceDocumentUri || '',
             aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
             strengthSplit: p.strengthPreferences?.splitPreference || 'full_body',
             strengthObjective: p.strengthPreferences?.objective || 'performance',
@@ -196,6 +203,7 @@ export default function ProfilePage() {
 
   const watchAvatarUrl = watch('avatarUrl');
   const watchGoalType = watch('raceGoalType');
+  const watchReferenceDoc = watch('referenceDocumentUri');
 
   const isOwner = context?.activeProfile?.ownerUid === user?.uid || context?.activeProfile?.ownerUid === 'local-user';
 
@@ -206,6 +214,16 @@ export default function ProfilePage() {
         setValue('avatarUrl', dataUri);
         toast({ title: "Foto atualizada!" });
       } catch (err) { toast({ variant: 'destructive', title: 'Erro na imagem' }); }
+    }
+  };
+
+  const handleRefDocChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      try {
+        const dataUri = await fileToDataURI(e.target.files[0]);
+        setValue('referenceDocumentUri', dataUri);
+        toast({ title: "Documento carregado!", description: "A IA usará este PDF como referência na próxima geração." });
+      } catch (err) { toast({ variant: 'destructive', title: 'Erro no documento' }); }
     }
   };
 
@@ -613,22 +631,50 @@ export default function ProfilePage() {
                                       </div>
                                   </div>
 
+                                  {/* SEÇÃO DE IMPORTAÇÃO DE REFERÊNCIA */}
                                   <div className="space-y-4 border-t border-border/20 pt-10">
                                       <div className="flex items-center gap-3">
-                                          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><HistoryIcon size={18}/></div>
-                                          <h4 className="text-xs font-black uppercase italic tracking-[0.2em]">Histórico para IA</h4>
+                                          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><FileText size={18}/></div>
+                                          <h4 className="text-xs font-black uppercase italic tracking-[0.2em]">Guia de Referência (PDF / Print)</h4>
                                       </div>
-                                      <FormField control={form.control} name="trainingHistory" render={({field}) => (
-                                          <FormItem>
-                                              <FormControl>
-                                                  <Textarea 
-                                                      placeholder="Descreva seu histórico, lesões ou qualquer detalhe para o Coach Gemini..." 
-                                                      className="bg-black/30 min-h-[140px] rounded-2xl font-medium italic p-5 border-border/40 focus:border-primary" 
-                                                      {...field} 
-                                                  />
-                                              </FormControl>
-                                          </FormItem>
-                                      )} />
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                          <div 
+                                              className={cn(
+                                                "border-2 border-dashed rounded-2xl p-6 text-center space-y-3 cursor-pointer transition-all",
+                                                watchReferenceDoc ? "border-primary bg-primary/10" : "border-border/40 hover:bg-primary/5"
+                                              )}
+                                              onClick={() => refDocFileRef.current?.click()}
+                                          >
+                                              <input type="file" ref={refDocFileRef} className="sr-only" onChange={handleRefDocChange} accept=".pdf,image/*" />
+                                              {watchReferenceDoc ? (
+                                                  <div className="flex flex-col items-center gap-2">
+                                                      <CheckCircle2 className="size-8 text-primary" />
+                                                      <p className="text-[10px] font-black uppercase italic text-primary">Documento Carregado</p>
+                                                      <Button variant="ghost" size="sm" className="h-6 text-[8px] uppercase font-bold" onClick={(e) => { e.stopPropagation(); setValue('referenceDocumentUri', ''); }}>Remover</Button>
+                                                  </div>
+                                              ) : (
+                                                  <div className="flex flex-col items-center gap-2">
+                                                      <Upload className="size-8 text-muted-foreground opacity-50" />
+                                                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Upload de Referência</p>
+                                                      <p className="text-[8px] text-muted-foreground/60 leading-tight">Envie planos anteriores ou observações em PDF para a IA usar como base.</p>
+                                                  </div>
+                                              )}
+                                          </div>
+                                          <div className="space-y-4">
+                                              <FormLabel className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2"><HistoryIcon size={14}/> Histórico Complementar</FormLabel>
+                                              <FormField control={form.control} name="trainingHistory" render={({field}) => (
+                                                  <FormItem>
+                                                      <FormControl>
+                                                          <Textarea 
+                                                              placeholder="Descreva seu histórico, lesões ou qualquer detalhe para o Coach Gemini..." 
+                                                              className="bg-black/30 min-h-[100px] rounded-2xl font-medium italic p-5 border-border/40 focus:border-primary text-xs" 
+                                                              {...field} 
+                                                          />
+                                                      </FormControl>
+                                                  </FormItem>
+                                              )} />
+                                          </div>
+                                      </div>
                                   </div>
                               </CardContent>
                           </Card>

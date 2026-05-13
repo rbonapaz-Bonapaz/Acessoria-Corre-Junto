@@ -55,7 +55,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const userConfigRef = useMemo(() => user ? doc(db, 'user_data', user.uid) : null, [db, user]);
   const { data: userConfig, loading: loadingConfig } = useDoc<any>(userConfigRef);
   
-  // Se não houver login, tentamos usar o localStorage como fallback temporário para não quebrar a UI
   const [localApiKey, setLocalApiKey] = useState<string | null>(null);
   const [localActiveProfileId, setLocalActiveProfileId] = useState<string | null>(null);
 
@@ -77,7 +76,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // 3. Busca perfis
   const coachProfilesQuery = useMemo(() => {
     if (user) return query(collection(db, 'athletes'), where('ownerUid', '==', user.uid));
-    // Se não logado, poderíamos buscar por uma chave local, mas por enquanto vamos deixar vazio ou buscar todos se for ambiente dev
     return query(collection(db, 'athletes'), where('ownerUid', '==', 'local-user'));
   }, [db, user]);
   const { data: coachProfiles } = useCollection<AthleteProfile>(coachProfilesQuery);
@@ -237,7 +235,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         weeklyAvailability: profile.trainingDays.join(', '),
         injuryHistory: profile.trainingHistory || 'Nenhuma reportada',
         preferredWorkoutDays: profile.trainingDays.slice(0, 2).join(', '),
-        legDay: profile.strengthPreferences?.legDay
+        legDay: profile.strengthPreferences?.legDay,
+        referenceFileDataUri: profile.referenceDocumentUri
       });
 
       result.weeklyPlans.forEach(week => {

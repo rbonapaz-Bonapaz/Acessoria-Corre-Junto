@@ -24,7 +24,9 @@ import {
   Clock,
   X,
   FileDigit,
-  Info
+  Info,
+  Printer,
+  FileDown
 } from "lucide-react";
 import { 
   Tooltip,
@@ -135,29 +137,77 @@ export default function TrainingPage() {
     }
   };
 
+  const handleExportPDF = () => {
+    if (!plan || !profile) return;
+    toast({ title: "Gerando PDF...", description: "Preparando versão otimizada para impressão." });
+    // Usamos o print nativo do navegador com estilos específicos para gerar PDF
+    window.print();
+  };
+
   return (
     <DashboardLayout>
       <TooltipProvider>
-        <div className="space-y-6 md:space-y-8 max-w-5xl mx-auto pb-20">
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+        <div className="space-y-6 md:space-y-8 max-w-5xl mx-auto pb-20 print:p-0">
+          <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2 print:hidden">
             <div>
               <h1 className="text-3xl md:text-4xl font-headline font-black uppercase italic tracking-tight">
                 <span className="text-white">Meu</span> <span className="text-primary">Plano</span>
               </h1>
               <p className="text-xs md:text-sm text-muted-foreground mt-1">Sua planilha inteligente baseada em ciência e performance.</p>
             </div>
-            <Button 
-              onClick={handleGenerate} 
-              disabled={loading || !profile}
-              className="bg-primary text-black hover:bg-primary/90 w-full md:min-w-[220px] md:w-auto h-12 font-black uppercase tracking-widest text-xs"
-            >
-              {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Sparkles className="mr-2 size-4" />}
-              {plan ? "Re-calibrar Ciclo" : "Gerar Meu Ciclo"}
-            </Button>
+            <div className="flex gap-2">
+              {plan && (
+                <Button 
+                  onClick={handleExportPDF}
+                  variant="outline"
+                  className="border-primary/30 text-primary h-12 px-6 font-black uppercase tracking-widest text-[10px] italic"
+                >
+                  <FileDown className="mr-2 size-4" /> Exportar PDF
+                </Button>
+              )}
+              <Button 
+                onClick={handleGenerate} 
+                disabled={loading || !profile}
+                className="bg-primary text-black hover:bg-primary/90 min-w-[180px] h-12 font-black uppercase tracking-widest text-[10px] italic"
+              >
+                {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Sparkles className="mr-2 size-4" />}
+                {plan ? "Recalibrar Ciclo" : "Gerar Meu Ciclo"}
+              </Button>
+            </div>
           </header>
 
+          {/* Versão para Impressão (Oculta na Tela) */}
+          <div className="hidden print:block space-y-8 p-10 bg-white text-black min-h-screen">
+            <div className="flex justify-between items-center border-b-4 border-black pb-4">
+               <h1 className="text-4xl font-black italic uppercase">Planilha de Treino <span className="text-emerald-600">CorreJunto</span></h1>
+               <div className="text-right">
+                  <p className="text-sm font-bold uppercase">{profile?.name}</p>
+                  <p className="text-xs">{profile?.raceName} | Alvo: {profile?.raceDate}</p>
+               </div>
+            </div>
+            <div className="space-y-6">
+                {plan?.weeklyPlans.map(week => (
+                    <div key={week.weekNumber} className="border p-4 rounded-xl">
+                        <h2 className="text-xl font-black uppercase italic border-b mb-3">Semana {week.weekNumber} - {week.focus}</h2>
+                        <div className="grid grid-cols-2 gap-4">
+                            {week.runs.map(run => (
+                                <div key={run.id} className="text-sm border-b pb-2">
+                                    <p className="font-black uppercase">{run.day} - {run.type}</p>
+                                    <p className="italic text-xs">{run.distance} @ {run.paceZone}</p>
+                                    <p className="text-[10px] leading-tight mt-1">{run.description}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-4 text-[10px] italic">
+                            <strong>Fortalecimento:</strong> {week.strength}
+                        </div>
+                    </div>
+                ))}
+            </div>
+          </div>
+
           {!plan && !loading && (
-            <Card className="mx-2 border-primary/20 bg-primary/5 p-20 text-center rounded-3xl shadow-lg border-2 border-dashed">
+            <Card className="mx-2 border-primary/20 bg-primary/5 p-20 text-center rounded-3xl shadow-lg border-2 border-dashed print:hidden">
               <CardContent className="flex flex-col items-center space-y-6">
                   <div className="p-6 rounded-full bg-primary/10 animate-pulse">
                       <CalendarDays className="h-12 w-12 text-primary" />
@@ -174,7 +224,7 @@ export default function TrainingPage() {
           )}
 
           {plan && !loading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in duration-500 px-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in duration-500 px-2 print:hidden">
               {sortedWorkouts.map((w: any) => (
                 <Card 
                   key={w.id} 
