@@ -11,14 +11,12 @@ import {
   MessageSquare, 
   Trophy, 
   Calculator,
-  ChevronRight,
   BookOpen,
   Target,
   Key,
-  Download,
   Link2,
   Info,
-  Clock
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,7 +26,6 @@ import {
   SidebarFooter, 
   SidebarGroup, 
   SidebarGroupContent, 
-  SidebarGroupLabel, 
   SidebarHeader, 
   SidebarInset, 
   SidebarMenu, 
@@ -37,7 +34,8 @@ import {
   SidebarProvider,
   SidebarTrigger 
 } from "@/components/ui/sidebar";
-import { AppContext } from "@/contexts/AppContext";
+import { TrainingContext } from "@/contexts/TrainingContext";
+import { useUser } from "@/firebase";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +45,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 
 const items = [
   { title: "DASHBOARD", url: "/", icon: LayoutDashboard },
@@ -64,22 +61,32 @@ const items = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const context = React.useContext(AppContext);
+  const context = React.useContext(TrainingContext);
+  const { user, loading: authLoading } = useUser();
   const [showKeyModal, setShowKeyModal] = React.useState(false);
   const [tempKey, setTempKey] = React.useState("");
 
   React.useEffect(() => {
-    if (context?.isHydrated && !context.apiKey) {
+    if (context?.isHydrated && !context.apiKey && user) {
       setShowKeyModal(true);
     }
-  }, [context?.isHydrated, context?.apiKey]);
+  }, [context?.isHydrated, context?.apiKey, user]);
 
   const handleSaveKey = () => {
-    if (tempKey.trim()) {
-      context?.setApiKey(tempKey.trim());
+    if (tempKey.trim() && context) {
+      context.setApiKey(tempKey.trim());
       setShowKeyModal(false);
     }
   };
+
+  if (!context?.isHydrated || authLoading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-background gap-4">
+        <Loader2 className="size-12 animate-spin text-primary" />
+        <p className="font-headline font-black uppercase italic tracking-widest text-primary animate-pulse">Sincronizando Laboratório...</p>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -144,11 +151,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3 pl-4">
                 <div className="text-right hidden md:block leading-none">
-                  <p className="text-[10px] font-black text-white tracking-widest uppercase italic">Atleta</p>
-                  <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">Perfil Ativo</p>
+                  <p className="text-[10px] font-black text-white tracking-widest uppercase italic">
+                    {context?.activeProfile?.name || 'ATLETA'}
+                  </p>
+                  <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">Sincronizado</p>
                 </div>
                 <div className="size-9 rounded-full bg-primary flex items-center justify-center font-headline font-black text-black shadow-lg shadow-primary/20">
-                  {context?.activeProfile?.name?.[0] || 'A'}
+                  {context?.activeProfile?.name?.[0] || user?.email?.[0]?.toUpperCase() || 'A'}
                 </div>
               </div>
             </div>
@@ -164,14 +173,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <DialogHeader>
             <DialogTitle className="text-primary font-headline italic font-black uppercase">Configuração de IA</DialogTitle>
             <DialogDescription>
-              Insira sua Gemini API Key para ativar o motor de periodização e o Coach.
+              Sua Gemini API Key será salva na nuvem para uso em todos os seus dispositivos.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground leading-relaxed">
                 1. Gere sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
-                <br/>2. Cole abaixo. Seus dados são salvos apenas localmente.
+                <br/>2. Cole abaixo.
               </p>
               <Input
                 placeholder="Cole sua API Key aqui..."
