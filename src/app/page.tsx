@@ -22,7 +22,8 @@ import {
   Calendar,
   Info,
   Plus,
-  ChevronRight
+  ChevronRight,
+  Users
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,9 @@ export default function Home() {
               QUEM ESTÁ <span className="text-primary">TREINANDO?</span>
             </h1>
             <p className="text-muted-foreground text-sm md:text-xl font-medium max-w-2xl mx-auto italic">
-              Selecione sua identidade atlética para carregar seus dados e planos.
+              {profiles.length > 0 
+                ? "Selecione o atleta para gerenciar o ciclo de performance." 
+                : "Seja bem-vindo ao seu laboratório. Comece criando seu primeiro perfil de atleta."}
             </p>
           </div>
 
@@ -116,6 +119,12 @@ export default function Home() {
                 Novo Atleta
               </span>
             </Link>
+          </div>
+
+          <div className="pt-12 text-center">
+             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/30 border border-border/50 text-[10px] font-black uppercase italic text-muted-foreground tracking-widest">
+                <Users size={14} className="text-primary" /> Modo Assessoria Ativo
+             </div>
           </div>
         </div>
       </div>

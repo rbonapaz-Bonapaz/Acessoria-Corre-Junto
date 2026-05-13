@@ -1,40 +1,42 @@
 
-# 🏃‍♂️ CorreJunto - Performance Atlética de Elite
+# 🏃‍♂️ CorreJunto - Laboratório de Performance Atlética
 
-O **CorreJunto** é um laboratório de performance para corredores, combinando a ciência clássica do esporte (Jack Daniels, VDOT) com inteligência artificial de última geração (Gemini 1.5 Flash).
+O **CorreJunto** é um laboratório de elite para corredores e treinadores, unindo a ciência de Jack Daniels (VDOT) com a inteligência do Gemini 1.5 Flash.
 
-## 🌐 Links de Acesso
+## 🌐 Modelos de Uso
 
-- **🚀 Site Oficial:** [https://acessoria-corre-junto.vercel.app/](https://acessoria-corre-junto.vercel.app/)
-- **📦 Repositório GitHub:** [https://github.com/rbonapaz-Bonapaz/Acessoria-Corre-Junto](https://github.com/rbonapaz-Bonapaz/Acessoria-Corre-Junto)
+Existem duas formas principais de operar o sistema:
 
-## 🔐 Autenticação e Sincronização (Multi-Usuário)
+### 1. Modelo Assessoria (Recomendado para Treinadores)
+Você utiliza um único login do Google para gerenciar múltiplos atletas.
+- **Vantagem:** Você usa apenas **uma chave de API Gemini** para todos os seus alunos.
+- **Como fazer:** Logue com sua conta, vá em "Meus Dados" e use o botão "Trocar Atleta" para criar novas identidades. Todos os perfis criados aqui serão sincronizados na sua nuvem.
+- **Acesso do Aluno:** O aluno pode ver os dados se você logar com sua conta no dispositivo dele, ou você pode exportar o **Backup JSON** do treino dele e enviar para ele importar no app dele.
 
-O app suporta **qualquer conta Google**. 
-- **Privacidade:** Cada e-mail possui seu próprio banco de dados privado. Os perfis e treinos criados em uma conta não são visíveis para outras contas.
-- **Sincronização:** Para ver os mesmos dados no PC e no Celular, você **deve utilizar o mesmo e-mail** em ambos os dispositivos.
+### 2. Modelo Independente
+Cada atleta possui sua própria conta Google.
+- **Vantagem:** Privacidade total.
+- **Configuração:** O atleta deve configurar sua própria chave de API Gemini no menu lateral.
 
-## 🛠️ Configuração do Firebase (CRÍTICO PARA SINCRONIZAÇÃO)
+## 🛠️ Configuração Técnica (CRÍTICO)
 
-Se o erro de login persistir no celular, siga estes passos EXATOS no seu Console do Firebase:
+Para que a sincronização entre PC e Celular funcione, você **deve** realizar estes passos no seu Console do Firebase:
 
-### 1. Ativar o Provedor Google
-1. No menu à esquerda, clique em **Build** > **Authentication**.
-2. Clique na aba **Método de login** (no topo).
-3. Clique em **Adicionar novo provedor**.
-4. Escolha **Google**, ative a chave e selecione um e-mail de suporte. Clique em **Salvar**.
+### 1. Ativar a Autenticação
+1. Vá em **Build** > **Authentication** > **Get Started**.
+2. Na aba **Sign-in method**, ative o provedor **Google**.
 
-### 2. Autorizar o Domínio (Resolve o erro no Celular)
-1. Ainda em **Authentication**, clique na aba **Configurações** (no topo).
-2. No menu lateral da esquerda (dentro da área branca), clique em **Domínios autorizados**.
-3. Clique em **Adicionar domínio** e adicione exatamente: `acessoria-corre-junto.vercel.app`.
+### 2. Autorizar o Domínio
+1. Ainda em **Authentication**, vá na aba **Settings** > **Authorized domains**.
+2. Adicione o domínio: `acessoria-corre-junto.vercel.app`.
 
-### 3. Firestore Database (Onde ficam os dados)
-1. No menu principal à esquerda, clique em **Build** > **Firestore Database**.
-2. Se não houver um banco, clique em **Criar banco de dados**.
-3. Escolha uma localização (ex: `southamerica-east1` para o Brasil) e inicie em **Modo de Teste**.
+### 3. Firestore (Banco de Dados)
+1. Vá em **Build** > **Firestore Database** > **Create Database**.
+2. Escolha uma localização (ex: `southamerica-east1`) e inicie em **Modo de Teste**.
 
-**Nota:** Após estas ativações, o Google leva cerca de **2 a 5 minutos** para propagar as permissões. Se o erro "Identity Toolkit API" aparecer, aguarde um pouco e tente logar novamente.
+## 🔐 Segurança e IA
+- Sua **Gemini API Key** é salva de forma criptografada na sua conta privada do Firebase.
+- Seus dados não são compartilhados com outros usuários. Cada login Google possui seu próprio banco de dados isolado.
 
 ---
-*Desenvolvido para atletas que buscam transformar dados em performance.*
+*Transformando dados brutos em recordes pessoais.*
