@@ -98,14 +98,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ title: "Sincronização Ativa!", description: "Baixando seus dados da nuvem..." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      const isInvalidAction = error.message?.includes('requested action is invalid') || error.code?.includes('invalid-action');
-      
       toast({ 
         variant: "destructive", 
-        title: "Erro de Configuração", 
-        description: isInvalidAction 
-          ? "ERRO CRÍTICO: Você precisa adicionar o domínio 'acessoria-corre-junto.vercel.app' nos DOMÍNIOS AUTORIZADOS do Firebase Console."
-          : error.message 
+        title: "Erro de Autenticação", 
+        description: "Verifique o suporte de e-mail e os domínios autorizados no Firebase Console."
       });
     }
   };
@@ -205,6 +201,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-4">
               <SidebarTrigger className="text-muted-foreground hover:text-white" />
               <div className="font-headline font-black text-lg uppercase italic tracking-tighter flex items-center gap-3">
+                <span className="text-white">C<span className="text-primary">J</span></span>
+                <span className="text-muted-foreground/30 font-thin">|</span>
                 <span className="text-white">
                    {items.find(i => i.url === pathname)?.title || "PORTAL"}
                 </span>
