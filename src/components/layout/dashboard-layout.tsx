@@ -21,7 +21,8 @@ import {
   AlertCircle,
   LogOut,
   Settings,
-  ShieldCheck
+  ShieldCheck,
+  Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -100,16 +101,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ title: "Sincronização Ativa!", description: "Acessando seu laboratório de performance." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'desconhecido';
-      let description = `Erro: ${error.code}. Verifique a configuração do seu projeto.`;
-      
-      if (error.code === 'auth/identity-toolkit-api-has-not-been-used-in-project') {
-        description = "A API Identity Toolkit não foi usada antes ou está desativada. Ative-a no console do Firebase e aguarde 5 minutos.";
-      } else if (error.code === 'auth/unauthorized-domain') {
-        description = `O domínio '${currentDomain}' não está autorizado no Console Firebase.`;
-      }
-      
-      toast({ variant: "destructive", title: "Falha na Autenticação", description });
+      toast({ variant: "destructive", title: "Falha na Autenticação", description: "Verifique a configuração do seu projeto Firebase." });
     }
   };
 
@@ -148,7 +140,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         tooltip={item.title}
                         className={cn(
                           "transition-all duration-200 h-10 px-6",
-                          pathname === item.url ? "bg-secondary/50 text-white" : "text-muted-foreground hover:text-white"
+                          pathname === item.url ? "bg-primary text-black" : "text-muted-foreground hover:text-white"
                         )}
                       >
                         <Link href={item.url}>
@@ -166,7 +158,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton 
                 className={cn(
-                  "w-full h-12 border transition-all",
+                  "w-full h-12 border transition-all rounded-xl",
                   context?.apiKey ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground border-border/20"
                 )} 
                 onClick={() => setShowKeyModal(true)}
@@ -178,7 +170,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </SidebarMenuButton>
             </SidebarMenuItem>
             {!user && (
-              <Button onClick={handleLogin} variant="outline" className="w-full h-10 font-headline font-black text-[10px] uppercase italic border-primary/30 text-primary hover:bg-primary hover:text-black">
+              <Button onClick={handleLogin} variant="outline" className="w-full h-12 font-headline font-black text-[10px] uppercase italic border-primary/30 text-primary hover:bg-primary hover:text-black rounded-xl">
                 Entrar com Google
               </Button>
             )}
@@ -196,72 +188,75 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center gap-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-3 pl-4 outline-none group text-right">
-                    <div className="text-right hidden md:block leading-none">
-                      <div className="flex items-center justify-end gap-2">
-                        <p className="text-[10px] font-black text-white tracking-widest uppercase italic truncate max-w-[150px]">
-                          {context?.activeProfile?.name || 'MODO LOCAL'}
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-3 pl-4 outline-none group text-right">
+                      <div className="text-right hidden md:block leading-none">
+                        <div className="flex items-center justify-end gap-2">
+                          <p className="text-[10px] font-black text-white tracking-widest uppercase italic truncate max-w-[150px]">
+                            {context?.activeProfile?.name || user.displayName || 'ATLETA'}
+                          </p>
+                          <ChevronDown size={12} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
+                        </div>
+                        <p className="text-[9px] font-bold uppercase tracking-tighter text-primary">
+                          {context?.activeProfile ? 'Perfil Ativo' : 'Escolher Atleta'}
                         </p>
-                        <ChevronDown size={12} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
                       </div>
-                      <p className="text-[9px] font-bold uppercase tracking-tighter text-primary">
-                        {user ? 'Sincronizado' : 'Offline'}
-                      </p>
+                      <div className="size-10 rounded-2xl flex items-center justify-center font-headline font-black text-black bg-primary shadow-lg shadow-primary/20 shrink-0 border-2 border-white/10">
+                        {(context?.activeProfile?.name?.[0] || user?.displayName?.[0] || 'A')}
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64 bg-card border-border p-2 rounded-2xl shadow-2xl mt-2 border-2">
+                    <DropdownMenuLabel className="px-4 py-3 border-b border-border/50">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Logado como</p>
+                      <p className="text-xs font-bold text-white truncate italic">{user.email}</p>
+                    </DropdownMenuLabel>
+                    
+                    <div className="p-1">
+                      <DropdownMenuItem asChild className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
+                        <Link href="/profile" className="flex items-center gap-3">
+                          <Settings size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
+                          <span className="font-headline font-black text-xs uppercase italic tracking-wider">Gestão do Atleta</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all"
+                        onClick={handleSwitchProfile}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Users size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
+                          <span className="font-headline font-black text-xs uppercase italic tracking-wider">Trocar Atleta</span>
+                        </div>
+                      </DropdownMenuItem>
                     </div>
-                    <div className="size-9 rounded-full flex items-center justify-center font-headline font-black text-black bg-primary shadow-lg shadow-primary/20 shrink-0">
-                      {(context?.activeProfile?.name?.[0] || user?.displayName?.[0] || 'L')}
-                    </div>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 bg-card border-border p-2 rounded-2xl shadow-2xl mt-2">
-                  <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    {user ? user.email : 'Sessão Local'}
-                  </DropdownMenuLabel>
-                  
-                  <DropdownMenuItem asChild className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
-                    <Link href="/profile" className="flex items-center gap-3">
-                      <Settings size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
-                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Gestão do Atleta</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuItem 
-                    className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all"
-                    onClick={handleSwitchProfile}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Users size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
-                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Trocar Atleta</span>
-                    </div>
-                  </DropdownMenuItem>
 
-                  <DropdownMenuSeparator className="bg-border/20" />
-                  
-                  {user ? (
-                    <DropdownMenuItem 
-                      className="p-3 focus:bg-destructive/10 text-destructive cursor-pointer rounded-xl group transition-all"
-                      onClick={handleLogout}
-                    >
-                      <div className="flex items-center gap-3">
-                        <LogOut size={18} className="text-destructive" />
-                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
-                      </div>
-                    </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem 
-                      className="p-3 focus:bg-primary/10 text-primary cursor-pointer rounded-xl group transition-all"
-                      onClick={handleLogin}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Users size={18} className="text-primary" />
-                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Entrar com Google</span>
-                      </div>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuSeparator className="bg-border/20" />
+                    
+                    <div className="p-1">
+                      <DropdownMenuItem 
+                        className="p-3 focus:bg-destructive/10 text-destructive cursor-pointer rounded-xl group transition-all"
+                        onClick={handleLogout}
+                      >
+                        <div className="flex items-center gap-3">
+                          <LogOut size={18} className="text-destructive" />
+                          <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair / Logout</span>
+                        </div>
+                      </DropdownMenuItem>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button 
+                  onClick={handleLogin} 
+                  variant="outline" 
+                  className="h-10 px-4 font-headline font-black text-[10px] uppercase italic border-primary/30 text-primary hover:bg-primary hover:text-black rounded-xl gap-2"
+                >
+                  <Users size={14} /> ENTRAR COM GOOGLE
+                </Button>
+              )}
             </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-12 lg:p-16">
@@ -271,16 +266,19 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <Dialog open={showKeyModal} onOpenChange={setShowKeyModal}>
-        <DialogContent className="sm:max-w-[425px] bg-card border-border rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-primary font-headline italic font-black uppercase">Sua Chave Gemini</DialogTitle>
-            <DialogDescription className="text-xs">
+        <DialogContent className="sm:max-w-[425px] bg-card border-border rounded-3xl p-8">
+          <DialogHeader className="space-y-4">
+            <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mx-auto">
+              <Key size={32} />
+            </div>
+            <DialogTitle className="text-primary font-headline italic font-black uppercase text-center text-2xl">Sua Chave Gemini</DialogTitle>
+            <DialogDescription className="text-xs text-center font-medium italic">
               Insira sua API Key do Google para processar seus treinos. Atletas vinculados usarão a chave do treinador como fallback automático.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-6 py-4">
             <div className="space-y-4">
-              <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 flex gap-3 items-start">
+              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 flex gap-3 items-start">
                 <AlertCircle className="size-4 text-primary shrink-0 mt-0.5" />
                 <p className="text-[10px] text-muted-foreground leading-relaxed italic">
                   Obtenha sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-primary underline font-bold">Google AI Studio</a>.
@@ -290,12 +288,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 placeholder="Cole sua API Key aqui..."
                 value={tempKey}
                 onChange={(e) => setTempKey(e.target.value)}
-                className="bg-secondary/50 border-border h-12 font-mono text-sm rounded-xl focus:border-primary"
+                className="bg-secondary/50 border-border h-14 font-mono text-sm rounded-xl focus:border-primary text-center"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black h-12 rounded-xl">Ativar Inteligência</Button>
+            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black h-16 rounded-2xl shadow-xl shadow-primary/20 text-lg italic">Ativar Inteligência</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -316,9 +314,9 @@ function LogoDisplay() {
   }
 
   return (
-    <div className="font-headline font-black text-2xl italic tracking-tighter flex flex-col items-center">
-      <span className="text-white leading-none">CORRE</span>
-      <span className="text-primary leading-none">JUNTO</span>
+    <div className="font-headline font-black text-3xl italic tracking-tighter flex flex-col items-center leading-none">
+      <span className="text-white">CORRE</span>
+      <span className="text-primary">JUNTO</span>
     </div>
   );
 }
