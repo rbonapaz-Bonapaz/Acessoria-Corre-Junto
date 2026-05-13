@@ -178,7 +178,6 @@ export default function ProfilePage() {
     setIsSaving(true);
     
     try {
-      // Limpa a meta que não está ativa
       const finalData = { ...data };
       if (targetType === 'pace') finalData.targetTime = '';
       else finalData.targetPace = '';
@@ -267,7 +266,7 @@ export default function ProfilePage() {
                       <FormField control={form.control} name="name" render={({field}) => (
                         <FormItem className="space-y-3">
                           <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic flex items-center gap-2">
-                            <User className="size-3" /> Nome Completo
+                            <User className="size-3" /> Nome do Atleta
                           </FormLabel>
                           <FormControl><Input {...field} className="bg-black/30 h-16 font-black text-lg md:text-xl rounded-2xl border-border/40 focus:border-primary px-6" /></FormControl>
                         </FormItem>
@@ -444,30 +443,30 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Bloco de Prova Alvo */}
-                      <div className="pt-10 border-t border-border/20 space-y-10">
+                      <div className="pt-10 border-t border-border/20 space-y-8">
                         <div className="flex items-center gap-3">
-                           <Trophy className="text-primary size-8 animate-bounce" />
-                           <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter">PROVA ALVO</h3>
+                           <Trophy className="text-primary size-7" />
+                           <h3 className="text-xl font-black uppercase italic text-white tracking-tighter">PROVA ALVO</h3>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                            <FormField control={form.control} name="raceName" render={({field}) => (
-                            <FormItem className="space-y-3 lg:col-span-1">
+                            <FormItem className="space-y-3">
                               <FormLabel className="text-[11px] font-black uppercase text-white italic">NOME DO EVENTO</FormLabel>
-                              <FormControl><Input placeholder="Ex: Maratona de SP" {...field} className="bg-black/40 border-border/40 h-16 font-black italic rounded-2xl px-6" /></FormControl>
+                              <FormControl><Input placeholder="Ex: Maratona de SP" {...field} className="bg-black/40 border-border/40 h-14 font-black italic rounded-xl px-6" /></FormControl>
                             </FormItem>
                           )} />
                           <FormField control={form.control} name="raceDate" render={({field}) => (
                             <FormItem className="space-y-3">
                               <FormLabel className="text-[11px] font-black uppercase text-white italic">DATA DA LARGADA</FormLabel>
-                              <FormControl><Input type="date" {...field} className="bg-black/40 border-border/40 h-16 font-black italic rounded-2xl px-6 text-center" /></FormControl>
+                              <FormControl><Input type="date" {...field} className="bg-black/40 border-border/40 h-14 font-black italic rounded-xl px-6 text-center" /></FormControl>
                             </FormItem>
                           )} />
                           <FormField control={form.control} name="raceDistance" render={({field}) => (
                             <FormItem className="space-y-3">
                               <FormLabel className="text-[11px] font-black uppercase text-white italic">DISTÂNCIA</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-16 font-black italic rounded-2xl px-6 text-lg"><SelectValue placeholder="Distância" /></SelectTrigger></FormControl>
+                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-14 font-black italic rounded-xl px-6 text-lg"><SelectValue placeholder="Distância" /></SelectTrigger></FormControl>
                                 <SelectContent>
                                   <SelectItem value="5k" className="font-black italic">5 KM</SelectItem>
                                   <SelectItem value="10k" className="font-black italic">10 KM</SelectItem>
@@ -479,36 +478,36 @@ export default function ProfilePage() {
                           )} />
                         </div>
 
-                        {/* Metas de Performance - PACE OU TEMPO */}
-                        <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/20 space-y-6">
-                           <div className="flex items-center gap-2 mb-2">
-                             <Target className="size-5 text-primary" />
-                             <span className="text-xs font-black uppercase italic tracking-widest text-primary">DEFINIR META POR:</span>
+                        {/* Metas de Performance - Layout Discreto com Tabs */}
+                        <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-6">
+                           <div className="flex items-center gap-2">
+                             <Target className="size-4 text-primary" />
+                             <span className="text-[11px] font-black uppercase italic tracking-widest text-primary">DEFINIR META POR:</span>
                            </div>
 
                            <Tabs value={targetType} onValueChange={(v) => setTargetType(v as any)} className="w-full">
-                              <TabsList className="grid w-full grid-cols-2 h-14 bg-black/40 p-1.5 rounded-xl gap-2">
-                                <TabsTrigger value="pace" className="font-black italic uppercase data-[state=active]:bg-primary data-[state=active]:text-black rounded-lg">PACE ALVO</TabsTrigger>
-                                <TabsTrigger value="time" className="font-black italic uppercase data-[state=active]:bg-primary data-[state=active]:text-black rounded-lg">TEMPO ALVO</TabsTrigger>
+                              <TabsList className="grid w-full grid-cols-2 h-12 bg-black/40 p-1 rounded-xl gap-2">
+                                <TabsTrigger value="pace" className="font-black italic uppercase data-[state=active]:bg-primary data-[state=active]:text-black rounded-lg text-[10px]">PACE ALVO</TabsTrigger>
+                                <TabsTrigger value="time" className="font-black italic uppercase data-[state=active]:bg-primary data-[state=active]:text-black rounded-lg text-[10px]">TEMPO ALVO</TabsTrigger>
                               </TabsList>
 
-                              <TabsContent value="pace" className="mt-6 animate-in fade-in duration-300">
-                                <FormField control={form.control} name="targetPace" render={({field}) => (
-                                  <FormItem className="space-y-3">
-                                    <FormLabel className="text-[11px] font-black uppercase text-white italic">RITMO PRETENDIDO (MIN/KM)</FormLabel>
-                                    <FormControl><Input placeholder="Ex: 4:15" {...field} className="bg-black/50 border-primary/30 h-16 text-center font-black text-3xl rounded-2xl focus:border-primary" /></FormControl>
-                                  </FormItem>
-                                )} />
-                              </TabsContent>
-
-                              <TabsContent value="time" className="mt-6 animate-in fade-in duration-300">
-                                <FormField control={form.control} name="targetTime" render={({field}) => (
-                                  <FormItem className="space-y-3">
-                                    <FormLabel className="text-[11px] font-black uppercase text-white italic">TEMPO FINAL (HH:MM:SS)</FormLabel>
-                                    <FormControl><Input placeholder="Ex: 03:30:00" {...field} className="bg-black/50 border-primary/30 h-16 text-center font-black text-3xl rounded-2xl focus:border-primary" /></FormControl>
-                                  </FormItem>
-                                )} />
-                              </TabsContent>
+                              <div className="mt-6">
+                                {targetType === 'pace' ? (
+                                  <FormField control={form.control} name="targetPace" render={({field}) => (
+                                    <FormItem className="space-y-3">
+                                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground italic">RITMO PRETENDIDO (MIN/KM)</FormLabel>
+                                      <FormControl><Input placeholder="Ex: 4:15" {...field} className="bg-black/50 border-border/40 h-14 text-center font-black text-2xl rounded-xl focus:border-primary" /></FormControl>
+                                    </FormItem>
+                                  )} />
+                                ) : (
+                                  <FormField control={form.control} name="targetTime" render={({field}) => (
+                                    <FormItem className="space-y-3">
+                                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground italic">TEMPO FINAL (HH:MM:SS)</FormLabel>
+                                      <FormControl><Input placeholder="Ex: 03:30:00" {...field} className="bg-black/50 border-border/40 h-14 text-center font-black text-2xl rounded-xl focus:border-primary" /></FormControl>
+                                    </FormItem>
+                                  )} />
+                                )}
+                              </div>
                            </Tabs>
                         </div>
                       </div>
