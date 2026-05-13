@@ -53,29 +53,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
 
-  // 1. Chave de API do usuário logado (Seja treinador ou atleta)
+  // 1. Chave de API do usuário logado
   const userConfigRef = useMemo(() => user ? doc(db, 'user_data', user.uid) : null, [db, user]);
   const { data: userConfig, loading: loadingConfig } = useDoc<any>(userConfigRef);
   const userApiKey = userConfig?.apiKey || null;
 
-  // 2. Chave de API do Treinador (Fallback se o usuário logado for um atleta vinculado e não tiver chave própria)
+  // 2. Fallback: Chave de API do Treinador (se o logado for atleta e não tiver chave)
   const [trainerApiKey, setTrainerApiKey] = useState<string | null>(null);
 
-  // Monitorar perfis onde sou o Treinador (Dono)
   const coachProfilesQuery = useMemo(() => {
     if (!user) return null;
     return query(collection(db, 'athletes'), where('ownerUid', '==', user.uid));
   }, [db, user]);
   const { data: coachProfiles } = useCollection<AthleteProfile>(coachProfilesQuery);
 
-  // Monitorar perfis onde sou o Atleta (Vinculado por e-mail)
   const athleteProfilesQuery = useMemo(() => {
     if (!user?.email) return null;
     return query(collection(db, 'athletes'), where('athleteEmail', '==', user.email));
   }, [db, user]);
   const { data: athleteProfiles } = useCollection<AthleteProfile>(athleteProfilesQuery);
 
-  // Combinar perfis
   const profiles = useMemo(() => {
     const map = new Map<string, AthleteProfile>();
     (coachProfiles || []).forEach(p => map.set(p.id, p));
@@ -85,7 +82,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const activeProfile = useMemo(() => profiles.find(p => p.id === activeProfileId) || null, [profiles, activeProfileId]);
 
-  // Efeito para buscar a chave do treinador caso o usuário logado seja o atleta vinculado e não tenha chave própria
   useEffect(() => {
     if (activeProfile && user && activeProfile.ownerUid !== user.uid && !userApiKey) {
       const trainerRef = doc(db, 'user_data', activeProfile.ownerUid);
@@ -105,7 +101,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [activeProfile, user, userApiKey, db]);
 
-  // Chave que será efetivamente usada
   const effectiveApiKey = userApiKey || trainerApiKey;
 
   const setApiKey = (key: string | null) => {
@@ -126,7 +121,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const saveProfile = async (data: Partial<AthleteProfile>) => {
     if (!user) {
-      toast({ variant: "destructive", title: "Ação Negada", description: "Faça login para salvar perfis." });
+      toast({ variant: "destructive", title: "Ação Negada", description: "Faça login para sincronizar dados." });
       throw new Error("No user");
     }
 
@@ -154,7 +149,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const docRef = doc(db, 'athletes', id);
     deleteDoc(docRef).then(() => {
       if (activeProfileId === id) setActiveProfileId(null);
-      toast({ title: "Perfil removido com sucesso." });
+      toast({ title: "Perfil removido do sistema." });
     }).catch(err => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,
@@ -187,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
     if (!effectiveApiKey) {
-      toast({ variant: "destructive", title: "IA Desconectada", description: "Configure sua Gemini API Key ou peça para seu treinador configurar a dele." });
+      toast({ variant: "destructive", title: "IA Desconectada", description: "Configure sua API Key ou peça ao seu treinador para configurar a dele." });
       return;
     }
 
@@ -226,9 +221,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       await saveProfile({ ...profile, trainingPlan: result });
-      
       setPlanGenerationStatus('success');
-      toast({ title: "Ciclo Gerado!", description: "Sua planilha de elite foi sincronizada." });
+      toast({ title: "Ciclo Sincronizado!", description: "Sua planilha de elite foi atualizada na nuvem." });
     } catch (error: any) {
       setPlanGenerationStatus('error');
       toast({ variant: "destructive", title: "Erro na IA", description: error.message });
