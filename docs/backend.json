@@ -8,6 +8,8 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
+        "ownerUid": { "type": "string", "description": "UID do Treinador dono do perfil" },
+        "athleteEmail": { "type": "string", "description": "E-mail do Google do atleta para acesso vinculado" },
         "avatarUrl": { "type": "string" },
         "location": { "type": "string" },
         "birthDate": { "type": "string", "format": "date" },
@@ -22,11 +24,14 @@
         "raceDistance": { "type": "string" },
         "raceDate": { "type": "string", "format": "date" },
         "raceGoal": { "type": "string" },
+        "targetPace": { "type": "string" },
+        "targetTime": { "type": "string" },
         "trainingDays": { "type": "array", "items": { "type": "string" } },
         "longRunDay": { "type": "string" },
         "planGenerationType": { "type": "string", "enum": ["full", "blocks"] },
         "experienceLevel": { "type": "string", "enum": ["run_walk", "beginner", "intermediate", "advanced"] },
         "trainingHistory": { "type": "string" },
+        "trainingPlan": { "type": "object", "description": "Plano de treino atual do atleta" },
         "dietPreferences": { "$ref": "#/backend/entities/DietPreferences" },
         "strengthPreferences": { "$ref": "#/backend/entities/StrengthPreferences" }
       }
@@ -66,13 +71,13 @@
     "providers": ["google.com"]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": "object",
-      "description": "Metadados de assinatura e conta do usuário."
-    },
     "/user_data/{userId}": {
       "schema": "object",
-      "description": "Documento central de dados do atleta (perfis, planos, logs)."
+      "description": "Configurações globais do usuário (ex: API Key)."
+    },
+    "/athletes/{athleteId}": {
+      "schema": { "$ref": "#/backend/entities/AthleteProfile" },
+      "description": "Dados individuais dos atletas compartilháveis entre treinador e aluno."
     }
   }
 }

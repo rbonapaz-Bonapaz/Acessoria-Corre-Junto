@@ -23,7 +23,9 @@ import {
   Info,
   Plus,
   ChevronRight,
-  Users
+  Users,
+  ShieldCheck,
+  User as UserIcon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,7 @@ import { AppContext } from "@/contexts/AppContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUser } from "@/firebase";
 
 const chartData = [
   { day: "Dom", previsto: 0, real: 0 },
@@ -58,8 +61,12 @@ const stats = [
 
 export default function Home() {
   const context = React.useContext(AppContext);
+  const { user } = useUser();
   const activeProfile = context?.activeProfile;
   const profiles = context?.profiles || [];
+
+  const myAthletes = profiles.filter(p => p.ownerUid === user?.uid);
+  const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid);
 
   if (!context?.isHydrated) {
     return (
@@ -77,54 +84,63 @@ export default function Home() {
   if (!activeProfile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-1000">
-        <div className="max-w-4xl w-full space-y-12">
+        <div className="max-w-5xl w-full space-y-12">
           <div className="text-center space-y-4">
             <h1 className="text-5xl md:text-7xl font-headline font-black uppercase italic tracking-tighter text-white">
-              QUEM ESTÁ <span className="text-primary">TREINANDO?</span>
+              SISTEMA DE <span className="text-primary">ASSESSORIA</span>
             </h1>
             <p className="text-muted-foreground text-sm md:text-xl font-medium max-w-2xl mx-auto italic">
-              {profiles.length > 0 
-                ? "Selecione o atleta para gerenciar o ciclo de performance." 
-                : "Seja bem-vindo ao seu laboratório. Comece criando seu primeiro perfil de atleta."}
+              Selecione o atleta para gerenciar ou visualizar o ciclo de performance.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {profiles.map((profile) => (
-              <button
-                key={profile.id}
-                onClick={() => context.switchProfile(profile.id)}
-                className="group flex flex-col items-center gap-4 transition-all hover:scale-105"
-              >
-                <div className="relative">
-                  <Avatar className="size-24 md:size-32 border-4 border-transparent group-hover:border-primary transition-all shadow-2xl">
-                    <AvatarImage src={profile.avatarUrl} />
-                    <AvatarFallback className="bg-secondary text-3xl font-black">{profile.name[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 rounded-full transition-opacity flex items-center justify-center">
-                    <ChevronRight className="size-8 text-black" />
-                  </div>
+          <div className="space-y-10">
+            {/* Seção: Meus Atletas (Visão do Treinador) */}
+            {myAthletes.length > 0 && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 px-2">
+                  <ShieldCheck className="text-primary size-5" />
+                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Meus Atletas (Gestão)</h3>
                 </div>
-                <span className="font-headline font-black text-xs md:text-sm uppercase italic tracking-widest text-muted-foreground group-hover:text-white transition-colors">
-                  {profile.name}
-                </span>
-              </button>
-            ))}
-
-            <Link href="/profile" className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
-              <div className="size-24 md:size-32 rounded-full bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
-                <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                  {myAthletes.map((profile) => (
+                    <ProfileCard key={profile.id} profile={profile} onSwitch={() => context.switchProfile(profile.id)} />
+                  ))}
+                  <Link href="/profile" onClick={() => context.switchProfile(null)} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
+                    <div className="size-24 md:size-32 rounded-3xl bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
+                      <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white">Novo Atleta</span>
+                  </Link>
+                </div>
               </div>
-              <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white transition-colors">
-                Novo Atleta
-              </span>
-            </Link>
-          </div>
+            )}
 
-          <div className="pt-12 text-center">
-             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/30 border border-border/50 text-[10px] font-black uppercase italic text-muted-foreground tracking-widest">
-                <Users size={14} className="text-primary" /> Modo Assessoria Ativo
-             </div>
+            {/* Seção: Treinos Vinculados (Visão do Atleta) */}
+            {linkedProfiles.length > 0 && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 px-2">
+                  <UserIcon className="text-accent size-5" />
+                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Meus Treinos (Vinculado)</h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                  {linkedProfiles.map((profile) => (
+                    <ProfileCard key={profile.id} profile={profile} onSwitch={() => context.switchProfile(profile.id)} isLinked />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {profiles.length === 0 && (
+              <div className="flex flex-col items-center gap-6 pt-10">
+                <div className="p-8 rounded-full bg-secondary/20 border-2 border-dashed border-border">
+                  <Users className="size-12 text-muted-foreground" />
+                </div>
+                <Button asChild size="lg" className="bg-primary text-black font-black uppercase">
+                   <Link href="/profile">CRIAR MEU PRIMEIRO ATLETA</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -210,5 +226,38 @@ export default function Home() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+function ProfileCard({ profile, onSwitch, isLinked = false }: { profile: any, onSwitch: () => void, isLinked?: boolean }) {
+  return (
+    <button
+      onClick={onSwitch}
+      className="group flex flex-col items-center gap-4 transition-all hover:scale-105"
+    >
+      <div className="relative">
+        <Avatar className={cn(
+          "size-24 md:size-32 border-4 transition-all shadow-2xl rounded-3xl",
+          isLinked ? "border-accent/40 group-hover:border-accent" : "border-transparent group-hover:border-primary"
+        )}>
+          <AvatarImage src={profile.avatarUrl} className="object-cover" />
+          <AvatarFallback className="bg-secondary text-3xl font-black">{profile.name[0]}</AvatarFallback>
+        </Avatar>
+        <div className={cn(
+          "absolute inset-0 opacity-0 group-hover:opacity-100 rounded-3xl transition-opacity flex items-center justify-center",
+          isLinked ? "bg-accent/20" : "bg-primary/20"
+        )}>
+          <ChevronRight className="size-8 text-white" />
+        </div>
+        {isLinked && (
+          <div className="absolute -top-2 -right-2 bg-accent text-black p-1.5 rounded-full shadow-lg">
+            <UserIcon size={12} />
+          </div>
+        )}
+      </div>
+      <span className="font-headline font-black text-[10px] md:text-sm uppercase italic tracking-widest text-muted-foreground group-hover:text-white transition-colors truncate max-w-[120px]">
+        {profile.name}
+      </span>
+    </button>
   );
 }
