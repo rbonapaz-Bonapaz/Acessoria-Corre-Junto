@@ -19,7 +19,8 @@ import {
   Info,
   LogOut,
   LogIn,
-  Users
+  Users,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -104,23 +105,31 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error("Auth Error:", error);
       const errorMsg = error.message?.toLowerCase() || "";
+      const errorCode = error.code || "";
       
-      if (errorMsg.includes('identitytoolkit')) {
+      if (errorMsg.includes('identitytoolkit') || errorCode.includes('api-not-activated')) {
         toast({ 
           variant: "destructive", 
-          duration: 15000,
-          title: "Configuração Necessária", 
-          description: "No Console do Firebase, ative a 'Authentication' clicando no botão 'Começar'." 
+          duration: 20000,
+          title: "API em Ativação", 
+          description: "O Google leva ~5 min para ativar a API após você clicar em 'Começar'. Aguarde um instante e tente novamente. Verifique também se há um 'E-mail de suporte' em Configurações do Projeto." 
         });
       } else if (errorMsg.includes('unauthorized-domain')) {
         toast({ 
           variant: "destructive", 
-          duration: 15000,
-          title: "Domínio Bloqueado", 
-          description: "Adicione 'acessoria-corre-junto.vercel.app' aos domínios autorizados no Firebase." 
+          duration: 20000,
+          title: "Domínio não Autorizado", 
+          description: "Adicione 'acessoria-corre-junto.vercel.app' na aba Authentication > Settings > Authorized Domains no seu Firebase." 
         });
+      } else if (errorMsg.includes('popup-closed-by-user')) {
+        toast({ title: "Login Cancelado", description: "Você fechou a janela de autenticação." });
       } else {
-        toast({ variant: "destructive", title: "Erro no Login", description: error.message });
+        toast({ 
+          variant: "destructive", 
+          duration: 15000,
+          title: "Erro de Conexão", 
+          description: `Detalhes: ${error.message}. Verifique se as chaves no arquivo src/firebase/config.ts estão corretas.` 
+        });
       }
     }
   };
