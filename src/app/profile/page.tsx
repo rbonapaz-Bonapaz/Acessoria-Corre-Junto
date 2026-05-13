@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useState, useEffect, useRef } from 'react';
+import { useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -46,7 +46,8 @@ import {
     Activity,
     Trophy,
     History as HistoryIcon,
-    Link2
+    Link2,
+    CalendarCheck
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -160,6 +161,13 @@ export default function ProfilePage() {
   });
 
   const { reset, watch, setValue, getValues } = form;
+
+  const trainingDays = watch('trainingDays') || [];
+  
+  // Filtra os dias disponíveis para o longão baseado nos dias de corrida marcados
+  const availableLongRunDays = useMemo(() => {
+    return weekDays.filter(day => trainingDays.includes(day.id));
+  }, [trainingDays]);
 
   useEffect(() => {
     if (context?.isHydrated && context.activeProfile) {
@@ -487,8 +495,16 @@ export default function ProfilePage() {
                                                                 <div 
                                                                     onClick={() => {
                                                                         const current = field.value || [];
-                                                                        if (current.includes(day.id)) field.onChange(current.filter(d => d !== day.id));
-                                                                        else field.onChange([...current, day.id]);
+                                                                        let next;
+                                                                        if (current.includes(day.id)) next = current.filter(d => d !== day.id);
+                                                                        else next = [...current, day.id];
+                                                                        field.onChange(next);
+                                                                        
+                                                                        // Se desmarcou o dia que era o longão, limpa o longão
+                                                                        const currentLongRun = getValues('longRunDay');
+                                                                        if (current.includes(day.id) && currentLongRun === day.id) {
+                                                                          setValue('longRunDay', '');
+                                                                        }
                                                                     }}
                                                                     className={cn(
                                                                         "h-14 rounded-xl border-2 flex flex-col items-center justify-center cursor-pointer transition-all",
@@ -508,13 +524,24 @@ export default function ProfilePage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <FormField control={form.control} name="longRunDay" render={({field}) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Dia do Longão</FormLabel>
+                                                    <FormLabel className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                                      Dia do Longão <CalendarCheck size={12} className="text-primary"/>
+                                                    </FormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl><SelectTrigger className="bg-black/20 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                        <FormControl>
+                                                          <SelectTrigger className="bg-black/20 h-12">
+                                                            <SelectValue placeholder={availableLongRunDays.length > 0 ? "Escolha um dia de corrida" : "Selecione dias de corrida primeiro"} />
+                                                          </SelectTrigger>
+                                                        </FormControl>
                                                         <SelectContent>
-                                                            {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
+                                                            {availableLongRunDays.length > 0 ? (
+                                                              availableLongRunDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)
+                                                            ) : (
+                                                              <div className="p-2 text-[10px] text-muted-foreground italic">Marque os dias de corrida acima primeiro.</div>
+                                                            )}
                                                         </SelectContent>
                                                     </Select>
+                                                    <FormDescription className="text-[9px]">Apenas dias selecionados no calendário acima aparecem aqui.</FormDescription>
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="experienceLevel" render={({field}) => (
@@ -744,12 +771,12 @@ export default function ProfilePage() {
                                     <div className="p-2 rounded-xl bg-primary/10 text-primary"><ShieldCheck size={24}/></div>
                                     <div>
                                       <CardTitle className="font-headline text-xl uppercase italic">Vínculo de Assessoria</CardTitle>
-                                      <CardDescription className="text-xs">Permita que seu atleta acesse o próprio plano usando o login do Google dele.</CardDescription>
+                                      <CardDescription className="text-xs">Identificação de papéis e acesso compartilhado.</CardDescription>
                                     </div>
                                   </div>
                                 </CardHeader>
-                                <CardContent className="space-y-6 pt-6 border-t border-border/50">
-                                    <div className="p-4 rounded-xl bg-secondary/30 space-y-3">
+                                <CardContent className="space-y-8 pt-6 border-t border-border/50">
+                                    <div className="p-6 rounded-2xl bg-secondary/30 space-y-4">
                                         <h4 className="text-xs font-black uppercase italic flex items-center gap-2">
                                             <Link2 size={14} className="text-primary" /> E-mail do Atleta (Google)
                                         </h4>
@@ -764,14 +791,25 @@ export default function ProfilePage() {
                                                     className="bg-black/30 h-12 border-border/50 focus:border-primary font-medium" 
                                                   />
                                                 </FormControl>
-                                                <FormDescription className="text-[10px]">
+                                                <FormDescription className="text-[10px] leading-relaxed">
                                                     {isOwner 
-                                                        ? "Insira o e-mail que o atleta usa para logar no Google. Ele verá apenas este perfil."
-                                                        : "Apenas seu treinador pode alterar este e-mail."}
+                                                        ? "Insira o e-mail que o atleta usa para logar no Google. Quando ele logar, verá este perfil na aba 'Vinculado'. Ele poderá usar a própria chave de IA se quiser."
+                                                        : "Apenas seu treinador (o dono deste perfil) pode alterar o e-mail de vínculo."}
                                                 </FormDescription>
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 space-y-2">
+                                        <h5 className="text-[10px] font-black uppercase italic text-primary">Papel: Treinador (Você)</h5>
+                                        <p className="text-[9px] text-muted-foreground leading-relaxed">Você criou este perfil. Você tem acesso total à gestão, alteração de dados e visualização de todos os treinos.</p>
+                                      </div>
+                                      <div className="p-5 rounded-2xl bg-accent/5 border border-accent/10 space-y-2">
+                                        <h5 className="text-[10px] font-black uppercase italic text-accent">Papel: Atleta Vinculado</h5>
+                                        <p className="text-[9px] text-muted-foreground leading-relaxed">O usuário do e-mail acima verá o plano, registrará treinos e poderá usar o Coach IA usando a chave dele ou a sua.</p>
+                                      </div>
                                     </div>
                                 </CardContent>
                             </Card>
