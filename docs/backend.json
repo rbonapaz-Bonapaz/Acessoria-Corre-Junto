@@ -8,12 +8,10 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "ownerUid": { "type": "string", "description": "UID do Treinador dono do perfil" },
-        "athleteEmail": { "type": "string", "description": "E-mail do Google do atleta para acesso vinculado" },
+        "ownerUid": { "type": "string" },
+        "athleteEmail": { "type": "string" },
         "avatarUrl": { "type": "string" },
-        "location": { "type": "string" },
         "birthDate": { "type": "string", "format": "date" },
-        "gender": { "type": "string", "enum": ["male", "female", "other"] },
         "currentWeight": { "type": "number" },
         "height": { "type": "number" },
         "restingHr": { "type": "number" },
@@ -23,38 +21,24 @@
         "raceName": { "type": "string" },
         "raceDistance": { "type": "string" },
         "raceDate": { "type": "string", "format": "date" },
-        "raceGoal": { "type": "string" },
         "targetPace": { "type": "string" },
         "targetTime": { "type": "string" },
         "trainingDays": { "type": "array", "items": { "type": "string" } },
         "longRunDay": { "type": "string" },
         "weeklyMileageGoal": { "type": "number" },
         "planGenerationType": { "type": "string", "enum": ["full", "blocks"] },
-        "experienceLevel": { "type": "string", "enum": ["run_walk", "beginner", "intermediate", "advanced"] },
+        "experienceLevel": { "type": "string" },
         "trainingHistory": { "type": "string" },
-        "trainingPlan": { "type": "object", "description": "Plano de treino atual do atleta" },
-        "dietPreferences": { "$ref": "#/backend/entities/DietPreferences" },
-        "strengthPreferences": { "$ref": "#/backend/entities/StrengthPreferences" }
+        "referenceDocumentUri": { "type": "string" }
       }
     },
-    "DietPreferences": {
-      "title": "Preferências Dieta",
+    "UserData": {
+      "title": "Dados do Usuário",
       "type": "object",
       "properties": {
-        "aestheticGoal": { "type": "string", "enum": ["performance", "cutting", "bulking", "recomp"] },
-        "trainingTiming": { "type": "string", "enum": ["jejum", "manha", "meio-dia", "tarde", "noite"] },
-        "mealCount": { "type": "number" },
-        "supplements": { "type": "string" },
-        "allergies": { "type": "string" }
-      }
-    },
-    "StrengthPreferences": {
-      "title": "Preferências Força",
-      "type": "object",
-      "properties": {
-        "splitPreference": { "type": "string", "enum": ["full_body", "upper_lower", "ppl"] },
-        "objective": { "type": "string", "enum": ["strength", "hypertrophy", "performance", "endurance"] },
-        "legDay": { "type": "string" }
+        "profile": { "$ref": "#/backend/entities/AthleteProfile" },
+        "trainingPlan": { "type": "object" },
+        "apiKey": { "type": "string" }
       }
     }
   },
@@ -63,8 +47,8 @@
   },
   "firestore": {
     "/user_data/{userId}": {
-      "schema": "object",
-      "description": "Dados do usuário e seu perfil de atleta sincronizado."
+      "schema": { "$ref": "#/backend/entities/UserData" },
+      "description": "Dados mestre do usuário sincronizados entre dispositivos."
     }
   }
 }

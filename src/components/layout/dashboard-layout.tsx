@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -5,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, 
-  User, 
+  User as UserIcon, 
   Activity, 
   MessageSquare, 
   Trophy, 
@@ -15,7 +16,10 @@ import {
   Key,
   Link2,
   Info,
-  Loader2
+  Loader2,
+  LogIn,
+  LogOut,
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -56,7 +60,7 @@ const items = [
   { title: "CALCULADORAS", url: "/calculators", icon: Calculator },
   { title: "DICIONÁRIO", url: "/dictionary", icon: BookOpen },
   { title: "INTEGRAÇÕES", url: "/integrations", icon: Link2 },
-  { title: "PERFIL ATLETA", url: "/profile", icon: User },
+  { title: "PERFIL ATLETA", url: "/profile", icon: UserIcon },
   { title: "SOBRE", url: "/about", icon: Info },
 ];
 
@@ -78,7 +82,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     if (tempKey.trim() && context) {
       context.setApiKey(tempKey.trim());
       setShowKeyModal(false);
-      toast({ title: "Sua IA está ativa!", description: "O sistema agora usará sua própria cota do Google." });
     }
   };
 
@@ -87,6 +90,29 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <div className="h-screen w-full flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="size-12 animate-spin text-primary" />
         <p className="font-headline font-black uppercase italic tracking-widest text-primary animate-pulse">Sincronizando Laboratório...</p>
+      </div>
+    );
+  }
+
+  // Gate de Autenticação
+  if (!user) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-background p-6 text-center space-y-8">
+        <div className="font-headline font-black text-6xl italic tracking-tighter flex flex-col items-center leading-none">
+          <span className="text-white">CORRE</span>
+          <span className="text-primary">JUNTO</span>
+        </div>
+        <div className="max-w-md space-y-4">
+          <h2 className="text-2xl font-black uppercase italic text-white">Laboratório de Elite</h2>
+          <p className="text-muted-foreground font-medium">Sincronize seus treinos, analise sua biomecânica e gere planos com IA em qualquer dispositivo.</p>
+        </div>
+        <Button 
+          size="lg" 
+          onClick={() => context?.login()} 
+          className="bg-white text-black hover:bg-primary font-black uppercase tracking-widest h-16 px-10 rounded-2xl shadow-2xl transition-all hover:scale-105"
+        >
+          <LogIn className="mr-3 size-6" /> Entrar com Google
+        </Button>
       </div>
     );
   }
@@ -139,6 +165,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                className="w-full h-12 text-muted-foreground border border-border/20 rounded-xl hover:bg-destructive/10 hover:text-destructive" 
+                onClick={() => context?.logout()}
+              >
+                <LogOut className="size-4" />
+                <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Sair</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset className="flex-1 flex flex-col min-w-0">
@@ -156,12 +191,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-3 pl-4">
                 <div className="text-right hidden md:block leading-none">
                   <p className="text-[10px] font-black text-white tracking-widest uppercase italic">
-                    {context?.activeProfile?.name || 'ATLETA'}
+                    {context?.activeProfile?.name || user?.displayName?.split(' ')[0] || 'ATLETA'}
                   </p>
                   <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">Sincronizado</p>
                 </div>
-                <div className="size-9 rounded-full bg-primary flex items-center justify-center font-headline font-black text-black shadow-lg shadow-primary/20">
-                  {context?.activeProfile?.name?.[0] || user?.email?.[0]?.toUpperCase() || 'A'}
+                <div className="size-9 rounded-full bg-primary flex items-center justify-center font-headline font-black text-black shadow-lg shadow-primary/20 overflow-hidden border-2 border-primary/20">
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    context?.activeProfile?.name?.[0] || user?.email?.[0]?.toUpperCase() || 'A'
+                  )}
                 </div>
               </div>
             </div>

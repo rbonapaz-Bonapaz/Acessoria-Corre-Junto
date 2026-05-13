@@ -3,6 +3,7 @@
 
 import { createContext, useState, useEffect, type ReactNode, useCallback } from 'react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import type { AthleteProfile, TrainingPlan, Workout } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -20,12 +21,15 @@ interface TrainingContextType {
   planGenerationStatus: PlanGenerationStatus;
   apiKey: string | null;
   setApiKey: (key: string) => Promise<void>;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 export const TrainingContext = createContext<TrainingContextType | null>(null);
 
 export function TrainingProvider({ children }: { children: ReactNode }) {
-  const { auth, firestore } = { auth: useAuth(), firestore: useFirestore() };
+  const auth = useAuth();
+  const firestore = useFirestore();
   const { user, loading: authLoading } = useUser();
   const { toast } = useToast();
 
@@ -36,12 +40,17 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (authLoading || !user || !firestore) {
-      if (!authLoading && !user) setIsHydrated(true);
+    if (authLoading) return;
+
+    if (!user) {
+      setActiveProfile(null);
+      setTrainingPlan(null);
+      setApiKeyInternal(null);
+      setIsHydrated(true);
       return;
     }
 
-    // Carregamento inicial do cache para resposta imediata
+    // Tentar recuperar chave local para agilidade
     const cachedKey = localStorage.getItem(`corre_junto_api_key_${user.uid}`);
     if (cachedKey) setApiKeyInternal(cachedKey);
 
@@ -56,24 +65,51 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
           setApiKeyInternal(data.apiKey);
           localStorage.setItem(`corre_junto_api_key_${user.uid}`, data.apiKey);
         }
+      } else {
+        // Documento novo, inicializar se necessário ou apenas marcar como hidratado
+        setActiveProfile(null);
+        setTrainingPlan(null);
       }
       setIsHydrated(true);
     }, (error) => {
-      console.error("Erro no Sync Real-time:", error);
+      console.error("Erro no Sync Firestore:", error);
       setIsHydrated(true);
     });
 
     return () => unsubscribe();
-  }, [user, authLoading, firestore, toast]);
+  }, [user, authLoading, firestore]);
+
+  const login = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast({ title: "Bem-vindo ao Laboratório!", description: "Sincronizando seus dados..." });
+    } catch (e) {
+      toast({ variant: 'destructive', title: "Erro no Login", description: "Não foi possível autenticar com o Google." });
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      toast({ title: "Sessão encerrada", description: "Até a próxima corrida!" });
+    } catch (e) {
+      toast({ variant: 'destructive', title: "Erro ao sair" });
+    }
+  };
 
   const saveProfile = useCallback(async (data: Partial<AthleteProfile>) => {
-    if (!user || !firestore) return;
+    if (!user || !firestore) {
+      toast({ variant: 'destructive', title: 'Não autenticado', description: 'Faça login para salvar seus dados.' });
+      return;
+    }
     const docRef = doc(firestore, 'user_data', user.uid);
     
     try {
       await setDoc(docRef, { profile: data }, { merge: true });
-      toast({ title: '✅ Sincronizado', description: 'Perfil atualizado na nuvem.' });
+      toast({ title: '✅ Sincronizado', description: 'Dados salvos na nuvem com sucesso.' });
     } catch (e) {
+      console.error(e);
       toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Verifique sua conexão.' });
     }
   }, [user, firestore, toast]);
@@ -101,19 +137,18 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     const cleanKey = key.trim();
     const docRef = doc(firestore, 'user_data', user.uid);
     
-    // Update local immediately
     setApiKeyInternal(cleanKey);
     localStorage.setItem(`corre_junto_api_key_${user.uid}`, cleanKey);
     
     try {
       await setDoc(docRef, { apiKey: cleanKey }, { merge: true });
+      toast({ title: "Chave Configurada", description: "Sua IA está pronta para uso." });
     } catch (e) {
-      console.error("Erro ao salvar chave na nuvem:", e);
+      console.error(e);
     }
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
-    // Check both state and localStorage just in case of race conditions
     const currentKey = apiKey || (user ? localStorage.getItem(`corre_junto_api_key_${user.uid}`) : null);
 
     if (!currentKey) {
@@ -125,11 +160,6 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!profile.thresholdHr || profile.thresholdHr <= 0) {
-      toast({ variant: "destructive", title: "Fisiologia Incompleta", description: "Informe seu FC Limiar no perfil." });
-      return;
-    }
-
     setPlanGenerationStatus('pending');
     toast({ title: "🧠 Gemini Coach está analisando...", description: "Planejando seu ciclo de elite..." });
 
@@ -138,11 +168,11 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
         apiKey: currentKey,
         raceName: profile.raceName,
         currentVDOT: profile.vo2Max || 40,
-        hrZone1End: Math.round(profile.thresholdHr * 0.8),
-        hrZone2End: Math.round(profile.thresholdHr * 0.9),
-        hrZone3End: Math.round(profile.thresholdHr * 0.95),
-        hrZone4End: profile.thresholdHr,
-        hrMax: profile.thresholdHr + 20,
+        hrZone1End: Math.round((profile.thresholdHr || 160) * 0.8),
+        hrZone2End: Math.round((profile.thresholdHr || 160) * 0.9),
+        hrZone3End: Math.round((profile.thresholdHr || 160) * 0.95),
+        hrZone4End: profile.thresholdHr || 160,
+        hrMax: (profile.thresholdHr || 160) + 20,
         trainingBlockType: 'Construction',
         planGenerationType: profile.planGenerationType || 'blocks',
         raceDate: profile.raceDate || new Date().toISOString(),
@@ -179,7 +209,9 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     generateRunningPlanAsync,
     planGenerationStatus,
     apiKey,
-    setApiKey
+    setApiKey,
+    login,
+    logout
   };
 
   return <TrainingContext.Provider value={value}>{children}</TrainingContext.Provider>;
