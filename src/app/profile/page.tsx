@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useState, useEffect, useRef, useMemo } from 'react';
+import { useContext, useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,7 +19,6 @@ import {
     FormItem, 
     FormLabel, 
     FormMessage, 
-    FormDescription 
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { 
@@ -31,7 +30,6 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
     Loader2, 
@@ -44,12 +42,10 @@ import {
     Target,
     Activity,
     Trophy,
-    History as HistoryIcon,
     CalendarCheck,
     Info,
     FileText,
-    Upload,
-    Clock
+    Upload
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -128,7 +124,7 @@ export default function ProfilePage() {
     }
   });
 
-  const { reset, watch, setValue, getValues } = form;
+  const { reset, watch, setValue } = form;
 
   useEffect(() => {
     if (context?.isHydrated && context.activeProfile) {
@@ -189,8 +185,7 @@ export default function ProfilePage() {
       };
       
       await context.saveProfile(profileData);
-      setIsSaving(false);
-    } catch (err) {
+    } finally {
       setIsSaving(false);
     }
   };
@@ -284,7 +279,7 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                {/* ABA CORRIDA - RESTAURADA */}
+                {/* ABA CORRIDA - RESTAURADA COM TODOS OS CAMPOS */}
                 <TabsContent value="corrida" className="mt-6 space-y-6">
                   <Card className="bg-card/50 border-border/50">
                     <CardHeader className="bg-primary/5 border-b border-border/50">
@@ -293,13 +288,13 @@ export default function ProfilePage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-10 pt-8">
-                      {/* Fisiologia */}
+                      {/* Seção 1: Fisiologia */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <FormField control={form.control} name="vo2Max" render={({field}) => (
                           <FormItem>
                             <div className="flex items-center gap-2">
                               <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">VDOT (Jack Daniels)</FormLabel>
-                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Índice de performance aeróbica.</p></TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Índice de performance aeróbica baseado nos seus tempos.</p></TooltipContent></Tooltip>
                             </div>
                             <FormControl><Input type="number" step="0.1" {...field} className="bg-primary/5 border-primary/30 h-16 text-2xl font-black text-primary text-center rounded-2xl" /></FormControl>
                           </FormItem>
@@ -325,7 +320,7 @@ export default function ProfilePage() {
                         )} />
                       </div>
 
-                      {/* Prova Alvo */}
+                      {/* Seção 2: Prova Alvo */}
                       <div className="space-y-6 pt-6 border-t border-border/20">
                         <div className="flex items-center gap-3"><Trophy className="text-primary size-5"/><h3 className="text-xs font-black uppercase italic tracking-widest">A Grande Prova</h3></div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -387,7 +382,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Disponibilidade */}
+                      {/* Seção 3: Disponibilidade */}
                       <div className="space-y-6 pt-6 border-t border-border/20">
                         <div className="flex items-center gap-3"><CalendarCheck className="text-primary size-5"/><h3 className="text-xs font-black uppercase italic tracking-widest">Disponibilidade Semanal</h3></div>
                         <div className="flex flex-wrap gap-4">
@@ -411,7 +406,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Documento de Referência */}
+                      {/* Seção 4: Documento de Referência */}
                       <div className="space-y-6 pt-6 border-t border-border/20">
                          <div className="flex items-center gap-3"><FileText className="text-primary size-5"/><h3 className="text-xs font-black uppercase italic tracking-widest">IA Reference (PDF / Imagem)</h3></div>
                          <div 
