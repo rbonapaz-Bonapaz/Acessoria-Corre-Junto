@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useState, useEffect, useRef, useMemo } from 'react';
@@ -118,12 +117,30 @@ export default function ProfilePage() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
+      avatarUrl: '',
+      birthDate: '',
+      currentWeight: 70,
+      height: 175,
+      restingHr: 50,
+      vo2Max: 45,
+      thresholdPace: '4:50',
+      thresholdHr: 165,
+      weeklyMileageGoal: 60,
+      raceName: '',
+      raceDistance: '10k',
+      raceDate: '',
+      targetPace: '',
+      targetTime: '',
       trainingDays: ['Segunda', 'Quarta', 'Sexta'],
+      longRunDay: 'Domingo',
       planGenerationType: 'blocks',
       experienceLevel: 'beginner',
-      raceDistance: '10k',
-      weeklyMileageGoal: 60,
-      longRunDay: 'Domingo',
+      trainingHistory: '',
+      referenceDocumentUri: '',
+      legDay: '',
+      supplements: '',
+      allergies: '',
+      mealCount: 4,
     }
   });
 
@@ -134,12 +151,33 @@ export default function ProfilePage() {
       const p = context.activeProfile;
       reset({
         ...p,
+        name: p.name || '',
+        avatarUrl: p.avatarUrl || '',
+        birthDate: p.birthDate || '',
+        currentWeight: p.currentWeight || 0,
+        height: p.height || 0,
+        restingHr: p.restingHr || 50,
+        vo2Max: p.vo2Max || 45,
+        thresholdPace: p.thresholdPace || '4:50',
+        thresholdHr: p.thresholdHr || 165,
+        weeklyMileageGoal: p.weeklyMileageGoal || 60,
+        raceName: p.raceName || '',
+        raceDistance: p.raceDistance || '10k',
+        raceDate: p.raceDate || '',
+        targetPace: p.targetPace || '',
+        targetTime: p.targetTime || '',
+        trainingDays: p.trainingDays || ['Segunda', 'Quarta', 'Sexta'],
+        longRunDay: p.longRunDay || 'Domingo',
+        planGenerationType: p.planGenerationType || 'blocks',
+        experienceLevel: p.experienceLevel || 'beginner',
+        trainingHistory: p.trainingHistory || '',
+        referenceDocumentUri: p.referenceDocumentUri || '',
         aestheticGoal: p.dietPreferences?.aestheticGoal,
         trainingTiming: p.dietPreferences?.trainingTiming,
-        mealCount: p.dietPreferences?.mealCount,
-        supplements: p.dietPreferences?.supplements,
-        allergies: p.dietPreferences?.allergies,
-        legDay: p.strengthPreferences?.legDay,
+        mealCount: p.dietPreferences?.mealCount || 4,
+        supplements: p.dietPreferences?.supplements || '',
+        allergies: p.dietPreferences?.allergies || '',
+        legDay: p.strengthPreferences?.legDay || '',
         strengthSplit: p.strengthPreferences?.splitPreference,
         strengthObjective: p.strengthPreferences?.objective,
       } as any);
@@ -210,7 +248,6 @@ export default function ProfilePage() {
     await handleSubmit(onSave)();
     
     setIsProcessing(true);
-    // Usamos o perfil atualizado do context após o save
     if (context.activeProfile) {
         await context.generateRunningPlanAsync(context.activeProfile);
     }
@@ -247,7 +284,7 @@ export default function ProfilePage() {
                   <TabsTrigger value="musculacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">FORÇA</TabsTrigger>
                 </TabsList>
 
-                {/* ABA PERFIL (Ex-Geral) */}
+                {/* ABA PERFIL */}
                 <TabsContent value="perfil" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                   <Card className="bg-card/40 border-border/50 rounded-2xl overflow-hidden shadow-xl">
                     <CardHeader className="bg-secondary/10 border-b border-border/10 py-6 px-8">
@@ -274,26 +311,26 @@ export default function ProfilePage() {
                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic flex items-center gap-2">
                             <User className="size-3" /> Nome do Atleta
                           </FormLabel>
-                          <FormControl><Input {...field} className="bg-black/30 h-12 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4" /></FormControl>
+                          <FormControl><Input {...field} className="bg-black/30 h-10 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4" /></FormControl>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="birthDate" render={({field}) => (
                         <FormItem className="space-y-2">
                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Data de Nascimento</FormLabel>
-                          <FormControl><Input type="date" {...field} className="bg-black/30 h-12 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4 text-center" /></FormControl>
+                          <FormControl><Input type="date" {...field} className="bg-black/30 h-10 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4 text-center" /></FormControl>
                         </FormItem>
                       )} />
                       <div className="grid grid-cols-2 gap-4">
                         <FormField control={form.control} name="currentWeight" render={({field}) => (
                           <FormItem className="space-y-2">
                             <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Peso (kg)</FormLabel>
-                            <FormControl><Input type="number" step="0.1" {...field} className="bg-black/30 h-12 text-center font-bold text-lg rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                            <FormControl><Input type="number" step="0.1" {...field} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="height" render={({field}) => (
                           <FormItem className="space-y-2">
                             <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Altura (cm)</FormLabel>
-                            <FormControl><Input type="number" {...field} className="bg-black/30 h-12 text-center font-bold text-lg rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                            <FormControl><Input type="number" {...field} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
                           </FormItem>
                         )} />
                       </div>
@@ -310,7 +347,7 @@ export default function ProfilePage() {
                     </CardHeader>
                     
                     <CardContent className="p-8 space-y-10">
-                      {/* Grid Fisiologia de 4 Pilares */}
+                      {/* Grid Fisiologia */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <FormField control={form.control} name="restingHr" render={({field}) => (
                           <FormItem className="space-y-1.5">
@@ -318,7 +355,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">FC REPOUSO</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Batimentos por minuto ao acordar.</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-12 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="vo2Max" render={({field}) => (
@@ -327,7 +364,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">VO2 MÁX / VDOT</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Seu índice de performance atual.</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input type="number" step="0.1" {...field} className="bg-black/40 border-border/40 h-12 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input type="number" step="0.1" {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="thresholdPace" render={({field}) => (
@@ -336,7 +373,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">PACE LIMIAR</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Seu ritmo de limiar de lactato (T-Pace).</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input {...field} className="bg-black/40 border-border/40 h-12 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="thresholdHr" render={({field}) => (
@@ -345,7 +382,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">FC LIMIAR (L2)</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">FC no ponto de transição anaeróbica.</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-12 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                       </div>
@@ -377,7 +414,7 @@ export default function ProfilePage() {
                                 }
                               }}
                               className={cn(
-                                "flex-1 min-w-[70px] h-14 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 group",
+                                "flex-1 min-w-[70px] h-12 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 group",
                                 watchTrainingDays.includes(day.id)
                                   ? "border-primary bg-primary/10 text-primary"
                                   : "border-border/40 bg-black/20 text-muted-foreground hover:border-primary/50"
@@ -397,7 +434,7 @@ export default function ProfilePage() {
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">NÍVEL DE EXPERIÊNCIA</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-12 font-bold italic rounded-xl px-4 text-sm"><SelectValue/></SelectTrigger></FormControl>
+                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue/></SelectTrigger></FormControl>
                                 <SelectContent className="bg-card border-border">
                                   <SelectItem value="run_walk" className="font-bold italic uppercase">Começando</SelectItem>
                                   <SelectItem value="beginner" className="font-bold italic uppercase">Iniciante</SelectItem>
@@ -411,7 +448,7 @@ export default function ProfilePage() {
                           <FormField control={form.control} name="weeklyMileageGoal" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">DISTÂNCIA SEMANAL (KM)</FormLabel>
-                              <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-12 text-center font-bold rounded-xl text-lg" /></FormControl>
+                              <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                             </FormItem>
                           )} />
                         </div>
@@ -421,7 +458,7 @@ export default function ProfilePage() {
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">ESTRATÉGIA DE CICLO</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-12 font-bold italic rounded-xl px-4 text-sm"><SelectValue/></SelectTrigger></FormControl>
+                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue/></SelectTrigger></FormControl>
                                 <SelectContent>
                                   <SelectItem value="blocks" className="font-bold italic uppercase">Blocos (4 Semanas)</SelectItem>
                                   <SelectItem value="full" className="font-bold italic uppercase">Ciclo Até a Prova</SelectItem>
@@ -434,7 +471,7 @@ export default function ProfilePage() {
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">DIA DO LONGÃO (LSD)</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-12 font-bold italic rounded-xl px-4 text-sm"><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
+                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                                 <SelectContent className="bg-card border-border">
                                   {availableLongRunDays.length > 0 ? (
                                     availableLongRunDays.map(d => <SelectItem key={d.id} value={d.id} className="font-bold italic uppercase">{d.id}</SelectItem>)
@@ -459,20 +496,20 @@ export default function ProfilePage() {
                            <FormField control={form.control} name="raceName" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">NOME DO EVENTO</FormLabel>
-                              <FormControl><Input placeholder="Ex: Maratona de SP" {...field} className="bg-black/40 border-border/40 h-12 font-bold italic rounded-xl px-4 text-sm" /></FormControl>
+                              <FormControl><Input placeholder="Ex: Maratona de SP" {...field} className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm" /></FormControl>
                             </FormItem>
                           )} />
                           <FormField control={form.control} name="raceDate" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">DATA DA LARGADA</FormLabel>
-                              <FormControl><Input type="date" {...field} className="bg-black/40 border-border/40 h-12 font-bold italic rounded-xl px-4 text-center text-sm" /></FormControl>
+                              <FormControl><Input type="date" {...field} className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-center text-sm" /></FormControl>
                             </FormItem>
                           )} />
                           <FormField control={form.control} name="raceDistance" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">DISTÂNCIA</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-12 font-bold italic rounded-xl px-4 text-sm"><SelectValue placeholder="Distância" /></SelectTrigger></FormControl>
+                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue placeholder="Distância" /></SelectTrigger></FormControl>
                                 <SelectContent>
                                   <SelectItem value="5k" className="font-bold italic">5 KM</SelectItem>
                                   <SelectItem value="10k" className="font-bold italic">10 KM</SelectItem>
@@ -492,7 +529,7 @@ export default function ProfilePage() {
                            </div>
 
                            <Tabs value={targetType} onValueChange={(v) => setTargetType(v as any)} className="w-full">
-                              <TabsList className="grid w-full grid-cols-2 h-10 bg-black/40 p-0.5 rounded-lg gap-1">
+                              <TabsList className="grid w-full grid-cols-2 h-9 bg-black/40 p-0.5 rounded-lg gap-1">
                                 <TabsTrigger value="pace" className="font-black italic uppercase data-[state=active]:bg-primary data-[state=active]:text-black rounded-md text-[9px]">PACE ALVO</TabsTrigger>
                                 <TabsTrigger value="time" className="font-black italic uppercase data-[state=active]:bg-primary data-[state=active]:text-black rounded-md text-[9px]">TEMPO ALVO</TabsTrigger>
                               </TabsList>
@@ -501,13 +538,13 @@ export default function ProfilePage() {
                                 {targetType === 'pace' ? (
                                   <FormField control={form.control} name="targetPace" render={({field}) => (
                                     <FormItem className="space-y-2">
-                                      <FormControl><Input placeholder="Ex: 4:15 min/km" {...field} className="bg-black/50 border-border/40 h-12 text-center font-bold text-lg rounded-xl focus:border-primary" /></FormControl>
+                                      <FormControl><Input placeholder="Ex: 4:15 min/km" {...field} className="bg-black/50 border-border/40 h-10 text-center font-bold text-sm rounded-xl focus:border-primary" /></FormControl>
                                     </FormItem>
                                   )} />
                                 ) : (
                                   <FormField control={form.control} name="targetTime" render={({field}) => (
                                     <FormItem className="space-y-2">
-                                      <FormControl><Input placeholder="Ex: 03:30:00" {...field} className="bg-black/50 border-border/40 h-12 text-center font-bold text-lg rounded-xl focus:border-primary" /></FormControl>
+                                      <FormControl><Input placeholder="Ex: 03:30:00" {...field} className="bg-black/50 border-border/40 h-10 text-center font-bold text-sm rounded-xl focus:border-primary" /></FormControl>
                                     </FormItem>
                                   )} />
                                 )}
@@ -564,7 +601,7 @@ export default function ProfilePage() {
                          <FormItem className="space-y-2">
                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">OBJETIVO CORPORAL</FormLabel>
                            <Select onValueChange={field.onChange} value={field.value}>
-                             <FormControl><SelectTrigger className="bg-black/30 h-14 font-bold text-lg rounded-xl border-border/40 px-6 transition-all focus:border-orange-500"><SelectValue placeholder="Qual sua meta..." /></SelectTrigger></FormControl>
+                             <FormControl><SelectTrigger className="bg-black/30 h-12 font-bold text-sm rounded-xl border-border/40 px-6 transition-all focus:border-orange-500"><SelectValue placeholder="Qual sua meta..." /></SelectTrigger></FormControl>
                              <SelectContent className="bg-card border-border">
                                <SelectItem value="performance" className="font-bold italic uppercase">PERFORMANCE PURA</SelectItem>
                                <SelectItem value="cutting" className="font-bold italic uppercase">DEFINIÇÃO (CUTTING)</SelectItem>
@@ -594,7 +631,7 @@ export default function ProfilePage() {
                             <Tooltip><TooltipTrigger asChild><Info className="size-4 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">A IA evitará intensidade alta no dia seguinte ao Leg Day.</p></TooltipContent></Tooltip>
                           </div>
                           <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="bg-black/30 h-14 font-bold text-lg rounded-xl border-border/40 px-6 transition-all focus:border-purple-500"><SelectValue placeholder="Escolha o dia da musculação de perna..." /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="bg-black/30 h-12 font-bold text-sm rounded-xl border-border/40 px-6 transition-all focus:border-purple-500"><SelectValue placeholder="Escolha o dia da musculação de perna..." /></SelectTrigger></FormControl>
                             <SelectContent className="bg-card border-border">
                               {weekDays.map(d => <SelectItem key={d.id} value={d.id} className="font-bold italic uppercase">{d.id}</SelectItem>)}
                             </SelectContent>
@@ -612,7 +649,7 @@ export default function ProfilePage() {
                   type="submit" 
                   size="lg" 
                   disabled={isSaving} 
-                  className="flex-1 h-14 font-black uppercase tracking-widest italic bg-white text-black hover:bg-primary transition-all duration-300 rounded-2xl shadow-xl hover:scale-[1.02]"
+                  className="flex-1 h-12 font-black uppercase tracking-widest italic bg-white text-black hover:bg-primary transition-all duration-300 rounded-2xl shadow-xl hover:scale-[1.02]"
                 >
                   {isSaving ? <Loader2 className="animate-spin mr-3 size-5" /> : <CheckCircle2 className="mr-3 size-5" />}
                   SALVAR DADOS
@@ -621,7 +658,7 @@ export default function ProfilePage() {
                 <Button 
                   type="button" 
                   size="lg" 
-                  className="flex-1 h-14 font-black uppercase tracking-widest italic bg-primary text-black shadow-xl rounded-2xl transition-all hover:scale-[1.02] hover:bg-white"
+                  className="flex-1 h-12 font-black uppercase tracking-widest italic bg-primary text-black shadow-xl rounded-2xl transition-all hover:scale-[1.02] hover:bg-white"
                   onClick={handleGenerate}
                   disabled={isProcessing || !context.activeProfile}
                 >
