@@ -77,27 +77,18 @@ export default function Home() {
       toast({ title: "Sincronização Ativa!", description: "Acessando seu laboratório de performance." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      let errorMessage = "Certifique-se de que a API Identity Toolkit está ATIVA no console do Google e que o domínio está autorizado.";
-      
-      if (error.code === 'auth/operation-not-allowed') {
-        errorMessage = "O provedor Google não está ativado no Firebase Console. Vá em Authentication > Método de Login e ative o Google.";
-      } else if (error.code === 'auth/unauthorized-domain') {
-        errorMessage = `O domínio ${window.location.hostname} não está autorizado no Firebase Console > Authentication > Settings > Authorized Domains.`;
-      }
-
       toast({ 
         variant: "destructive", 
         title: "Falha na Autenticação", 
-        description: errorMessage,
-        duration: 15000,
+        description: "Verifique as configurações do console do Firebase.",
       });
     }
   };
 
-  const myAthletes = profiles.filter(p => p.ownerUid === user?.uid);
-  const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid && p.athleteEmail === user?.email);
+  const myAthletes = profiles.filter(p => user ? p.ownerUid === user.uid : p.ownerUid === 'local-user');
+  const linkedProfiles = profiles.filter(p => user && p.ownerUid !== user.uid && p.athleteEmail === user.email);
 
-  if (authLoading) {
+  if (authLoading && !context?.isHydrated) {
     return (
       <DashboardLayout>
         <div className="space-y-8 animate-pulse">
@@ -110,44 +101,7 @@ export default function Home() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center space-y-12 animate-in fade-in duration-700">
-        <div className="space-y-4">
-          <div className="font-headline font-black text-6xl md:text-9xl italic tracking-tighter uppercase leading-none">
-            <span className="text-white">CORRE</span><span className="text-primary">JUNTO</span>
-          </div>
-          <p className="text-muted-foreground max-w-xl mx-auto text-lg md:text-2xl italic font-medium">
-            Performance atlética de elite impulsionada por IA e sincronizada na nuvem.
-          </p>
-        </div>
-
-        <div className="bg-card/40 border-2 border-border/50 p-10 md:p-16 rounded-[3rem] shadow-2xl max-w-lg w-full space-y-8 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Zap size={150} />
-          </div>
-          
-          <div className="space-y-2 relative z-10">
-            <Lock className="size-16 text-primary mx-auto mb-4" />
-            <h2 className="font-headline font-black text-2xl uppercase italic text-white">Área do Atleta</h2>
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Faça login para acessar seu laboratório</p>
-          </div>
-
-          <Button 
-            onClick={handleLogin} 
-            className="w-full h-20 bg-primary text-black hover:bg-primary/90 font-black uppercase italic text-xl rounded-3xl shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-4"
-          >
-            ENTRAR COM GOOGLE <ArrowRight size={24} />
-          </Button>
-
-          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter italic">
-            Ao entrar você concorda com nossos termos de performance de elite.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+  // Se não houver perfil ativo, mostramos a seleção de perfis
   if (!activeProfile) {
     return (
       <DashboardLayout>
@@ -158,10 +112,24 @@ export default function Home() {
               <span className="text-white">CORRE</span> <span className="text-primary">JUNTO</span>
             </h1>
             <p className="text-muted-foreground text-sm md:text-xl font-medium max-w-2xl mx-auto italic">
-              Bem-vindo, <span className="text-white">{user.displayName}</span>. <br/>
-              Acesse sua assessoria ou gerencie seus atletas abaixo.
+              {user ? (
+                <>Bem-vindo, <span className="text-white">{user.displayName}</span>. Acesse sua assessoria abaixo.</>
+              ) : (
+                <>Bem-vindo ao modo local. Entre com o Google para habilitar a sincronização entre dispositivos.</>
+              )}
             </p>
           </div>
+
+          {!user && (
+            <div className="max-w-md mx-auto">
+               <Button 
+                onClick={handleLogin} 
+                className="w-full h-16 bg-primary text-black hover:bg-primary/90 font-black uppercase italic text-sm rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2"
+              >
+                ENTRAR COM GOOGLE PARA SINCRONIZAR <ArrowRight size={18} />
+              </Button>
+            </div>
+          )}
 
           <div className="space-y-16">
             <div className="space-y-8">
@@ -208,11 +176,18 @@ export default function Home() {
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">
-        <header className="px-2">
-            <h2 className="text-3xl md:text-5xl font-headline font-black uppercase italic tracking-tighter">
-                <span className="text-white">DASHBOARD DE</span> <span className="text-primary">PERFORMANCE</span>
-            </h2>
-            <p className="text-muted-foreground text-sm font-medium mt-2">Visão geral da evolução biomecânica e metabólica.</p>
+        <header className="px-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl md:text-5xl font-headline font-black uppercase italic tracking-tighter">
+                  <span className="text-white">DASHBOARD DE</span> <span className="text-primary">PERFORMANCE</span>
+              </h2>
+              <p className="text-muted-foreground text-sm font-medium mt-2">Visão geral da evolução biomecânica e metabólica.</p>
+            </div>
+            {!user && (
+              <Button onClick={handleLogin} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 font-black italic uppercase text-[10px] h-10 px-4 rounded-xl gap-2">
+                <Lock size={14} /> Ativar Sincronização Cloud
+              </Button>
+            )}
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-2">

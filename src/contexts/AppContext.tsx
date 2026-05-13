@@ -51,27 +51,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const db = useFirestore();
   const { user } = useUser();
 
-  // 1. Configurações globais do usuário (API Key e Último Perfil Ativo)
+  // 1. Configurações globais do usuário
   const userConfigRef = useMemo(() => user ? doc(db, 'user_data', user.uid) : null, [db, user]);
   const { data: userConfig, loading: loadingConfig } = useDoc<any>(userConfigRef);
-  const userApiKey = userConfig?.apiKey || null;
-  const persistedActiveProfileId = userConfig?.lastActiveProfileId || null;
+  
+  // Se não houver login, tentamos usar o localStorage como fallback temporário para não quebrar a UI
+  const [localApiKey, setLocalApiKey] = useState<string | null>(null);
+  const [localActiveProfileId, setLocalActiveProfileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !user) {
+      setLocalApiKey(localStorage.getItem('corre_junto_temp_key'));
+      setLocalActiveProfileId(localStorage.getItem('corre_junto_temp_profile_id'));
+    }
+  }, [user]);
+
+  const userApiKey = user ? (userConfig?.apiKey || null) : localApiKey;
+  const persistedActiveProfileId = user ? (userConfig?.lastActiveProfileId || null) : localActiveProfileId;
 
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
 
   // 2. Fallback: Chave de API do Treinador
   const [trainerApiKey, setTrainerApiKey] = useState<string | null>(null);
 
-  // 3. Busca perfis onde sou treinador ou atleta vinculado
+  // 3. Busca perfis
   const coachProfilesQuery = useMemo(() => {
-    if (!user) return null;
-    return query(collection(db, 'athletes'), where('ownerUid', '==', user.uid));
+    if (user) return query(collection(db, 'athletes'), where('ownerUid', '==', user.uid));
+    // Se não logado, poderíamos buscar por uma chave local, mas por enquanto vamos deixar vazio ou buscar todos se for ambiente dev
+    return query(collection(db, 'athletes'), where('ownerUid', '==', 'local-user'));
   }, [db, user]);
   const { data: coachProfiles } = useCollection<AthleteProfile>(coachProfilesQuery);
 
   const athleteProfilesQuery = useMemo(() => {
-    if (!user?.email) return null;
-    return query(collection(db, 'athletes'), where('athleteEmail', '==', user.email));
+    if (user?.email) return query(collection(db, 'athletes'), where('athleteEmail', '==', user.email));
+    return null;
   }, [db, user]);
   const { data: athleteProfiles } = useCollection<AthleteProfile>(athleteProfilesQuery);
 
@@ -107,36 +120,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const effectiveApiKey = userApiKey || trainerApiKey;
 
   const setApiKey = (key: string | null) => {
-    if (!user || !userConfigRef) return;
-    setDoc(userConfigRef, { apiKey: key }, { merge: true }).catch(err => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: userConfigRef.path,
-        operation: 'write',
-        requestResourceData: { apiKey: key }
-      }));
-    });
+    if (user && userConfigRef) {
+      setDoc(userConfigRef, { apiKey: key }, { merge: true }).catch(err => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: userConfigRef.path,
+          operation: 'write',
+          requestResourceData: { apiKey: key }
+        }));
+      });
+    } else {
+      localStorage.setItem('corre_junto_temp_key', key || '');
+      setLocalApiKey(key);
+    }
   };
 
   const switchProfile = (id: string | null) => {
-    if (!user || !userConfigRef) return;
-    setDoc(userConfigRef, { lastActiveProfileId: id }, { merge: true }).catch(err => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: userConfigRef.path,
-        operation: 'write',
-        requestResourceData: { lastActiveProfileId: id }
-      }));
-    });
+    if (user && userConfigRef) {
+      setDoc(userConfigRef, { lastActiveProfileId: id }, { merge: true }).catch(err => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: userConfigRef.path,
+          operation: 'write',
+          requestResourceData: { lastActiveProfileId: id }
+        }));
+      });
+    } else {
+      localStorage.setItem('corre_junto_temp_profile_id', id || '');
+      setLocalActiveProfileId(id);
+    }
   };
 
   const saveProfile = async (data: Partial<AthleteProfile>) => {
-    if (!user) throw new Error("No user");
-
     const id = data.id || crypto.randomUUID();
     const docRef = doc(db, 'athletes', id);
     const newProfile = {
       ...data,
       id,
-      ownerUid: data.ownerUid || user.uid,
+      ownerUid: data.ownerUid || (user ? user.uid : 'local-user'),
     } as AthleteProfile;
 
     setDoc(docRef, newProfile, { merge: true }).catch(err => {
@@ -151,7 +170,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteProfile = async (id: string) => {
-    if (!user) return;
     const docRef = doc(db, 'athletes', id);
     deleteDoc(docRef).then(() => {
       if (persistedActiveProfileId === id) switchProfile(null);
