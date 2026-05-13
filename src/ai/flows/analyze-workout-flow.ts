@@ -1,6 +1,7 @@
+
 'use server';
 /**
- * @fileOverview Fluxo Genkit para analisar o desempenho do atleta e fornecer feedback biomecânico.
+ * @fileOverview Fluxo Genkit para analisar o desempenho do atleta e fornecer feedback biomecânico ou interpretar orientações.
  */
 
 import { ai, getAiWithKey } from '@/ai/genkit';
@@ -10,7 +11,7 @@ const AnalyzeWorkoutInputSchema = z.object({
   apiKey: z.string().optional().describe('A chave de API do usuário para o processamento.'),
   prescribedWorkout: z.string().describe('Detalhes do treino planejado.'),
   athleteFeedback: z.string().describe('Relato do atleta.'),
-  fileDataUri: z.string().optional().describe("URI de dados do arquivo/imagem."),
+  fileDataUri: z.string().optional().describe("URI de dados do arquivo/imagem/PDF."),
   athleteProfile: z.string().describe('Dados do atleta.'),
 });
 
@@ -38,13 +39,13 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    system: 'Você é um biomecânico de corrida de elite. Analise os dados em PORTUGUÊS.',
+    system: 'Você é um biomecânico e treinador de corrida de elite. Analise os dados em PORTUGUÊS. Se o arquivo for um PDF, ele pode conter métricas de treino ou novas orientações de como você deve ajustar o plano futuro.',
     prompt: [
-      { text: `Prescrição: ${input.prescribedWorkout}` },
-      { text: `Feedback: ${input.athleteFeedback}` },
-      { text: `Perfil: ${input.athleteProfile}` },
+      { text: `Prescrição Atual: ${input.prescribedWorkout}` },
+      { text: `Feedback do Atleta: ${input.athleteFeedback}` },
+      { text: `Perfil Biométrico: ${input.athleteProfile}` },
       ...(input.fileDataUri ? [{ media: { url: input.fileDataUri } }] : []),
-      { text: 'Extraia métricas, compare com a prescrição e forneça recomendações biomecânicas.' }
+      { text: 'Extraia métricas se for um arquivo de dados, ou interprete as orientações de texto se for um PDF/Print. Forneça uma análise técnica profunda comparando o realizado com o planejado.' }
     ],
     output: { schema: AnalyzeWorkoutOutputSchema }
   });

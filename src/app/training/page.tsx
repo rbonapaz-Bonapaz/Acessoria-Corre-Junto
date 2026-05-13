@@ -22,7 +22,8 @@ import {
   MessageSquare,
   Route,
   Clock,
-  X
+  X,
+  FileDigit
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -91,7 +92,7 @@ export default function TrainingPage() {
     if (!selectedWorkout || !profile || !context?.apiKey) return;
     
     setAnalyzing(true);
-    toast({ title: "🧠 Gemini Coach está analisando...", description: "Comparando biomecânica e esforço." });
+    toast({ title: "🧠 Gemini Coach está analisando...", description: "Processando arquivos e orientações." });
 
     try {
       const result = await analyzeWorkout({
@@ -282,7 +283,7 @@ export default function TrainingPage() {
                                         </div>
 
                                         <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase text-muted-foreground">Anexar Evidência (Opcional)</label>
+                                            <label className="text-[10px] font-black uppercase text-muted-foreground">Anexar Evidência ou Orientação (PDF, FIT, Print)</label>
                                             <div 
                                                 className={cn(
                                                   "border-2 border-dashed rounded-2xl p-8 text-center space-y-4 cursor-pointer transition-all",
@@ -290,13 +291,25 @@ export default function TrainingPage() {
                                                 )}
                                                 onClick={() => fileInputRef.current?.click()}
                                             >
-                                                <input type="file" ref={fileInputRef} className="sr-only" onChange={handleFileUpload} accept=".fit,.csv,image/*" />
+                                                <input 
+                                                  type="file" 
+                                                  ref={fileInputRef} 
+                                                  className="sr-only" 
+                                                  onChange={handleFileUpload} 
+                                                  accept=".fit,.csv,image/*,.pdf" 
+                                                />
                                                 {uploadedFileUri ? (
                                                   <div className="space-y-2 animate-in zoom-in-95">
                                                      <div className="flex justify-center">
                                                        <div className="relative">
                                                           <div className="p-4 rounded-full bg-primary text-black">
-                                                            {uploadedFileName?.endsWith('.fit') || uploadedFileName?.endsWith('.csv') ? <FileText size={32}/> : <ImageIcon size={32}/>}
+                                                            {uploadedFileName?.endsWith('.pdf') ? (
+                                                              <FileText size={32} />
+                                                            ) : uploadedFileName?.endsWith('.fit') || uploadedFileName?.endsWith('.csv') ? (
+                                                              <FileDigit size={32}/>
+                                                            ) : (
+                                                              <ImageIcon size={32}/>
+                                                            )}
                                                           </div>
                                                           <Button 
                                                             variant="destructive" 
@@ -309,7 +322,7 @@ export default function TrainingPage() {
                                                        </div>
                                                      </div>
                                                      <div>
-                                                        <p className="text-xs font-black uppercase italic text-primary">ARQUIVO IDENTIFICADO</p>
+                                                        <p className="text-xs font-black uppercase italic text-primary">DOCUMENTO PRONTO</p>
                                                         <p className="text-[10px] text-muted-foreground truncate max-w-[200px] mx-auto">{uploadedFileName}</p>
                                                      </div>
                                                   </div>
@@ -321,8 +334,8 @@ export default function TrainingPage() {
                                                         <div className="p-3 rounded-full bg-secondary/50 text-muted-foreground"><ImageIcon size={24}/></div>
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-black uppercase italic">Importar .FIT, .CSV ou Print</p>
-                                                        <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-tighter">Essencial para extração de biomecânica</p>
+                                                        <p className="text-xs font-black uppercase italic">Importar PDF, .FIT ou Print</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-tighter">Analise treinos ou envie novas orientações</p>
                                                     </div>
                                                   </>
                                                 )}
