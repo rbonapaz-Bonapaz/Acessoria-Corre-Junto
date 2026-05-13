@@ -11,11 +11,11 @@ Se você vir o erro "Requests to this API identitytoolkit method are blocked" ou
 1. Acesse o [Firebase Console](https://console.firebase.google.com/).
 2. Vá em **Build > Authentication**.
 3. **IMPORTANTE:** Se você ver um botão escrito **"Get Started"** (ou "Começar"), você **PRECISA** clicar nele. Sem isso, o Google bloqueia qualquer tentativa de login.
+4. Vá na aba **"Método de login"**, clique em **"Adicionar novo provedor"**, escolha **Google** e ative-o.
 
 ### 2. Ativar a API no Google Cloud
 1. Acesse o [Console do Google Cloud](https://console.cloud.google.com/).
-2. Certifique-se de que o projeto selecionado é o mesmo do Firebase.
-3. Procure por **"Identity Toolkit API"** e clique em **ATIVAR**.
+2. Procure por **"Identity Toolkit API"** e clique em **ATIVAR**.
 
 ### 3. Autorizar o Domínio atual
 1. Copie o endereço do seu navegador (ex: `https://9002-....cloudworkstations.dev`).

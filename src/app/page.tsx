@@ -81,18 +81,18 @@ export default function Home() {
       let errorMessage = "Certifique-se de que a API Identity Toolkit está ATIVA no console do Google e que o domínio está autorizado.";
       
       if (error.code === 'auth/operation-not-allowed') {
-        errorMessage = "O provedor Google não está ativado no Firebase Console. Vá em Authentication > Sign-in method e ative o Google.";
+        errorMessage = "O provedor Google não está ativado no Firebase Console. Vá em Authentication > Método de Login e ative o Google.";
       } else if (error.message.includes('ProjectConfigService.GetProjectConfig are blocked')) {
         errorMessage = "O acesso à API foi bloqueado. Verifique se clicou em 'Get Started' no Firebase Console > Authentication.";
       } else if (error.code === 'auth/unauthorized-domain') {
-        errorMessage = `O domínio ${window.location.hostname} não está autorizado no Firebase Console.`;
+        errorMessage = `O domínio ${window.location.hostname} não está autorizado no Firebase Console > Authentication > Configurações > Domínios Autorizados.`;
       }
 
       toast({ 
         variant: "destructive", 
         title: "Falha na Autenticação", 
         description: errorMessage,
-        duration: 10000,
+        duration: 15000,
       });
     }
   };
