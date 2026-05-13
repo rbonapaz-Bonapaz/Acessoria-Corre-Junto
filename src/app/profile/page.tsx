@@ -197,7 +197,7 @@ export default function ProfilePage() {
     setIsProcessing(false);
   };
 
-  if (!context?.isHydrated) return <DashboardLayout><Skeleton className="h-96 w-full"/></DashboardLayout>;
+  if (!context?.isHydrated) return <DashboardLayout><Skeleton className="h-96 w-full bg-secondary/20 rounded-3xl"/></DashboardLayout>;
 
   return (
     <DashboardLayout>
@@ -311,6 +311,7 @@ export default function ProfilePage() {
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl><SelectTrigger className="bg-black/30 h-16 font-black rounded-xl"><SelectValue/></SelectTrigger></FormControl>
                               <SelectContent>
+                                <SelectItem value="run_walk">Corrida & Caminhada</SelectItem>
                                 <SelectItem value="beginner">Iniciante</SelectItem>
                                 <SelectItem value="intermediate">Intermediário</SelectItem>
                                 <SelectItem value="advanced">Avançado</SelectItem>
