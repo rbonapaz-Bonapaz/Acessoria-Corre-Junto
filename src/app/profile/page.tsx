@@ -43,8 +43,8 @@ import {
     FileText,
     Upload,
     Activity,
-    User,
-    Calendar,
+    User as UserIcon,
+    Calendar as CalendarIcon,
     Target,
     Key
 } from 'lucide-react';
@@ -69,9 +69,9 @@ const weekDays = [
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório.'),
-  avatarUrl: z.string().optional(),
-  birthDate: z.string().optional(),
-  gender: z.enum(['male', 'female', 'other']).optional(),
+  avatarUrl: z.string().optional().default(''),
+  birthDate: z.string().optional().default(''),
+  gender: z.enum(['male', 'female', 'other']).optional().default('male'),
   currentWeight: z.coerce.number().optional().default(70),
   height: z.coerce.number().optional().default(175),
   restingHr: z.coerce.number().optional().default(50),
@@ -79,25 +79,25 @@ const profileSchema = z.object({
   thresholdPace: z.string().optional().default('4:50'),
   thresholdHr: z.coerce.number().optional().default(165),
   weeklyMileageGoal: z.coerce.number().optional().default(60),
-  raceName: z.string().optional(),
+  raceName: z.string().optional().default(''),
   raceDistance: z.string().optional().default('10k'),
-  raceDate: z.string().optional(),
-  targetPace: z.string().optional(),
-  targetTime: z.string().optional(),
+  raceDate: z.string().optional().default(''),
+  targetPace: z.string().optional().default(''),
+  targetTime: z.string().optional().default(''),
   trainingDays: z.array(z.string()).default(['Segunda', 'Quarta', 'Sexta']),
   longRunDay: z.string().optional().default('Domingo'),
   planGenerationType: z.enum(['full', 'blocks']).default('blocks'),
   experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']).optional().default('beginner'),
-  trainingHistory: z.string().optional(),
-  referenceDocumentUri: z.string().optional(),
-  aestheticGoal: z.enum(['performance', 'cutting', 'bulking', 'recomp']).optional(),
-  trainingTiming: z.enum(['jejum', 'manha', 'meio-dia', 'tarde', 'noite']).optional(),
+  trainingHistory: z.string().optional().default(''),
+  referenceDocumentUri: z.string().optional().default(''),
+  aestheticGoal: z.enum(['performance', 'cutting', 'bulking', 'recomp']).optional().default('performance'),
+  trainingTiming: z.enum(['jejum', 'manha', 'meio-dia', 'tarde', 'noite']).optional().default('manha'),
   mealCount: z.coerce.number().optional().default(4),
-  supplements: z.string().optional(),
-  allergies: z.string().optional(),
-  legDay: z.string().optional(),
-  strengthSplit: z.enum(['full_body', 'upper_lower', 'ppl']).optional(),
-  strengthObjective: z.enum(['strength', 'hypertrophy', 'performance', 'endurance']).optional(),
+  supplements: z.string().optional().default(''),
+  allergies: z.string().optional().default(''),
+  legDay: z.string().optional().default(''),
+  strengthSplit: z.enum(['full_body', 'upper_lower', 'ppl']).optional().default('full_body'),
+  strengthObjective: z.enum(['strength', 'hypertrophy', 'performance', 'endurance']).optional().default('performance'),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -235,10 +235,9 @@ export default function ProfilePage() {
       };
       
       await context.saveProfile(profileData);
-      toast({ title: "Dados Salvos", description: "Configurações atualizadas com sucesso." });
     } catch (error) {
       console.error(error);
-      toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Não foi possível salvar seus dados.' });
+      toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Não foi possível persistir seus dados.' });
     } finally {
       setIsSaving(false);
     }
@@ -247,15 +246,6 @@ export default function ProfilePage() {
   const handleGenerate = async () => {
     if (!context) return;
     
-    if (!context.apiKey) {
-      toast({ 
-        variant: "destructive", 
-        title: "Gemini API Key Ausente", 
-        description: "Configure sua chave no menu lateral ou no aviso acima para gerar o ciclo." 
-      });
-      return;
-    }
-
     const isValid = await form.trigger();
     if (!isValid) {
       toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha o nome e campos obrigatórios." });
@@ -339,7 +329,6 @@ export default function ProfilePage() {
                   <TabsTrigger value="musculacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">FORÇA</TabsTrigger>
                 </TabsList>
 
-                {/* ABA PERFIL */}
                 <TabsContent value="perfil" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                   <Card className="bg-card/40 border-border/50 rounded-2xl overflow-hidden shadow-xl">
                     <CardHeader className="bg-secondary/10 border-b border-border/10 py-6 px-8">
@@ -364,7 +353,7 @@ export default function ProfilePage() {
                       <FormField control={form.control} name="name" render={({field}) => (
                         <FormItem className="space-y-2">
                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic flex items-center gap-2">
-                            <User className="size-3" /> Nome do Atleta
+                            <UserIcon className="size-3" /> Nome do Atleta
                           </FormLabel>
                           <FormControl><Input {...field} value={field.value || ''} className="bg-black/30 h-10 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4" /></FormControl>
                         </FormItem>
@@ -393,7 +382,6 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                {/* ABA CORRIDA */}
                 <TabsContent value="corrida" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                   <Card className="bg-card/40 border-border/50 rounded-2xl overflow-hidden shadow-xl">
                     <CardHeader className="py-6 px-8 space-y-1">
@@ -444,8 +432,8 @@ export default function ProfilePage() {
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                             <Calendar className="size-4 text-primary" />
-                             <span className="text-[10px] font-black uppercase text-white italic tracking-widest">DISPONIBILIDADE SEMANAL</span>
+                             <CalendarIcon className="size-4 text-primary" />
+                             <span className="text-[10px] font-black uppercase text-white italic tracking-widest">DISPONIBILIDADE SEMANAL (DOMINGO FIRST)</span>
                           </div>
                           <span className="text-[9px] font-black uppercase text-primary italic tracking-widest bg-primary/10 px-3 py-1 rounded-full">
                             {watchTrainingDays.length} DIAS / SEMANA
@@ -604,40 +592,8 @@ export default function ProfilePage() {
                       </div>
                     </CardContent>
                   </Card>
-
-                  <Card className="bg-card/40 border-border/50 rounded-2xl overflow-hidden shadow-xl">
-                    <CardHeader className="bg-secondary/20 border-b border-border/10 py-4 px-8">
-                       <div className="flex items-center gap-3"><FileText className="text-primary size-5"/><h3 className="text-[10px] font-black uppercase italic tracking-[0.2em]">IA REFERENCE (PDF / PLANO)</h3></div>
-                    </CardHeader>
-                    <CardContent className="p-8">
-                       <div 
-                         className={cn(
-                           "border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-300",
-                           watchReferenceDoc ? "border-primary bg-primary/10" : "border-border/40 hover:border-primary/50 hover:bg-primary/5"
-                         )}
-                         onClick={() => refDocFileRef.current?.click()}
-                       >
-                         <input type="file" ref={refDocFileRef} className="sr-only" onChange={handleRefDocChange} accept=".pdf,image/*" />
-                         {watchReferenceDoc ? (
-                           <div className="flex flex-col items-center gap-2 animate-in zoom-in-95">
-                             <CheckCircle2 className="size-10 text-primary" />
-                             <p className="text-xs font-black uppercase italic text-primary">SINCRONIZADO</p>
-                           </div>
-                         ) : (
-                           <div className="flex flex-col items-center gap-4 opacity-40 hover:opacity-100 transition-opacity">
-                             <Upload className="size-10 text-muted-foreground" />
-                             <div className="space-y-1">
-                                <p className="text-sm font-black uppercase italic tracking-tighter">ANEXAR DIRETRIZES</p>
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground italic">O Coach interpretará seu plano anterior.</p>
-                             </div>
-                           </div>
-                         )}
-                       </div>
-                    </CardContent>
-                  </Card>
                 </TabsContent>
 
-                {/* ABA ALIMENTAÇÃO */}
                 <TabsContent value="alimentacao" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                   <Card className="bg-card/40 border-border/50 rounded-2xl overflow-hidden shadow-xl">
                     <CardHeader className="bg-orange-500/10 border-b border-border/10 py-8 px-10">
@@ -664,7 +620,6 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                {/* ABA MUSCULAÇÃO */}
                 <TabsContent value="musculacao" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                   <Card className="bg-card/40 border-border/50 rounded-2xl overflow-hidden shadow-xl">
                     <CardHeader className="bg-purple-500/10 border-b border-border/10 py-8 px-10">
@@ -692,7 +647,6 @@ export default function ProfilePage() {
                 </TabsContent>
               </Tabs>
 
-              {/* Botões de Ação */}
               <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-border/20 px-2 pb-20">
                 <Button 
                   type="submit" 

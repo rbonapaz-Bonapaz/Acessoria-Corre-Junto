@@ -45,7 +45,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // 1. Hidratação Inicial (Local Storage)
+  // 1. Hidratação Inicial (Local Storage) - Sempre ocorre primeiro
   useEffect(() => {
     const localProfile = localStorage.getItem(STORAGE_KEYS.PROFILE);
     const localPlan = localStorage.getItem(STORAGE_KEYS.PLAN);
@@ -58,17 +58,23 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true);
   }, []);
 
-  // 2. Sincronização e Migração (Cloud Firestore)
+  // 2. Sincronização Cloud (Firestore)
   useEffect(() => {
     if (authLoading || !isHydrated || !user) return;
 
     const docRef = doc(firestore, 'user_data', user.uid);
     
-    // Verificar se precisamos migrar dados locais para a nuvem recém-logada
-    const checkAndMigrate = async () => {
+    const syncData = async () => {
       const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        // Usuário novo ou sem dados na nuvem, vamos subir o que temos localmente
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Se houver dados na nuvem, eles são a fonte da verdade
+        if (data.profile) setActiveProfile(data.profile);
+        if (data.trainingPlan) setTrainingPlan(data.trainingPlan);
+        if (data.apiKey) setApiKeyInternal(data.apiKey);
+      } else {
+        // Se a nuvem estiver vazia, migramos os dados locais para lá
         const migrationData: any = {};
         if (activeProfile) migrationData.profile = activeProfile;
         if (trainingPlan) migrationData.trainingPlan = trainingPlan;
@@ -81,11 +87,11 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    checkAndMigrate();
+    syncData();
 
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+    const unsubscribe = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
         if (data.profile) setActiveProfile(data.profile);
         if (data.trainingPlan) setTrainingPlan(data.trainingPlan);
         if (data.apiKey) setApiKeyInternal(data.apiKey);
@@ -107,29 +113,31 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
-      // Limpar estados locais mas manter localStorage se o usuário quiser (opcional)
-      // Aqui optamos por manter para permitir uso offline/guest contínuo
-      toast({ title: "Sessão encerrada" });
+      toast({ title: "Sessão encerrada", description: "Seus dados locais permanecem no navegador." });
     } catch (e) {
       toast({ variant: 'destructive', title: "Erro ao sair" });
     }
   };
 
   const saveProfile = useCallback(async (data: Partial<AthleteProfile>) => {
-    const updatedProfile = { ...activeProfile, ...data } as AthleteProfile;
+    // Atualiza estado local imediatamente
+    const currentProfile = activeProfile || {} as AthleteProfile;
+    const updatedProfile = { ...currentProfile, ...data } as AthleteProfile;
+    
     setActiveProfile(updatedProfile);
     localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(updatedProfile));
 
+    // Se estiver logado, salva na nuvem
     if (user && firestore) {
       const docRef = doc(firestore, 'user_data', user.uid);
       try {
         await setDoc(docRef, { profile: updatedProfile }, { merge: true });
-        toast({ title: '✅ Sincronizado', description: 'Dados salvos na nuvem.' });
+        toast({ title: '✅ Laboratório Salvo', description: 'Dados sincronizados com sua conta Google.' });
       } catch (e) {
-        toast({ variant: 'destructive', title: 'Erro de Sincronização' });
+        toast({ variant: 'destructive', title: 'Erro na Nuvem', description: 'Salvo apenas localmente por enquanto.' });
       }
     } else {
-      toast({ title: 'Salvo Localmente', description: 'Faça login para salvar na nuvem.' });
+      toast({ title: 'Salvo Localmente', description: 'Faça login para habilitar a sincronização na nuvem.' });
     }
   }, [user, firestore, activeProfile, toast]);
 
@@ -150,7 +158,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       try {
         await setDoc(docRef, { trainingPlan: updatedPlan }, { merge: true });
       } catch (e) {
-        console.error(e);
+        console.error("Erro ao sincronizar treino:", e);
       }
     }
   }, [user, firestore, trainingPlan]);
@@ -164,7 +172,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       const docRef = doc(firestore, 'user_data', user.uid);
       try {
         await setDoc(docRef, { apiKey: cleanKey }, { merge: true });
-        toast({ title: "Chave Configurada" });
+        toast({ title: "Chave Configurada", description: "Sua IA está pronta para agir." });
       } catch (e) {
         console.error(e);
       }
@@ -173,12 +181,12 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
     if (!apiKey) {
-      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua Gemini API Key." });
+      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua Gemini API Key no menu lateral." });
       return;
     }
 
     setPlanGenerationStatus('pending');
-    toast({ title: "🧠 Gemini Coach está planejando...", description: "Isso pode levar alguns segundos." });
+    toast({ title: "🧠 Gemini Coach está planejando...", description: "Analisando seu perfil e biometria." });
 
     try {
       const result = await generateTrainingBlock({
@@ -214,7 +222,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       }
       
       setPlanGenerationStatus('success');
-      toast({ title: "✅ Ciclo IA Concluído!" });
+      toast({ title: "✅ Ciclo IA Concluído!", description: "Sua planilha de elite foi atualizada." });
     } catch (error: any) {
       setPlanGenerationStatus('error');
       toast({ variant: "destructive", title: "Erro na IA", description: error.message });
