@@ -77,10 +77,22 @@ export default function Home() {
       toast({ title: "Sincronização Ativa!", description: "Acessando seu laboratório de performance." });
     } catch (error: any) {
       console.error("Auth Error:", error);
+      
+      let errorMessage = "Certifique-se de que a API Identity Toolkit está ATIVA no console do Google e que o domínio está autorizado.";
+      
+      if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = "O provedor Google não está ativado no Firebase Console. Vá em Authentication > Sign-in method e ative o Google.";
+      } else if (error.message.includes('ProjectConfigService.GetProjectConfig are blocked')) {
+        errorMessage = "O acesso à API foi bloqueado. Verifique se clicou em 'Get Started' no Firebase Console > Authentication.";
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = `O domínio ${window.location.hostname} não está autorizado no Firebase Console.`;
+      }
+
       toast({ 
         variant: "destructive", 
         title: "Falha na Autenticação", 
-        description: "Certifique-se de que a API Identity Toolkit está ATIVA e o domínio está autorizado." 
+        description: errorMessage,
+        duration: 10000,
       });
     }
   };
