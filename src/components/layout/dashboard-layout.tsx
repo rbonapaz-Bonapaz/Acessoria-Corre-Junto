@@ -19,8 +19,7 @@ import {
   Info,
   LogOut,
   LogIn,
-  Users,
-  AlertTriangle
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -104,31 +103,29 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ title: "Sincronização Ativa!", description: "Baixando seus dados da nuvem..." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      const errorMsg = error.message?.toLowerCase() || "";
       const errorCode = error.code || "";
+      const errorMessage = error.message || "";
       
-      if (errorMsg.includes('identitytoolkit') || errorCode.includes('api-not-activated')) {
+      if (errorCode.includes('project-not-found') || errorCode.includes('invalid-api-key')) {
+        toast({ 
+          variant: "destructive", 
+          duration: 15000,
+          title: "Configuração Inválida", 
+          description: "O código está apontando para um projeto que não existe. Verifique se o projectId no arquivo src/firebase/config.ts é o mesmo do seu console." 
+        });
+      } else if (errorMessage.includes('identitytoolkit') || errorCode.includes('api-not-activated')) {
         toast({ 
           variant: "destructive", 
           duration: 20000,
           title: "API em Ativação", 
-          description: "O Google leva ~5 min para ativar a API após você clicar em 'Começar'. Aguarde um instante e tente novamente. Verifique também se há um 'E-mail de suporte' em Configurações do Projeto." 
+          description: "O Google está processando seu e-mail de suporte. Aguarde 5 minutos. Se persistir, verifique os 'Domínios Autorizados' nas configurações de Authentication." 
         });
-      } else if (errorMsg.includes('unauthorized-domain')) {
-        toast({ 
-          variant: "destructive", 
-          duration: 20000,
-          title: "Domínio não Autorizado", 
-          description: "Adicione 'acessoria-corre-junto.vercel.app' na aba Authentication > Settings > Authorized Domains no seu Firebase." 
-        });
-      } else if (errorMsg.includes('popup-closed-by-user')) {
-        toast({ title: "Login Cancelado", description: "Você fechou a janela de autenticação." });
       } else {
         toast({ 
           variant: "destructive", 
-          duration: 15000,
-          title: "Erro de Conexão", 
-          description: `Detalhes: ${error.message}. Verifique se as chaves no arquivo src/firebase/config.ts estão corretas.` 
+          duration: 10000,
+          title: "Erro de Login", 
+          description: error.message 
         });
       }
     }
