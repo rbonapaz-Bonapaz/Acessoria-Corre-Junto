@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -39,8 +38,6 @@ import {
   SidebarTrigger 
 } from "@/components/ui/sidebar";
 import { AppContext } from "@/contexts/AppContext";
-import { useUser, useAuth } from "@/firebase";
-import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import {
   Dialog,
   DialogContent,
@@ -77,8 +74,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const context = React.useContext(AppContext);
-  const { user } = useUser();
-  const auth = useAuth();
   const { toast } = useToast();
   const [showKeyModal, setShowKeyModal] = React.useState(false);
   const [tempKey, setTempKey] = React.useState("");
@@ -88,35 +83,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       context?.setApiKey(tempKey.trim());
       setShowKeyModal(false);
       toast({ title: "Sua IA está ativa!", description: "O sistema agora usará sua própria cota do Google." });
-    }
-  };
-
-  const handleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      toast({ title: "Sincronização Ativa!", description: "Baixando seus dados da nuvem..." });
-    } catch (error: any) {
-      console.error("Auth Error:", error);
-      const isInvalidAction = error.message?.includes('requested action is invalid') || error.code?.includes('invalid-action');
-      
-      toast({ 
-        variant: "destructive", 
-        title: "Erro de Configuração", 
-        description: isInvalidAction 
-          ? "ERRO CRÍTICO: Você precisa adicionar o domínio 'acessoria-corre-junto.vercel.app' nos DOMÍNIOS AUTORIZADOS do Firebase Console."
-          : error.message 
-      });
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      toast({ title: "Sessão Encerrada", description: "Você está agora no Modo Local." });
-      router.push('/');
-    } catch (error) {
-      toast({ variant: "destructive", title: "Erro ao sair" });
     }
   };
 
@@ -131,11 +97,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <Sidebar collapsible="icon" className="border-r border-border/50">
           <SidebarHeader className="py-8 px-4 flex items-center justify-center overflow-hidden">
             <div className="flex items-center gap-2">
-              <span className="font-headline font-black text-2xl tracking-tighter italic text-white group-data-[state=expanded]:block group-data-[state=collapsed]:hidden transition-all">
-                CORRE<span className="text-primary">JUNTO</span>
+              <span className="font-headline font-black text-2xl tracking-tighter italic group-data-[state=expanded]:block group-data-[state=collapsed]:hidden transition-all">
+                <span className="text-white">CORRE</span><span className="text-primary">JUNTO</span>
               </span>
-              <span className="font-headline font-black text-2xl tracking-tighter italic text-white group-data-[state=collapsed]:block group-data-[state=expanded]:hidden transition-all">
-                C<span className="text-primary">J</span>
+              <span className="font-headline font-black text-2xl tracking-tighter italic group-data-[state=collapsed]:block group-data-[state=expanded]:hidden transition-all">
+                <span className="text-white">C</span><span className="text-primary">J</span>
               </span>
             </div>
           </SidebarHeader>
@@ -166,15 +132,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </SidebarGroup>
           </SidebarContent>
           <SidebarFooter className="p-4 border-t border-border/20 space-y-2">
-            {!user && (
-              <SidebarMenuItem>
-                <SidebarMenuButton className="w-full text-primary hover:bg-primary/10 h-12 bg-primary/5 border border-primary/20" onClick={handleLogin}>
-                  <LogIn className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden font-headline font-black text-[10px] tracking-widest uppercase italic">Entrar / Sincronizar</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
-            
             <SidebarMenuItem>
               <SidebarMenuButton 
                 className={cn(
@@ -185,19 +142,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               >
                 <Key className="size-4" />
                 <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">
-                  {context?.apiKey ? "IA Ativa" : "Configurar Chave IA"}
+                  {context?.apiKey ? "IA Ativa" : "Configurar IA"}
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-
-            {user && (
-              <SidebarMenuItem>
-                <SidebarMenuButton className="w-full text-destructive hover:bg-destructive/10 h-10" onClick={handleLogout}>
-                  <LogOut className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Sair</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
           </SidebarFooter>
         </Sidebar>
         <SidebarInset className="flex-1 flex flex-col min-w-0">
@@ -205,7 +153,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-4">
               <SidebarTrigger className="text-muted-foreground hover:text-white" />
               <div className="font-headline font-black text-lg uppercase italic tracking-tighter flex items-center gap-3">
-                <span className="text-white">
+                <span className="text-white">C</span><span className="text-primary">J</span>
+                <span className="text-white ml-2 text-sm">
                    {items.find(i => i.url === pathname)?.title || "PORTAL"}
                 </span>
               </div>
@@ -218,37 +167,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <div className="text-right hidden md:block leading-none">
                       <div className="flex items-center justify-end gap-2">
                         <p className="text-[10px] font-black text-white tracking-widest uppercase italic truncate max-w-[150px]">
-                          {user ? user.displayName : (context?.activeProfile?.name || 'MODO LOCAL')}
+                          {context?.activeProfile?.name || 'USUÁRIO LOCAL'}
                         </p>
                         <ChevronDown size={12} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
                       </div>
-                      <p className={cn(
-                        "text-[9px] font-bold uppercase tracking-tighter",
-                        user ? "text-primary" : "text-yellow-500"
-                      )}>
-                        {user ? 'Sincronizado' : 'Offline / Local'}
-                      </p>
+                      <p className="text-[9px] font-bold uppercase tracking-tighter text-accent">Modo Local</p>
                     </div>
-                    <div className={cn(
-                      "size-9 rounded-full flex items-center justify-center font-headline font-black text-black shadow-lg shrink-0",
-                      user ? "bg-primary shadow-primary/20" : "bg-yellow-500 shadow-yellow-500/20"
-                    )}>
-                      {(user?.displayName?.[0] || context?.activeProfile?.name?.[0] || 'L')}
+                    <div className="size-9 rounded-full flex items-center justify-center font-headline font-black text-black bg-primary shadow-lg shadow-primary/20 shrink-0">
+                      {(context?.activeProfile?.name?.[0] || 'L')}
                     </div>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 bg-card border-border p-2 rounded-2xl shadow-2xl mt-2">
                   <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Gerenciamento
+                    Local-First Browser
                   </DropdownMenuLabel>
                   
-                  {!user && (
-                    <DropdownMenuItem onClick={handleLogin} className="p-3 focus:bg-primary/10 text-primary cursor-pointer rounded-xl group transition-all">
-                      <LogIn size={18} className="text-primary" />
-                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Entrar no Google</span>
-                    </DropdownMenuItem>
-                  )}
-
                   <DropdownMenuItem asChild className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
                     <Link href="/profile" className="flex items-center gap-3">
                       <User size={18} className="text-muted-foreground group-focus:text-primary transition-colors" />
@@ -269,26 +203,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuSeparator className="bg-border/20" />
                   
                   <DropdownMenuItem 
-                    className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
+                    className="p-3 focus:bg-primary/10 text-primary cursor-pointer rounded-xl group transition-all"
                     onClick={() => setShowKeyModal(true)}
                   >
                     <div className="flex items-center gap-3">
-                      <Key size={18} className="text-muted-foreground group-focus:text-destructive" />
+                      <Key size={18} className="text-muted-foreground group-focus:text-primary" />
                       <span className="font-headline font-black text-xs uppercase italic tracking-wider">Configurar IA</span>
                     </div>
                   </DropdownMenuItem>
-
-                  {user && (
-                    <DropdownMenuItem 
-                      className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
-                      onClick={handleLogout}
-                    >
-                      <div className="flex items-center gap-3">
-                        <LogOut size={18} className="text-destructive" />
-                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
-                      </div>
-                    </DropdownMenuItem>
-                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -304,7 +226,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <DialogHeader>
             <DialogTitle className="text-primary font-headline italic font-black uppercase">Sua Chave Gemini</DialogTitle>
             <DialogDescription>
-              Insira sua API Key do Google para processar seus treinos com IA.
+              Insira sua API Key do Google para processar seus treinos localmente.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -312,7 +234,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 flex gap-3 items-start">
                 <AlertCircle className="size-4 text-primary shrink-0 mt-0.5" />
                 <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                  Obtenha sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-primary underline font-bold">Google AI Studio</a>. Se você for um atleta vinculado, pode usar a chave do seu treinador.
+                  Obtenha sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-primary underline font-bold">Google AI Studio</a>. Seus dados permanecem apenas neste navegador.
                 </p>
               </div>
               <Input

@@ -1,20 +1,9 @@
 'use client';
 
-import { createContext, useState, useEffect, ReactNode, useRef } from 'react';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import type { AthleteProfile, TrainingPlan, Workout } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
-import { useUser, useFirestore } from '@/firebase';
-import { 
-  doc, 
-  setDoc, 
-  onSnapshot, 
-  collection, 
-  query, 
-  where, 
-  deleteDoc,
-  getDoc
-} from 'firebase/firestore';
 
 type PlanGenerationStatus = 'idle' | 'pending' | 'success' | 'error';
 
@@ -38,100 +27,73 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType | null>(null);
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const { user } = useUser();
-  const db = useFirestore();
-  const { toast } = useToast();
+const STORAGE_KEY_PROFILES = 'corre_junto_profiles';
+const STORAGE_KEY_API_KEY = 'corre_junto_api_key';
+const STORAGE_KEY_ACTIVE_ID = 'corre_junto_active_id';
 
+export function AppProvider({ children }: { children: ReactNode }) {
+  const { toast } = useToast();
   const [isHydrated, setIsHydrated] = useState(false);
   const [apiKey, setApiKeyInternal] = useState<string | null>(null);
   const [profiles, setProfiles] = useState<AthleteProfile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
-  
-  // 1. Carregamento de Configurações do Usuário (API Key, etc)
+
+  // Carregamento inicial (Local-First)
   useEffect(() => {
-    if (!user || !db) {
-      setIsHydrated(true);
-      return;
-    }
+    const savedProfiles = localStorage.getItem(STORAGE_KEY_PROFILES);
+    const savedApiKey = localStorage.getItem(STORAGE_KEY_API_KEY);
+    const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_ID);
 
-    const userDocRef = doc(db, 'user_data', user.uid);
-    return onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setApiKeyInternal(data.apiKey || null);
-      }
-      setIsHydrated(true);
-    });
-  }, [user, db]);
+    if (savedProfiles) setProfiles(JSON.parse(savedProfiles));
+    if (savedApiKey) setApiKeyInternal(savedApiKey);
+    if (savedActiveId) setActiveProfileId(savedActiveId);
 
-  // 2. Carregamento de Atletas (Onde sou dono OU e-mail vinculado)
+    setIsHydrated(true);
+  }, []);
+
+  // Persistência automática
   useEffect(() => {
-    if (!user || !db) {
-      setProfiles([]);
-      return;
+    if (isHydrated) {
+      localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(profiles));
+      if (apiKey) localStorage.setItem(STORAGE_KEY_API_KEY, apiKey);
+      if (activeProfileId) localStorage.setItem(STORAGE_KEY_ACTIVE_ID, activeProfileId);
     }
+  }, [profiles, apiKey, activeProfileId, isHydrated]);
 
-    // Monitora atletas que eu criei (Treinador)
-    const trainerQuery = query(collection(db, 'athletes'), where('ownerUid', '==', user.uid));
-    const unsubscribeTrainer = onSnapshot(trainerQuery, (snapshot) => {
-      const trainerProfiles = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as AthleteProfile));
-      
-      // Monitora atletas onde meu e-mail está vinculado (Atleta)
-      const athleteQuery = query(collection(db, 'athletes'), where('athleteEmail', '==', user.email));
-      const unsubscribeAthlete = onSnapshot(athleteQuery, (athleteSnapshot) => {
-        const athleteProfiles = athleteSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as AthleteProfile));
-        
-        // Merge dos perfis sem duplicatas
-        const allProfilesMap = new Map();
-        trainerProfiles.forEach(p => allProfilesMap.set(p.id, p));
-        athleteProfiles.forEach(p => allProfilesMap.set(p.id, p));
-        
-        setProfiles(Array.from(allProfilesMap.values()));
-      });
-
-      return () => unsubscribeAthlete();
-    });
-
-    return () => unsubscribeTrainer();
-  }, [user, db]);
-
-  const setApiKey = async (key: string | null) => {
-    setApiKeyInternal(key);
-    if (user && db) {
-      await setDoc(doc(db, 'user_data', user.uid), { apiKey: key }, { merge: true });
-    }
-  };
+  const setApiKey = (key: string | null) => setApiKeyInternal(key);
 
   const switchProfile = (id: string | null) => setActiveProfileId(id);
 
   const saveProfile = async (data: Partial<AthleteProfile>) => {
-    if (!user || !db) throw new Error("Usuário não autenticado");
-    
     const id = data.id || crypto.randomUUID();
-    const profileToSave = {
+    const newProfile = {
       ...data,
       id,
-      ownerUid: data.ownerUid || user.uid,
-    };
+      ownerUid: 'local-user', // No modo local, o UID é fixo
+    } as AthleteProfile;
 
-    await setDoc(doc(db, 'athletes', id), profileToSave, { merge: true });
-    return profileToSave as AthleteProfile;
+    setProfiles(prev => {
+      const exists = prev.find(p => p.id === id);
+      if (exists) {
+        return prev.map(p => p.id === id ? { ...p, ...newProfile } : p);
+      }
+      return [...prev, newProfile];
+    });
+
+    return newProfile;
   };
 
   const deleteProfile = async (id: string) => {
-    if (!db) return;
-    await deleteDoc(doc(db, 'athletes', id));
     setProfiles(prev => prev.filter(p => p.id !== id));
     if (activeProfileId === id) setActiveProfileId(null);
-    toast({ title: "Atleta removido" });
+    toast({ title: "Atleta removido localmente" });
   };
 
   const activeProfile = profiles.find(p => p.id === activeProfileId) || null;
 
-  const updateWorkout = async (workoutId: string, updates: Partial<Workout>) => {
-    if (!activeProfile || !db) return;
+  const updateWorkout = (workoutId: string, updates: Partial<Workout>) => {
+    if (!activeProfile) return;
     
     const currentPlan = activeProfile.trainingPlan;
     if (!currentPlan) return;
@@ -146,35 +108,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       trainingPlan: { ...currentPlan, weeklyPlans: newWeeklyPlans }
     };
 
-    await setDoc(doc(db, 'athletes', activeProfile.id), updatedProfile, { merge: true });
+    saveProfile(updatedProfile);
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
-    // 1. Tentar usar a chave do próprio usuário logado (Atleta ou Treinador)
-    let effectiveApiKey = apiKey;
-    
-    // 2. Fallback: Se o usuário logado NÃO tem chave, tenta a chave do treinador (owner)
-    if ((!effectiveApiKey || effectiveApiKey.trim() === "") && profile.ownerUid !== user?.uid) {
-      try {
-        const trainerData = await getDoc(doc(db, 'user_data', profile.ownerUid));
-        effectiveApiKey = trainerData.data()?.apiKey || null;
-        if (effectiveApiKey) {
-          toast({ title: "Inteligência de Assessoria", description: "Usando a chave de API do seu treinador." });
-        }
-      } catch (e) {
-        console.error("Erro ao buscar chave do treinador", e);
-      }
-    }
-
-    if (!effectiveApiKey || effectiveApiKey.trim() === "") {
-      toast({ variant: "destructive", title: "Configuração Pendente", description: "Insira sua Gemini API Key no menu lateral para ativar a IA." });
+    if (!apiKey || apiKey.trim() === "") {
+      toast({ variant: "destructive", title: "Configuração Pendente", description: "Insira sua Gemini API Key no menu lateral." });
       return;
     }
 
     setPlanGenerationStatus('pending');
     try {
       const result = await generateTrainingBlock({
-        apiKey: effectiveApiKey,
+        apiKey,
         raceName: profile.raceName,
         currentVDOT: profile.vo2Max,
         hrZone1End: Math.round(profile.thresholdHr * 0.8),
@@ -196,16 +142,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         legDay: profile.strengthPreferences?.legDay
       });
 
-      // Garantir IDs únicos para os novos treinos
       result.weeklyPlans.forEach(week => {
         week.runs.forEach(run => { if (!run.id) run.id = crypto.randomUUID(); });
       });
 
-      // Salva o resultado no documento COMPARTILHADO do atleta
-      await setDoc(doc(db, 'athletes', profile.id), { trainingPlan: result }, { merge: true });
+      const updatedProfile = { ...profile, trainingPlan: result };
+      await saveProfile(updatedProfile);
       
       setPlanGenerationStatus('success');
-      toast({ title: "Ciclo Calibrado!", description: "Os novos treinos já estão disponíveis." });
+      toast({ title: "Ciclo Calibrado!", description: "Os novos treinos já estão disponíveis localmente." });
     } catch (error: any) {
       setPlanGenerationStatus('error');
       toast({ variant: "destructive", title: "Erro no Motor de IA", description: error.message });
@@ -222,14 +167,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       planGenerationStatus,
       generateRunningPlanAsync,
       exportData: () => {
-        const data = JSON.stringify({ profiles });
+        const data = JSON.stringify({ profiles, apiKey });
         const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
-        const a = document.createElement('a'); a.href = url; a.download = `corre_junto_backup.json`; a.click();
+        const a = document.createElement('a'); a.href = url; a.download = `corre_junto_local_backup.json`; a.click();
       },
       importData: (json: string) => {
         try {
-            const p = JSON.parse(json);
-            if (p.profiles) p.profiles.forEach((profile: any) => saveProfile(profile));
+            const data = JSON.parse(json);
+            if (data.profiles) setProfiles(data.profiles);
+            if (data.apiKey) setApiKeyInternal(data.apiKey);
             toast({ title: 'Dados Importados com Sucesso' });
         } catch (e) { toast({ variant: 'destructive', title: 'Erro na importação' }); }
       },
