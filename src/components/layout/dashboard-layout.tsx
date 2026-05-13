@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -18,7 +19,8 @@ import {
   Info,
   LogOut,
   LogIn,
-  Users
+  Users,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -81,14 +83,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [showKeyModal, setShowKeyModal] = React.useState(false);
   const [tempKey, setTempKey] = React.useState("");
 
-  React.useEffect(() => {
-    // Se o usuário não tem chave e não está logado, ou se é um novo atleta
-    // Mas por enquanto, mostramos apenas se ele quiser ativar sua própria IA
-    if (context?.isHydrated && !context.apiKey) {
-      // Opcional: mostrar modal automaticamente
-    }
-  }, [context?.isHydrated, context?.apiKey]);
-
   const handleSaveKey = () => {
     if (tempKey.trim()) {
       context?.setApiKey(tempKey.trim());
@@ -104,7 +98,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ title: "Sincronização Ativa!", description: "Baixando seus dados da nuvem..." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      toast({ variant: "destructive", title: "Erro de Login", description: error.message });
+      const isInvalidAction = error.message?.includes('requested action is invalid') || error.code?.includes('invalid-action');
+      
+      toast({ 
+        variant: "destructive", 
+        title: "Erro de Configuração", 
+        description: isInvalidAction 
+          ? "ERRO CRÍTICO: Você precisa adicionar o domínio 'acessoria-corre-junto.vercel.app' nos DOMÍNIOS AUTORIZADOS do Firebase Console."
+          : error.message 
+      });
     }
   };
 
@@ -127,10 +129,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="flex min-h-screen bg-background w-full">
         <Sidebar collapsible="icon" className="border-r border-border/50">
-          <SidebarHeader className="py-8 px-6">
+          <SidebarHeader className="py-8 px-4 flex items-center justify-center overflow-hidden">
             <div className="flex items-center gap-2">
-              <span className="font-headline font-black text-2xl tracking-tighter group-data-[collapsible=icon]:hidden italic text-white">
+              <span className="font-headline font-black text-2xl tracking-tighter italic text-white group-data-[state=expanded]:block group-data-[state=collapsed]:hidden transition-all">
                 CORRE<span className="text-primary">JUNTO</span>
+              </span>
+              <span className="font-headline font-black text-2xl tracking-tighter italic text-white group-data-[state=collapsed]:block group-data-[state=expanded]:hidden transition-all">
+                C<span className="text-primary">J</span>
               </span>
             </div>
           </SidebarHeader>
@@ -161,18 +166,35 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </SidebarGroup>
           </SidebarContent>
           <SidebarFooter className="p-4 border-t border-border/20 space-y-2">
-            {!user ? (
+            {!user && (
               <SidebarMenuItem>
                 <SidebarMenuButton className="w-full text-primary hover:bg-primary/10 h-12 bg-primary/5 border border-primary/20" onClick={handleLogin}>
                   <LogIn className="size-4" />
                   <span className="group-data-[collapsible=icon]:hidden font-headline font-black text-[10px] tracking-widest uppercase italic">Entrar / Sincronizar</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            ) : (
+            )}
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                className={cn(
+                  "w-full h-12 border transition-all",
+                  context?.apiKey ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground border-border/20"
+                )} 
+                onClick={() => setShowKeyModal(true)}
+              >
+                <Key className="size-4" />
+                <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">
+                  {context?.apiKey ? "IA Ativa" : "Configurar Chave IA"}
+                </span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            {user && (
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full text-muted-foreground hover:text-white" onClick={() => setShowKeyModal(true)}>
-                  <Key className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Minha Chave IA</span>
+                <SidebarMenuButton className="w-full text-destructive hover:bg-destructive/10 h-10" onClick={handleLogout}>
+                  <LogOut className="size-4" />
+                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Sair</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
@@ -182,7 +204,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-6 sticky top-0 bg-background/80 backdrop-blur-md z-30 justify-between">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="text-muted-foreground hover:text-white" />
-              <div className="font-headline font-black text-lg uppercase italic tracking-tighter hidden md:flex items-center gap-3">
+              <div className="font-headline font-black text-lg uppercase italic tracking-tighter flex items-center gap-3">
                 <span className="text-white">
                    {items.find(i => i.url === pathname)?.title || "PORTAL"}
                 </span>
@@ -196,22 +218,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <div className="text-right hidden md:block leading-none">
                       <div className="flex items-center justify-end gap-2">
                         <p className="text-[10px] font-black text-white tracking-widest uppercase italic truncate max-w-[150px]">
-                          {user ? user.displayName : (context?.activeProfile?.name || 'ATLETA')}
+                          {user ? user.displayName : (context?.activeProfile?.name || 'MODO LOCAL')}
                         </p>
                         <ChevronDown size={12} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
                       </div>
                       <p className={cn(
                         "text-[9px] font-bold uppercase tracking-tighter",
-                        user ? "text-primary" : "text-destructive"
+                        user ? "text-primary" : "text-yellow-500"
                       )}>
-                        {user ? 'Sincronizado' : 'Modo Local'}
+                        {user ? 'Sincronizado' : 'Offline / Local'}
                       </p>
                     </div>
                     <div className={cn(
                       "size-9 rounded-full flex items-center justify-center font-headline font-black text-black shadow-lg shrink-0",
-                      user ? "bg-primary shadow-primary/20" : "bg-destructive shadow-destructive/20"
+                      user ? "bg-primary shadow-primary/20" : "bg-yellow-500 shadow-yellow-500/20"
                     )}>
-                      {(user?.displayName?.[0] || context?.activeProfile?.name?.[0] || 'A')}
+                      {(user?.displayName?.[0] || context?.activeProfile?.name?.[0] || 'L')}
                     </div>
                   </button>
                 </DropdownMenuTrigger>
@@ -248,13 +270,25 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   
                   <DropdownMenuItem 
                     className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
-                    onClick={handleLogout}
+                    onClick={() => setShowKeyModal(true)}
                   >
                     <div className="flex items-center gap-3">
-                      <LogOut size={18} className="text-destructive" />
-                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
+                      <Key size={18} className="text-muted-foreground group-focus:text-destructive" />
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Configurar IA</span>
                     </div>
                   </DropdownMenuItem>
+
+                  {user && (
+                    <DropdownMenuItem 
+                      className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
+                      onClick={handleLogout}
+                    >
+                      <div className="flex items-center gap-3">
+                        <LogOut size={18} className="text-destructive" />
+                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
+                      </div>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -270,24 +304,27 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <DialogHeader>
             <DialogTitle className="text-primary font-headline italic font-black uppercase">Sua Chave Gemini</DialogTitle>
             <DialogDescription>
-              Por padrão, usamos a inteligência da sua assessoria. Se quiser usar sua própria cota gratuita do Google, insira sua chave abaixo.
+              Insira sua API Key do Google para processar seus treinos com IA.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Obtenha sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
-              </p>
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 flex gap-3 items-start">
+                <AlertCircle className="size-4 text-primary shrink-0 mt-0.5" />
+                <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+                  Obtenha sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-primary underline font-bold">Google AI Studio</a>. Se você for um atleta vinculado, pode usar a chave do seu treinador.
+                </p>
+              </div>
               <Input
                 placeholder="Cole sua API Key aqui..."
                 value={tempKey}
                 onChange={(e) => setTempKey(e.target.value)}
-                className="bg-secondary/50 border-border h-12 font-mono text-sm rounded-xl"
+                className="bg-secondary/50 border-border h-12 font-mono text-sm rounded-xl focus:border-primary"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black h-12 rounded-xl">Ativar Minha Chave</Button>
+            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black h-12 rounded-xl">Ativar Inteligência</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
