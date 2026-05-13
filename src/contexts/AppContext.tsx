@@ -6,7 +6,7 @@ import type { AthleteProfile, TrainingPlan, Workout } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 type PlanGenerationStatus = 'idle' | 'pending' | 'success' | 'error';
 
@@ -40,7 +40,7 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType | null>(null);
 
-const STORAGE_KEY = 'correJunto_local_data_v6';
+const STORAGE_KEY = 'correJunto_local_data_v7';
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
@@ -77,36 +77,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // 2. Sincronização de ENTRADA (Nuvem -> App)
   useEffect(() => {
     if (!user || !db || !isHydrated) {
-      if (!user) {
-        firstCloudSyncDone.current = false;
-      }
+      if (!user) firstCloudSyncDone.current = false;
       return;
     }
 
     const userDocRef = doc(db, 'user_data', user.uid);
     
-    // Listener em tempo real com prioridade
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       isSyncingFromCloud.current = true;
       
       if (docSnap.exists()) {
         const cloudData = docSnap.data();
         
-        // Atualiza estados apenas se houver mudança real para evitar loops
-        if (JSON.stringify(cloudData.profiles) !== JSON.stringify(profiles)) {
-          setProfiles(cloudData.profiles || []);
-        }
-        if (cloudData.apiKey !== apiKey) {
-          setApiKeyInternal(cloudData.apiKey || null);
-        }
-        if (cloudData.activeProfileId !== activeProfileId) {
-          setActiveProfileId(cloudData.activeProfileId || null);
-        }
-        if (JSON.stringify(cloudData.profileData) !== JSON.stringify(profileData)) {
-          setProfileData(cloudData.profileData || {});
-        }
+        // Sincroniza estados globais
+        setProfiles(cloudData.profiles || []);
+        setApiKeyInternal(cloudData.apiKey || null);
+        setActiveProfileId(cloudData.activeProfileId || null);
+        setProfileData(cloudData.profileData || {});
         
-        // Atualiza cache local para manter consistência offline
+        // Atualiza cache local
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           apiKey: cloudData.apiKey,
           profiles: cloudData.profiles,
@@ -114,7 +103,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           profileData: cloudData.profileData
         }));
       } else {
-        // Se o usuário logou mas não tem dados na nuvem, faz o upload inicial dos dados locais
+        // Primeiro upload se a nuvem estiver vazia
         const localData = { apiKey, profiles, activeProfileId, profileData };
         setDoc(userDocRef, { ...localData, updatedAt: new Date().toISOString() }, { merge: true });
       }
@@ -146,7 +135,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } catch (e) {
           console.error("Erro ao subir dados:", e);
         }
-      }, 800);
+      }, 1000);
       return () => clearTimeout(timeoutId);
     }
   }, [apiKey, profiles, activeProfileId, profileData, user, db, isHydrated]);
@@ -243,19 +232,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const toggleIntegration = (service: 'strava' | 'coros', connected: boolean) => {
-    const current = profiles.find(p => p.id === activeProfileId);
-    if (!current) return;
-    const updated = {
-        ...current,
-        integrations: {
-            ...current.integrations,
-            [service]: { ...(current.integrations?.[service] || {}), connected, autoSync: connected }
-        }
-    };
-    saveProfile(updated);
-  };
-
   return (
     <AppContext.Provider value={{
       isHydrated, apiKey, setApiKey, profiles,
@@ -285,7 +261,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             toast({ title: 'Dados Importados' });
         } catch (e) { toast({ variant: 'destructive', title: 'Erro na importação' }); }
       },
-      toggleIntegration
+      toggleIntegration: (service, connected) => {
+        const current = profiles.find(p => p.id === activeProfileId);
+        if (!current) return;
+        saveProfile({ ...current, integrations: { ...current.integrations, [service]: { ...current.integrations?.[service], connected, autoSync: connected } } });
+      }
     }}>
       {children}
     </AppContext.Provider>

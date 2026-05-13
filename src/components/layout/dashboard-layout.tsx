@@ -100,32 +100,27 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      toast({ title: "Sincronização Ativa!", description: "Seus dados estão sendo baixados..." });
+      toast({ title: "Sincronização Ativa!", description: "Baixando seus dados da nuvem..." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      
       const errorMsg = error.message?.toLowerCase() || "";
       
-      if (errorMsg.includes('identitytoolkit') || errorMsg.includes('api has not been used')) {
-        toast({ 
-          variant: "destructive", 
-          duration: 20000,
-          title: "API de Autenticação Necessária", 
-          description: "No Console do Firebase, vá em Build > Authentication e clique em 'Começar'. Se já estiver ativo, aguarde 2 minutos para a API propagar." 
-        });
-      } else if (error.code === 'auth/unauthorized-domain' || errorMsg.includes('unauthorized-domain')) {
+      if (errorMsg.includes('identitytoolkit')) {
         toast({ 
           variant: "destructive", 
           duration: 15000,
-          title: "Domínio Não Autorizado", 
-          description: "No Firebase Console, vá em Authentication > Configurações > Domínios autorizados e adicione 'acessoria-corre-junto.vercel.app'." 
+          title: "Configuração Necessária", 
+          description: "No Console do Firebase, ative a 'Authentication' clicando no botão 'Começar'." 
         });
-      } else {
+      } else if (errorMsg.includes('unauthorized-domain')) {
         toast({ 
           variant: "destructive", 
-          title: "Erro no Login", 
-          description: error.message || "Verifique sua conexão ou configurações do Firebase." 
+          duration: 15000,
+          title: "Domínio Bloqueado", 
+          description: "Adicione 'acessoria-corre-junto.vercel.app' aos domínios autorizados no Firebase." 
         });
+      } else {
+        toast({ variant: "destructive", title: "Erro no Login", description: error.message });
       }
     }
   };
@@ -133,7 +128,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast({ title: "Modo Local Ativado", description: "Saindo da sincronização em nuvem." });
+      toast({ title: "Sessão Encerrada", description: "Você está agora no Modo Local." });
+      router.push('/');
     } catch (error) {
       toast({ variant: "destructive", title: "Erro ao sair" });
     }
@@ -183,23 +179,19 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </SidebarContent>
           <SidebarFooter className="p-4 border-t border-border/20 space-y-2">
             {!user ? (
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="w-full text-primary hover:bg-primary/10 h-12 bg-primary/5 border border-primary/20" onClick={handleLogin}>
-                    <LogIn className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden font-headline font-black text-[10px] tracking-widest uppercase italic">Entrar e Sincronizar</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="w-full text-primary hover:bg-primary/10 h-12 bg-primary/5 border border-primary/20" onClick={handleLogin}>
+                  <LogIn className="size-4" />
+                  <span className="group-data-[collapsible=icon]:hidden font-headline font-black text-[10px] tracking-widest uppercase italic">Entrar / Sincronizar</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             ) : (
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="w-full text-muted-foreground hover:text-white" onClick={() => setShowKeyModal(true)}>
-                    <Key className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Chave IA</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="w-full text-muted-foreground hover:text-white" onClick={() => setShowKeyModal(true)}>
+                  <Key className="size-4" />
+                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Chave IA</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             )}
           </SidebarFooter>
         </Sidebar>
@@ -246,7 +238,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   </DropdownMenuLabel>
                   
                   {!user && (
-                    <DropdownMenuItem onClick={handleLogin} className="p-3 focus:bg-primary/10 text-primary focus:text-primary cursor-pointer rounded-xl group transition-all">
+                    <DropdownMenuItem onClick={handleLogin} className="p-3 focus:bg-primary/10 text-primary cursor-pointer rounded-xl group transition-all">
                       <LogIn size={18} className="text-primary" />
                       <span className="font-headline font-black text-xs uppercase italic tracking-wider">Entrar no Google</span>
                     </DropdownMenuItem>
@@ -271,27 +263,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
                   <DropdownMenuSeparator className="bg-border/20" />
                   
-                  {user ? (
-                    <DropdownMenuItem 
-                      className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
-                      onClick={handleLogout}
-                    >
-                      <div className="flex items-center gap-3">
-                        <LogOut size={18} className="text-destructive" />
-                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair da Nuvem</span>
-                      </div>
-                    </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem 
-                      className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
-                      onClick={handleSwitchProfile}
-                    >
-                      <div className="flex items-center gap-3">
-                        <LogOut size={18} className="text-destructive" />
-                        <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
-                      </div>
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem 
+                    className="p-3 focus:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer rounded-xl group transition-all"
+                    onClick={handleLogout}
+                  >
+                    <div className="flex items-center gap-3">
+                      <LogOut size={18} className="text-destructive" />
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
+                    </div>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
