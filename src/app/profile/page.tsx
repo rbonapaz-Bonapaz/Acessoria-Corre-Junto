@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useState, useEffect, useRef, useMemo } from 'react';
@@ -40,8 +39,6 @@ import {
     Utensils,
     Trophy,
     Info,
-    FileText,
-    Upload,
     Activity,
     User as UserIcon,
     Calendar as CalendarIcon,
@@ -69,35 +66,34 @@ const weekDays = [
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório.'),
-  avatarUrl: z.string().optional().default(''),
-  birthDate: z.string().optional().default(''),
-  gender: z.enum(['male', 'female', 'other']).optional().default('male'),
-  currentWeight: z.coerce.number().optional().default(70),
-  height: z.coerce.number().optional().default(175),
-  restingHr: z.coerce.number().optional().default(50),
-  vo2Max: z.coerce.number().optional().default(45),
-  thresholdPace: z.string().optional().default('4:50'),
-  thresholdHr: z.coerce.number().optional().default(165),
-  weeklyMileageGoal: z.coerce.number().optional().default(60),
-  raceName: z.string().optional().default(''),
-  raceDistance: z.string().optional().default('10k'),
-  raceDate: z.string().optional().default(''),
-  targetPace: z.string().optional().default(''),
-  targetTime: z.string().optional().default(''),
+  avatarUrl: z.string().default(''),
+  birthDate: z.string().default(''),
+  currentWeight: z.coerce.number().default(70),
+  height: z.coerce.number().default(175),
+  restingHr: z.coerce.number().default(50),
+  vo2Max: z.coerce.number().default(45),
+  thresholdPace: z.string().default('4:50'),
+  thresholdHr: z.coerce.number().default(165),
+  weeklyMileageGoal: z.coerce.number().default(60),
+  raceName: z.string().default(''),
+  raceDistance: z.string().default('10k'),
+  raceDate: z.string().default(''),
+  targetPace: z.string().default(''),
+  targetTime: z.string().default(''),
   trainingDays: z.array(z.string()).default(['Segunda', 'Quarta', 'Sexta']),
-  longRunDay: z.string().optional().default('Domingo'),
+  longRunDay: z.string().default('Domingo'),
   planGenerationType: z.enum(['full', 'blocks']).default('blocks'),
-  experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']).optional().default('beginner'),
-  trainingHistory: z.string().optional().default(''),
-  referenceDocumentUri: z.string().optional().default(''),
-  aestheticGoal: z.enum(['performance', 'cutting', 'bulking', 'recomp']).optional().default('performance'),
-  trainingTiming: z.enum(['jejum', 'manha', 'meio-dia', 'tarde', 'noite']).optional().default('manha'),
-  mealCount: z.coerce.number().optional().default(4),
-  supplements: z.string().optional().default(''),
-  allergies: z.string().optional().default(''),
-  legDay: z.string().optional().default(''),
-  strengthSplit: z.enum(['full_body', 'upper_lower', 'ppl']).optional().default('full_body'),
-  strengthObjective: z.enum(['strength', 'hypertrophy', 'performance', 'endurance']).optional().default('performance'),
+  experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']).default('beginner'),
+  trainingHistory: z.string().default(''),
+  referenceDocumentUri: z.string().default(''),
+  aestheticGoal: z.enum(['performance', 'cutting', 'bulking', 'recomp']).default('performance'),
+  trainingTiming: z.enum(['jejum', 'manha', 'meio-dia', 'tarde', 'noite']).default('manha'),
+  mealCount: z.coerce.number().default(4),
+  supplements: z.string().default(''),
+  allergies: z.string().default(''),
+  legDay: z.string().default(''),
+  strengthSplit: z.enum(['full_body', 'upper_lower', 'ppl']).default('full_body'),
+  strengthObjective: z.enum(['strength', 'hypertrophy', 'performance', 'endurance']).default('performance'),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -149,27 +145,6 @@ export default function ProfilePage() {
       const p = context.activeProfile;
       reset({
         ...p,
-        name: p.name || '',
-        avatarUrl: p.avatarUrl || '',
-        birthDate: p.birthDate || '',
-        currentWeight: p.currentWeight || 70,
-        height: p.height || 175,
-        restingHr: p.restingHr || 50,
-        vo2Max: p.vo2Max || 45,
-        thresholdPace: p.thresholdPace || '4:50',
-        thresholdHr: p.thresholdHr || 165,
-        weeklyMileageGoal: p.weeklyMileageGoal || 60,
-        raceName: p.raceName || '',
-        raceDistance: p.raceDistance || '10k',
-        raceDate: p.raceDate || '',
-        targetPace: p.targetPace || '',
-        targetTime: p.targetTime || '',
-        trainingDays: p.trainingDays || ['Segunda', 'Quarta', 'Sexta'],
-        longRunDay: p.longRunDay || 'Domingo',
-        planGenerationType: p.planGenerationType || 'blocks',
-        experienceLevel: p.experienceLevel || 'beginner',
-        trainingHistory: p.trainingHistory || '',
-        referenceDocumentUri: p.referenceDocumentUri || '',
         aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
         trainingTiming: p.dietPreferences?.trainingTiming || 'manha',
         mealCount: p.dietPreferences?.mealCount || 4,
@@ -246,6 +221,7 @@ export default function ProfilePage() {
     setIsProcessing(true);
 
     try {
+      // Primeiro salvamos os dados atuais
       await onSave(formData);
       
       const tempProfile: AthleteProfile = {
@@ -276,11 +252,13 @@ export default function ProfilePage() {
 
   if (!context?.isHydrated) return <DashboardLayout><Skeleton className="h-96 w-full bg-secondary/20 rounded-3xl"/></DashboardLayout>;
 
+  const isIAActive = context?.apiKey && context.apiKey.trim() !== "";
+
   return (
     <DashboardLayout>
       <TooltipProvider>
         <div className="space-y-8 pb-20 max-w-5xl mx-auto animate-in fade-in duration-700">
-          {(!context?.apiKey || context.apiKey.trim() === "") && (
+          {!isIAActive && (
             <div className="mx-2 bg-primary/10 border border-primary/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4">
               <div className="flex items-center gap-4">
                 <div className="size-10 rounded-full bg-primary flex items-center justify-center text-black">
@@ -360,13 +338,13 @@ export default function ProfilePage() {
                         <FormField control={form.control} name="currentWeight" render={({field}) => (
                           <FormItem className="space-y-2">
                             <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Peso (kg)</FormLabel>
-                            <FormControl><Input type="number" step="0.1" {...field} value={field.value || 0} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                            <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? 0} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="height" render={({field}) => (
                           <FormItem className="space-y-2">
                             <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Altura (cm)</FormLabel>
-                            <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                            <FormControl><Input type="number" {...field} value={field.value ?? 0} className="bg-black/30 h-10 text-center font-bold text-sm rounded-xl border-border/40 focus:border-primary" /></FormControl>
                           </FormItem>
                         )} />
                       </div>
@@ -389,7 +367,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">FC REPOUSO</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Frequência cardíaca basal ao acordar.</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input type="number" {...field} value={field.value ?? 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="vo2Max" render={({field}) => (
@@ -398,7 +376,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">VO2 MÁX / VDOT</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Seu nível de performance (VDOT).</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input type="number" step="0.1" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="thresholdPace" render={({field}) => (
@@ -416,7 +394,7 @@ export default function ProfilePage() {
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">FC LIMIAR (L2)</FormLabel>
                               <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Batimentos no limiar anaeróbico.</p></TooltipContent></Tooltip>
                             </div>
-                            <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
+                            <FormControl><Input type="number" {...field} value={field.value ?? 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
                         )} />
                       </div>
@@ -480,7 +458,7 @@ export default function ProfilePage() {
                           <FormField control={form.control} name="weeklyMileageGoal" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">VOLUME SEMANAL (KM)</FormLabel>
-                              <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
+                              <FormControl><Input type="number" {...field} value={field.value ?? 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                             </FormItem>
                           )} />
                         </div>

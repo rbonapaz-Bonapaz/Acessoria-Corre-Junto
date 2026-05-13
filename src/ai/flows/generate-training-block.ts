@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
@@ -49,7 +48,7 @@ const WorkoutSchema = z.object({
 const WeeklyPlanSchema = z.object({
   weekNumber: z.number().describe('Número da semana no bloco.'),
   focus: z.string().describe('Foco principal da semana (ex: Volume, Intensidade, Recuperação).'),
-  runs: z.array(WorkoutSchema).describe('Lista de treinos da semana iniciando no DOMINGO.'),
+  runs: z.array(WorkoutSchema).describe('Lista de treinos da semana iniciando obrigatoriamente no DOMINGO.'),
   strength: z.string().describe('Recomendações de fortalecimento específicas.'),
   notes: z.string().describe('Notas técnicas do treinador.'),
 });
@@ -72,7 +71,8 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
     3. Use o esquema JSON fornecido.
     4. Se o atleta tiver um "Leg Day", o dia seguinte deve ser obrigatoriamente OFF ou Rodagem Leve (Z1).
-    5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
+    5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.
+    6. Gere exatamente ${input.planGenerationType === 'blocks' ? '4' : 'as'} semanas necessárias iniciando no DOMINGO.`,
     prompt: [
       { text: `Gere um plano de performance para a prova "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
           
@@ -87,13 +87,15 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
           Fisiologia (Zonas FC):
           - Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}. Máx: ${input.hrMax}.` },
       ...(input.referenceFileDataUri ? [{ media: { url: input.referenceFileDataUri } }] : []),
-      { text: 'Gere o plano garantindo que cada semana comece no Domingo e termine no Sábado.' }
+      { text: 'Gere o plano técnico garantindo que a lista de runs de cada semana comece no Domingo e termine no Sábado.' }
     ],
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {
       safetySettings: [
         { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' }
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' }
       ]
     }
   });
