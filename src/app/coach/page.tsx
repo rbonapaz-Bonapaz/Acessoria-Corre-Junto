@@ -1,4 +1,5 @@
-"use client";
+
+'use client';
 
 import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -21,32 +22,47 @@ import {
   Check,
   Paperclip,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, fileToDataURI } from "@/lib/utils";
-import Image from "next/image";
+import { useFirestore, useCollection } from "@/firebase";
+import { collection, addDoc, query, orderBy, serverTimestamp, deleteDoc, getDocs } from "firebase/firestore";
 
 type Message = {
+  id?: string;
   role: "user" | "model";
   parts: string;
   image?: string;
+  createdAt?: any;
 };
 
 export default function CoachPage() {
   const context = React.useContext(AppContext);
+  const db = useFirestore();
   const { toast } = useToast();
   const profile = context?.activeProfile;
   const plan = context?.trainingPlan;
 
-  const [messages, setMessages] = React.useState<Message[]>([]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [attachedImage, setAttachedImage] = React.useState<string | null>(null);
-  const [copiedId, setCopiedId] = React.useState<number | null>(null);
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Busca histórico de chat do Firestore
+  const chatHistoryQuery = React.useMemo(() => {
+    if (!profile) return null;
+    return query(
+      collection(db, 'athletes', profile.id, 'chat_history'),
+      orderBy('createdAt', 'asc')
+    );
+  }, [db, profile]);
+
+  const { data: messages = [] } = useCollection<Message>(chatHistoryQuery);
 
   React.useEffect(() => {
     if (scrollRef.current) {
@@ -54,24 +70,11 @@ export default function CoachPage() {
     }
   }, [messages, loading]);
 
-  const handleCopy = (text: string, index: number) => {
+  const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
-    setCopiedId(index);
+    setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
     toast({ title: "Copiado!", description: "Mensagem salva na área de transferência." });
-  };
-
-  const handleImagePaste = async (e: React.ClipboardEvent) => {
-    const items = e.clipboardData.items;
-    for (const item of items) {
-      if (item.type.indexOf("image") !== -1) {
-        const file = item.getAsFile();
-        if (file) {
-          const uri = await fileToDataURI(file);
-          setAttachedImage(uri);
-        }
-      }
-    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,21 +85,23 @@ export default function CoachPage() {
     }
   };
 
+  const handleClearHistory = async () => {
+    if (!profile) return;
+    const q = query(collection(db, 'athletes', profile.id, 'chat_history'));
+    const snapshot = await getDocs(q);
+    const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+    toast({ title: "Histórico Limpo", description: "Sua conversa foi reiniciada." });
+  };
+
   const handleSend = async () => {
-    if ((!input.trim() && !attachedImage) || loading) return;
+    if ((!input.trim() && !attachedImage) || loading || !profile) return;
 
     if (!context?.apiKey) {
       toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua Gemini API Key no menu lateral." });
       return;
     }
 
-    const userMessage: Message = { 
-      role: "user", 
-      parts: input, 
-      image: attachedImage || undefined 
-    };
-
-    setMessages(prev => [...prev, userMessage]);
     const currentInput = input;
     const currentImage = attachedImage;
     
@@ -105,8 +110,17 @@ export default function CoachPage() {
     setLoading(true);
 
     try {
-      const workoutHistoryContext = `Perfil: ${profile?.name || 'Atleta'}. Peso: ${profile?.currentWeight}kg. Pace T: ${profile?.thresholdPace}. FC Limiar: ${profile?.thresholdHr}bpm.`;
-      const planContext = plan ? `Atualmente no bloco ${plan.blockType}. Objetivo: ${profile?.raceDistance} em ${profile?.raceDate}.` : "Sem plano ativo no momento.";
+      // Salva mensagem do usuário no Firestore
+      const chatRef = collection(db, 'athletes', profile.id, 'chat_history');
+      await addDoc(chatRef, {
+        role: "user",
+        parts: currentInput,
+        image: currentImage || null,
+        createdAt: serverTimestamp()
+      });
+
+      const workoutHistoryContext = `Perfil: ${profile.name}. Peso: ${profile.currentWeight}kg. Pace T: ${profile.thresholdPace}. FC Limiar: ${profile.thresholdHr}bpm.`;
+      const planContext = plan ? `Atualmente no bloco ${plan.blockType}. Objetivo: ${profile.raceDistance} em ${profile.raceDate}.` : "Sem plano ativo no momento.";
 
       const response = await chatWithAICoach({
         apiKey: context.apiKey,
@@ -116,7 +130,13 @@ export default function CoachPage() {
         imageDataUri: currentImage || undefined
       });
 
-      setMessages(prev => [...prev, { role: "model", parts: response.feedback }]);
+      // Salva resposta da IA no Firestore
+      await addDoc(chatRef, {
+        role: "model",
+        parts: response.feedback,
+        createdAt: serverTimestamp()
+      });
+
     } catch (error) {
       console.error(error);
       toast({ variant: "destructive", title: "Erro na IA", description: "Não foi possível obter resposta do Coach." });
@@ -128,13 +148,18 @@ export default function CoachPage() {
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in duration-700">
-        <div className="text-center space-y-2">
-          <h1 className="font-headline text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white">
-            GEMINI <span className="text-primary">COACH</span>
-          </h1>
-          <p className="text-muted-foreground text-sm md:text-lg font-medium">
-            Sua assessoria técnica personalizada via inteligência artificial.
-          </p>
+        <div className="flex justify-between items-center">
+          <div className="text-left space-y-2">
+            <h1 className="font-headline text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white">
+              GEMINI <span className="text-primary">COACH</span>
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-lg font-medium">
+              Assessoria técnica sincronizada na nuvem.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleClearHistory} className="text-destructive hover:bg-destructive/10 border-destructive/20 gap-2 font-black italic uppercase text-[10px] h-10 px-4 rounded-xl">
+            <Trash2 size={14} /> Limpar Conversa
+          </Button>
         </div>
 
         <Tabs defaultValue="conversar" className="w-full space-y-8">
@@ -147,9 +172,9 @@ export default function CoachPage() {
             </TabsTrigger>
             <TabsTrigger 
               value="historico" 
-              className="py-4 font-headline font-black text-xs md:text-sm uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl opacity-60"
+              className="py-4 font-headline font-black text-xs md:text-sm uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl"
             >
-              <History className="size-4" /> Histórico
+              <History className="size-4" /> Histórico Completo
             </TabsTrigger>
           </TabsList>
 
@@ -164,7 +189,7 @@ export default function CoachPage() {
                     <div className="space-y-1">
                       <h3 className="font-headline font-black text-xl uppercase italic text-white tracking-widest">INICIE A CONVERSA</h3>
                       <p className="text-muted-foreground text-xs font-medium max-w-xs mx-auto italic leading-relaxed">
-                        Tire dúvidas técnicas, poste prints de treinos ou peça ajustes.
+                        Tire dúvidas técnicas ou peça ajustes no seu cronograma. Seus dados estão sincronizados entre todos os seus dispositivos.
                       </p>
                     </div>
                   </div>
@@ -173,7 +198,7 @@ export default function CoachPage() {
                     <div className="space-y-10">
                       {messages.map((msg, i) => (
                         <div 
-                          key={i} 
+                          key={msg.id || i} 
                           className={cn(
                             "flex items-start gap-4 group",
                             msg.role === 'user' ? "flex-row-reverse" : "flex-row"
@@ -195,7 +220,7 @@ export default function CoachPage() {
                           )}>
                             {msg.image && (
                               <div className="mb-4 rounded-xl overflow-hidden border border-white/20">
-                                <img src={msg.image} alt="Anexo de treino" className="w-full h-auto max-h-60 object-contain" />
+                                <img src={msg.image} alt="Anexo" className="w-full h-auto max-h-60 object-contain" />
                               </div>
                             )}
                             {msg.parts}
@@ -203,13 +228,13 @@ export default function CoachPage() {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              onClick={() => handleCopy(msg.parts, i)}
+                              onClick={() => handleCopy(msg.parts, msg.id || String(i))}
                               className={cn(
                                 "absolute -bottom-10 opacity-0 group-hover:opacity-100 transition-opacity size-8 text-muted-foreground hover:text-primary",
                                 msg.role === 'user' ? "left-0" : "right-0"
                               )}
                             >
-                              {copiedId === i ? <Check className="size-4 text-primary" /> : <Copy className="size-4" />}
+                              {copiedId === (msg.id || String(i)) ? <Check className="size-4 text-primary" /> : <Copy className="size-4" />}
                             </Button>
                           </div>
                         </div>
@@ -238,16 +263,8 @@ export default function CoachPage() {
                     </div>
                     <div className="flex-1 overflow-hidden">
                       <p className="text-[10px] font-black uppercase text-primary italic">IMAGEM ANEXADA</p>
-                      <p className="text-[9px] text-muted-foreground truncate italic">Será enviada com sua mensagem</p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="size-8 text-muted-foreground hover:text-destructive" 
-                      onClick={() => setAttachedImage(null)}
-                    >
-                      <X className="size-4" />
-                    </Button>
+                    <Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-destructive" onClick={() => setAttachedImage(null)}><X className="size-4" /></Button>
                   </div>
                 )}
                 
@@ -257,68 +274,39 @@ export default function CoachPage() {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                      onPaste={handleImagePaste}
-                      placeholder="Pergunte ou cole um print do Strava/Relógio..."
-                      className="bg-black/30 border-border/50 h-16 px-6 pr-24 rounded-2xl focus-visible:ring-primary font-medium text-white italic placeholder:text-muted-foreground/50 border-2"
+                      placeholder="Peça ajustes no plano ou envie um feedback..."
+                      className="bg-black/30 border-border/50 h-16 px-6 pr-24 rounded-2xl focus-visible:ring-primary font-medium text-white italic border-2"
                     />
                     <div className="absolute right-3 top-3 flex gap-2">
-                      <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        className="hidden" 
-                        accept="image/*" 
-                        onChange={handleFileChange} 
-                      />
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="size-10 text-muted-foreground hover:text-primary rounded-xl"
-                      >
-                        <Paperclip className="size-5" />
-                      </Button>
-                      <Button 
-                        onClick={handleSend}
-                        disabled={loading || (!input.trim() && !attachedImage)}
-                        size="icon" 
-                        className="size-10 bg-primary hover:bg-primary/90 rounded-xl text-black shadow-lg shadow-primary/20"
-                      >
-                        <Send className="size-5" />
-                      </Button>
+                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+                      <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="size-10 text-muted-foreground hover:text-primary rounded-xl"><Paperclip className="size-5" /></Button>
+                      <Button onClick={handleSend} disabled={loading || (!input.trim() && !attachedImage)} size="icon" className="size-10 bg-primary hover:bg-primary/90 rounded-xl text-black"><Send className="size-5" /></Button>
                     </div>
                   </div>
                 </div>
               </CardFooter>
             </Card>
-
-            <div className="flex flex-wrap gap-3 justify-center pt-8">
-              {[
-                "Ajuste meu plano (estou cansado)",
-                "Analise este print de treino",
-                "Explique o treino de Limiar",
-                "Dica para Maratona"
-              ].map(suggestion => (
-                <Button 
-                  key={suggestion} 
-                  variant="outline" 
-                  size="sm" 
-                  className="rounded-full bg-secondary/30 text-[10px] font-black uppercase italic border-border/50 hover:bg-primary hover:text-black transition-all h-9 px-4"
-                  onClick={() => setInput(suggestion)}
-                >
-                  <Sparkles className="mr-2 size-3 text-primary" /> {suggestion}
-                </Button>
-              ))}
-            </div>
           </TabsContent>
 
           <TabsContent value="historico" className="mt-0">
-            <Card className="bg-card/40 border-border/50 rounded-3xl p-12 text-center border-2 border-dashed">
+            <Card className="bg-card/40 border-border/50 rounded-3xl p-8 space-y-6">
+              <h3 className="font-headline font-black text-xl uppercase italic text-white tracking-widest">LINHA DO TEMPO</h3>
               <div className="space-y-4">
-                 <History className="size-12 text-muted-foreground/30 mx-auto" />
-                 <h3 className="font-headline font-black text-xl text-muted-foreground uppercase italic tracking-widest">Sem Histórico Salvo</h3>
-                 <p className="text-sm text-muted-foreground/50 max-w-xs mx-auto">
-                    Suas conversas técnicas de elite aparecerão aqui para consultas futuras.
-                 </p>
+                {messages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">Nenhum histórico disponível para este atleta.</p>
+                ) : (
+                  messages.filter(m => m.role === 'model').map((msg, idx) => (
+                    <div key={idx} className="p-4 rounded-xl bg-secondary/20 border border-border/50 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-primary/20 text-primary border-none text-[8px] font-black uppercase">Coach Feedback</Badge>
+                        <span className="text-[9px] text-muted-foreground italic">
+                          {msg.createdAt?.toDate?.()?.toLocaleDateString('pt-BR') || 'Recentemente'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground italic line-clamp-3">{msg.parts}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </Card>
           </TabsContent>

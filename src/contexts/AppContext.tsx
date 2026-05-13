@@ -50,17 +50,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const db = useFirestore();
   const { user } = useUser();
-  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
-  const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
 
-  // 1. Chave de API do usuário logado
+  // 1. Configurações globais do usuário (API Key e Último Perfil Ativo)
   const userConfigRef = useMemo(() => user ? doc(db, 'user_data', user.uid) : null, [db, user]);
   const { data: userConfig, loading: loadingConfig } = useDoc<any>(userConfigRef);
   const userApiKey = userConfig?.apiKey || null;
+  const persistedActiveProfileId = userConfig?.lastActiveProfileId || null;
 
-  // 2. Fallback: Chave de API do Treinador (se o logado for atleta e não tiver chave)
+  const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
+
+  // 2. Fallback: Chave de API do Treinador
   const [trainerApiKey, setTrainerApiKey] = useState<string | null>(null);
 
+  // 3. Busca perfis onde sou treinador ou atleta vinculado
   const coachProfilesQuery = useMemo(() => {
     if (!user) return null;
     return query(collection(db, 'athletes'), where('ownerUid', '==', user.uid));
@@ -80,11 +82,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return Array.from(map.values());
   }, [coachProfiles, athleteProfiles]);
 
-  const activeProfile = useMemo(() => profiles.find(p => p.id === activeProfileId) || null, [profiles, activeProfileId]);
+  const activeProfile = useMemo(() => {
+    return profiles.find(p => p.id === persistedActiveProfileId) || null;
+  }, [profiles, persistedActiveProfileId]);
 
   useEffect(() => {
-    // Se o usuário logado está em um perfil que não é dele e ele não tem chave própria,
-    // buscamos a chave do dono (treinador) do perfil.
     if (activeProfile && user && activeProfile.ownerUid !== user.uid && !userApiKey) {
       const trainerRef = doc(db, 'user_data', activeProfile.ownerUid);
       const unsubscribe = onSnapshot(trainerRef, (snap) => {
@@ -105,10 +107,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const effectiveApiKey = userApiKey || trainerApiKey;
 
   const setApiKey = (key: string | null) => {
-    if (!user || !userConfigRef) {
-      toast({ variant: "destructive", title: "Erro", description: "Faça login para salvar sua chave." });
-      return;
-    }
+    if (!user || !userConfigRef) return;
     setDoc(userConfigRef, { apiKey: key }, { merge: true }).catch(err => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: userConfigRef.path,
@@ -118,13 +117,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const switchProfile = (id: string | null) => setActiveProfileId(id);
+  const switchProfile = (id: string | null) => {
+    if (!user || !userConfigRef) return;
+    setDoc(userConfigRef, { lastActiveProfileId: id }, { merge: true }).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: userConfigRef.path,
+        operation: 'write',
+        requestResourceData: { lastActiveProfileId: id }
+      }));
+    });
+  };
 
   const saveProfile = async (data: Partial<AthleteProfile>) => {
-    if (!user) {
-      toast({ variant: "destructive", title: "Ação Negada", description: "Faça login para sincronizar dados." });
-      throw new Error("No user");
-    }
+    if (!user) throw new Error("No user");
 
     const id = data.id || crypto.randomUUID();
     const docRef = doc(db, 'athletes', id);
@@ -149,7 +154,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     const docRef = doc(db, 'athletes', id);
     deleteDoc(docRef).then(() => {
-      if (activeProfileId === id) setActiveProfileId(null);
+      if (persistedActiveProfileId === id) switchProfile(null);
       toast({ title: "Perfil removido do sistema." });
     }).catch(err => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -183,7 +188,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
     if (!effectiveApiKey) {
-      toast({ variant: "destructive", title: "IA Desconectada", description: "Configure sua API Key ou peça ao seu treinador para configurar a dele." });
+      toast({ variant: "destructive", title: "IA Desconectada", description: "Configure sua API Key." });
       return;
     }
 
@@ -197,12 +202,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const result = await generateTrainingBlock({
         apiKey: effectiveApiKey,
         raceName: profile.raceName,
-        currentVDOT: profile.vo2Max,
-        hrZone1End: Math.round(profile.thresholdHr * 0.8),
-        hrZone2End: Math.round(profile.thresholdHr * 0.9),
-        hrZone3End: Math.round(profile.thresholdHr * 0.95),
-        hrZone4End: profile.thresholdHr,
-        hrMax: profile.thresholdHr + 20,
+        currentVDOT: profile.vo2Max || 40,
+        hrZone1End: Math.round((profile.thresholdHr || 160) * 0.8),
+        hrZone2End: Math.round((profile.thresholdHr || 160) * 0.9),
+        hrZone3End: Math.round((profile.thresholdHr || 160) * 0.95),
+        hrZone4End: profile.thresholdHr || 160,
+        hrMax: (profile.thresholdHr || 160) + 20,
         trainingBlockType: 'Construction',
         planGenerationType: profile.planGenerationType,
         raceDate: profile.raceDate,
