@@ -74,18 +74,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Monitora atletas que eu criei (Treinador)
     const trainerQuery = query(collection(db, 'athletes'), where('ownerUid', '==', user.uid));
     const unsubscribeTrainer = onSnapshot(trainerQuery, (snapshot) => {
       const trainerProfiles = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as AthleteProfile));
       
+      // Monitora atletas onde meu e-mail está vinculado (Atleta)
       const athleteQuery = query(collection(db, 'athletes'), where('athleteEmail', '==', user.email));
-      onSnapshot(athleteQuery, (athleteSnapshot) => {
+      const unsubscribeAthlete = onSnapshot(athleteQuery, (athleteSnapshot) => {
         const athleteProfiles = athleteSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as AthleteProfile));
         
+        // Merge dos perfis sem duplicatas
         const allProfilesMap = new Map();
-        [...trainerProfiles, ...athleteProfiles].forEach(p => allProfilesMap.set(p.id, p));
+        trainerProfiles.forEach(p => allProfilesMap.set(p.id, p));
+        athleteProfiles.forEach(p => allProfilesMap.set(p.id, p));
+        
         setProfiles(Array.from(allProfilesMap.values()));
       });
+
+      return () => unsubscribeAthlete();
     });
 
     return () => unsubscribeTrainer();
@@ -111,7 +118,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     await setDoc(doc(db, 'athletes', id), profileToSave, { merge: true });
-    toast({ title: "Perfil Sincronizado" });
     return profileToSave as AthleteProfile;
   };
 
@@ -148,17 +154,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // 1. Tentar usar a chave do próprio usuário logado (Atleta ou Treinador)
     let effectiveApiKey = apiKey;
     
-    // 2. Se o usuário logado NÃO tem chave e NÃO é o dono do perfil, tenta a chave do treinador
-    if (!effectiveApiKey && profile.ownerUid !== user?.uid) {
-      const trainerData = await getDoc(doc(db, 'user_data', profile.ownerUid));
-      effectiveApiKey = trainerData.data()?.apiKey || null;
-      if (effectiveApiKey) {
-        toast({ title: "Usando chave da Assessoria", description: "Sua chave individual não foi detectada." });
+    // 2. Fallback: Se o usuário logado NÃO tem chave, tenta a chave do treinador (owner)
+    if ((!effectiveApiKey || effectiveApiKey.trim() === "") && profile.ownerUid !== user?.uid) {
+      try {
+        const trainerData = await getDoc(doc(db, 'user_data', profile.ownerUid));
+        effectiveApiKey = trainerData.data()?.apiKey || null;
+        if (effectiveApiKey) {
+          toast({ title: "Sincronização de IA", description: "Usando inteligência da assessoria." });
+        }
+      } catch (e) {
+        console.error("Erro ao buscar chave do treinador", e);
       }
     }
 
-    if (!effectiveApiKey) {
-      toast({ variant: "destructive", title: "IA Indisponível", description: "Configure sua Gemini API Key no menu lateral." });
+    if (!effectiveApiKey || effectiveApiKey.trim() === "") {
+      toast({ variant: "destructive", title: "Configuração Pendente", description: "Insira sua Gemini API Key no menu lateral para ativar a IA." });
       return;
     }
 
@@ -187,16 +197,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         legDay: profile.strengthPreferences?.legDay
       });
 
+      // Garantir IDs únicos para os novos treinos
       result.weeklyPlans.forEach(week => {
         week.runs.forEach(run => { if (!run.id) run.id = crypto.randomUUID(); });
       });
 
+      // Salva o resultado no documento COMPARTILHADO do atleta
       await setDoc(doc(db, 'athletes', profile.id), { trainingPlan: result }, { merge: true });
+      
       setPlanGenerationStatus('success');
-      toast({ title: "Planilha Gerada com Sucesso!" });
+      toast({ title: "Ciclo Calibrado!", description: "Os novos treinos já estão disponíveis." });
     } catch (error: any) {
       setPlanGenerationStatus('error');
-      toast({ variant: "destructive", title: "Erro na IA", description: error.message });
+      toast({ variant: "destructive", title: "Erro no Motor de IA", description: error.message });
     }
   };
 
@@ -212,18 +225,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       exportData: () => {
         const data = JSON.stringify({ profiles });
         const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
-        const a = document.createElement('a'); a.href = url; a.download = `assessoria_backup.json`; a.click();
+        const a = document.createElement('a'); a.href = url; a.download = `corre_junto_backup.json`; a.click();
       },
       importData: (json: string) => {
         try {
             const p = JSON.parse(json);
             if (p.profiles) p.profiles.forEach((profile: any) => saveProfile(profile));
-            toast({ title: 'Dados Importados' });
+            toast({ title: 'Dados Importados com Sucesso' });
         } catch (e) { toast({ variant: 'destructive', title: 'Erro na importação' }); }
       },
       toggleIntegration: (service, connected) => {
         if (!activeProfile) return;
-        saveProfile({ ...activeProfile, integrations: { ...activeProfile.integrations, [service]: { ...activeProfile.integrations?.[service], connected, autoSync: connected } } } as any);
+        saveProfile({ 
+          ...activeProfile, 
+          integrations: { 
+            ...activeProfile.integrations, 
+            [service]: { ...activeProfile.integrations?.[service], connected, autoSync: connected } 
+          } 
+        } as any);
       }
     }}>
       {children}
