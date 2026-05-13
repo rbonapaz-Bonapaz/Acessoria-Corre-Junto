@@ -61,10 +61,11 @@ export interface AthleteProfile {
   targetTime?: string;
   trainingDays: string[];
   longRunDay: string;
+  weeklyMileageGoal: number;
   planGenerationType: PlanGenerationType;
   experienceLevel: ExperienceLevel;
   trainingHistory: string;
-  referenceDocumentUri?: string; // Novo campo para PDF/Print de referência
+  referenceDocumentUri?: string;
   trainingPlan?: TrainingPlan;
   dietPreferences?: DietPreferences;
   strengthPreferences?: StrengthPreferences;

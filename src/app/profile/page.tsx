@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useContext, useState, useEffect, useRef, useMemo } from 'react';
@@ -55,7 +56,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AthleteProfile } from '@/lib/types';
 
-// Domingo como primeiro dia do sistema
 const weekDays = [
   { id: 'Domingo', label: 'DOM' },
   { id: 'Segunda', label: 'SEG' },
@@ -77,6 +77,7 @@ const profileSchema = z.object({
   vo2Max: z.coerce.number().optional(),
   thresholdPace: z.string().optional(),
   thresholdHr: z.coerce.number().optional(),
+  weeklyMileageGoal: z.coerce.number().optional().default(60),
   raceName: z.string().optional(),
   raceDistance: z.string().optional(),
   raceDate: z.string().optional(),
@@ -121,6 +122,7 @@ export default function ProfilePage() {
       planGenerationType: 'blocks',
       experienceLevel: 'beginner',
       raceDistance: '10k',
+      weeklyMileageGoal: 60,
     }
   });
 
@@ -232,7 +234,6 @@ export default function ProfilePage() {
                   <TabsTrigger value="musculacao" className="py-4 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">FORÇA</TabsTrigger>
                 </TabsList>
 
-                {/* --- ABA GERAL --- */}
                 <TabsContent value="perfil" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                   <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
                     <CardHeader className="bg-secondary/10 border-b border-border/10 py-8 px-8">
@@ -286,9 +287,7 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                {/* --- ABA CORRIDA --- */}
                 <TabsContent value="corrida" className="mt-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-                  {/* Bloco Fisiologia */}
                   <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
                     <CardHeader className="bg-primary/5 border-b border-border/10 py-6 px-8">
                       <div className="flex items-center gap-4">
@@ -296,7 +295,7 @@ export default function ProfilePage() {
                         <CardTitle className="font-headline text-2xl uppercase italic text-white font-black tracking-tighter">FISIOLOGIA DO ATLETA</CardTitle>
                       </div>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 md:p-10">
+                    <CardContent className="grid grid-cols-2 md:grid-cols-5 gap-4 p-8 md:p-10">
                       <FormField control={form.control} name="vo2Max" render={({field}) => (
                         <FormItem className="space-y-3">
                           <div className="flex items-center gap-2">
@@ -324,6 +323,12 @@ export default function ProfilePage() {
                           <FormControl><Input type="number" {...field} className="bg-black/40 h-16 text-2xl font-black text-center rounded-2xl border-border/40" /></FormControl>
                         </FormItem>
                       )} />
+                      <FormField control={form.control} name="weeklyMileageGoal" render={({field}) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Volume Semanal (km)</FormLabel>
+                          <FormControl><Input type="number" {...field} className="bg-primary/5 border-primary/20 h-16 text-2xl font-black text-center rounded-2xl" /></FormControl>
+                        </FormItem>
+                      )} />
                     </CardContent>
                     <CardFooter className="bg-secondary/10 py-4 border-t border-border/20 px-8">
                         <FormField control={form.control} name="experienceLevel" render={({field}) => (
@@ -342,7 +347,6 @@ export default function ProfilePage() {
                     </CardFooter>
                   </Card>
 
-                  {/* Bloco Prova Alvo */}
                   <Card className="bg-primary/5 border-primary/20 rounded-3xl overflow-hidden shadow-2xl border-2 animate-in zoom-in-95 duration-700">
                     <CardHeader className="bg-primary/10 border-b border-primary/20 py-8 px-10">
                       <div className="flex items-center gap-4">
@@ -411,7 +415,6 @@ export default function ProfilePage() {
                     </CardContent>
                   </Card>
 
-                  {/* Bloco Disponibilidade */}
                   <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
                     <CardHeader className="bg-secondary/20 border-b border-border/10 py-6 px-8">
                        <div className="flex items-center gap-4"><CalendarCheck className="text-primary size-6"/><h3 className="text-sm font-black uppercase italic tracking-[0.2em]">LOGÍSTICA SEMANAL</h3></div>
@@ -463,7 +466,6 @@ export default function ProfilePage() {
                     </CardContent>
                   </Card>
 
-                  {/* Bloco Documentos IA */}
                   <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
                     <CardHeader className="bg-secondary/20 border-b border-border/10 py-6 px-8">
                        <div className="flex items-center gap-4"><FileText className="text-primary size-6"/><h3 className="text-sm font-black uppercase italic tracking-[0.2em]">REFERÊNCIA TÉCNICA (IA CONTEXT)</h3></div>
@@ -497,7 +499,6 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                {/* --- ABA ALIMENTAÇÃO --- */}
                 <TabsContent value="alimentacao" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                   <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
                     <CardHeader className="bg-orange-500/10 border-b border-border/10 py-8 px-8">
@@ -524,7 +525,6 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                {/* --- ABA MUSCULAÇÃO --- */}
                 <TabsContent value="musculacao" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                   <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
                     <CardHeader className="bg-purple-500/10 border-b border-border/10 py-8 px-8">
@@ -552,7 +552,6 @@ export default function ProfilePage() {
                 </TabsContent>
               </Tabs>
 
-              {/* Botões de Ação Final */}
               <div className="flex flex-col sm:flex-row gap-6 pt-10 border-t border-border/20 px-2 pb-20">
                 <Button 
                   type="submit" 

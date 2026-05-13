@@ -28,6 +28,7 @@
         "targetTime": { "type": "string" },
         "trainingDays": { "type": "array", "items": { "type": "string" } },
         "longRunDay": { "type": "string" },
+        "weeklyMileageGoal": { "type": "number" },
         "planGenerationType": { "type": "string", "enum": ["full", "blocks"] },
         "experienceLevel": { "type": "string", "enum": ["run_walk", "beginner", "intermediate", "advanced"] },
         "trainingHistory": { "type": "string" },
@@ -40,13 +41,11 @@
       "title": "Preferências Dieta",
       "type": "object",
       "properties": {
-        "aestheticGoal": { "type": "string", "enum": ["cutting", "bulking", "recomp", "performance"] },
+        "aestheticGoal": { "type": "string", "enum": ["performance", "cutting", "bulking", "recomp"] },
         "trainingTiming": { "type": "string", "enum": ["jejum", "manha", "meio-dia", "tarde", "noite"] },
         "mealCount": { "type": "number" },
         "supplements": { "type": "string" },
-        "allergies": { "type": "string" },
-        "preferredFoods": { "type": "string" },
-        "excludedFoods": { "type": "string" }
+        "allergies": { "type": "string" }
       }
     },
     "StrengthPreferences": {
@@ -55,15 +54,7 @@
       "properties": {
         "splitPreference": { "type": "string", "enum": ["full_body", "upper_lower", "ppl"] },
         "objective": { "type": "string", "enum": ["strength", "hypertrophy", "performance", "endurance"] },
-        "frequency": { "type": "number" },
-        "trainingDays": { "type": "array", "items": { "type": "string" } },
-        "equipment": { "type": "array", "items": { "type": "string" } },
-        "focusAreas": { "type": "array", "items": { "type": "string" } },
-        "legDay": { "type": "string" },
-        "limitations": { "type": "string" },
-        "prBench": { "type": "number" },
-        "prSquat": { "type": "number" },
-        "prDeadlift": { "type": "number" }
+        "legDay": { "type": "string" }
       }
     }
   },
@@ -73,11 +64,7 @@
   "firestore": {
     "/user_data/{userId}": {
       "schema": "object",
-      "description": "Configurações globais do usuário (ex: API Key)."
-    },
-    "/athletes/{athleteId}": {
-      "schema": { "$ref": "#/backend/entities/AthleteProfile" },
-      "description": "Dados individuais dos atletas compartilháveis entre treinador e aluno."
+      "description": "Dados do usuário e seu perfil de atleta sincronizado."
     }
   }
 }

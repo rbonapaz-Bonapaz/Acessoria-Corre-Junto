@@ -1,10 +1,10 @@
 
 'use client';
 
-import { createContext, useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
-import { doc, onSnapshot, setDoc, collection, query, orderBy, limit, Firestore } from 'firebase/firestore';
+import { createContext, useState, useEffect, type ReactNode, useCallback } from 'react';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore, useUser } from '@/firebase';
-import type { AthleteProfile, TrainingPlan, ChatMessage, Workout } from '@/lib/types';
+import type { AthleteProfile, TrainingPlan, Workout } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { generateTrainingBlock } from '@/ai/flows/generate-training-block';
 
@@ -35,7 +35,6 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Listener em tempo real para os dados do usuário
   useEffect(() => {
     if (authLoading || !user || !firestore) {
       if (!authLoading && !user) setIsHydrated(true);
@@ -107,6 +106,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
 
     try {
       const result = await generateTrainingBlock({
+        apiKey,
         raceName: profile.raceName,
         currentVDOT: profile.vo2Max,
         hrZone1End: Math.round(profile.thresholdHr * 0.8),
@@ -117,7 +117,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
         trainingBlockType: 'Construction',
         planGenerationType: profile.planGenerationType,
         raceDate: profile.raceDate,
-        weeklyMileageGoal: 60,
+        weeklyMileageGoal: profile.weeklyMileageGoal || 60,
         targetRaceDistance: profile.raceDistance,
         targetPace: profile.targetPace,
         targetTime: profile.targetTime,
@@ -125,7 +125,8 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
         weeklyAvailability: profile.trainingDays.join(', '),
         injuryHistory: 'Nenhuma reportada',
         preferredWorkoutDays: profile.trainingDays.slice(0, 2).join(', '),
-        legDay: profile.strengthPreferences?.legDay
+        legDay: profile.strengthPreferences?.legDay,
+        referenceFileDataUri: profile.referenceDocumentUri
       });
 
       if (!user || !firestore) return;
