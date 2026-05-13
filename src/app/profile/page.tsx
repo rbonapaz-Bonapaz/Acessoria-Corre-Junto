@@ -11,7 +11,7 @@ import { fileToDataURI, cn } from "@/lib/utils";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
     Form, 
     FormControl, 
@@ -279,7 +279,6 @@ export default function ProfilePage() {
                 </TabsContent>
 
                 <TabsContent value="corrida" className="mt-6 space-y-8">
-                  {/* SEÇÃO: FISIOLOGIA (OS 4 CAMPOS CRÍTICOS) */}
                   <Card className="bg-card/50 border-border/50 rounded-2xl overflow-hidden">
                     <CardHeader className="bg-primary/5 border-b border-border/50">
                       <div className="flex items-center gap-3">
@@ -333,7 +332,6 @@ export default function ProfilePage() {
                     </CardFooter>
                   </Card>
 
-                  {/* SEÇÃO UNIFICADA: PROVA ALVO */}
                   <Card className="bg-primary/5 border-primary/20 rounded-2xl overflow-hidden shadow-lg border-2">
                     <CardHeader className="bg-primary/10 border-b border-primary/20 py-6">
                       <div className="flex items-center gap-3">
