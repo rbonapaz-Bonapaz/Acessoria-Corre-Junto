@@ -71,32 +71,33 @@ const equipmentOptions = [
   'Barra Fixa / Paralelas',
 ];
 
+// Esquema relaxado para permitir salvamento isolado por aba
 const profileSchema = z.object({
-  name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.'),
+  name: z.string().min(1, 'Nome é obrigatório.').optional().or(z.literal('')),
   athleteEmail: z.string().email('E-mail inválido').optional().or(z.literal('')),
   avatarUrl: z.string().optional(),
   location: z.string().optional(),
-  birthDate: z.string().min(1, "Data de nascimento obrigatória."),
-  gender: z.enum(['male', 'female', 'other']),
-  currentWeight: z.coerce.number().min(30, 'Insira um peso válido.'),
-  height: z.coerce.number().min(100, 'Insira uma altura válida em cm.'),
+  birthDate: z.string().optional().or(z.literal('')),
+  gender: z.enum(['male', 'female', 'other']).optional(),
+  currentWeight: z.coerce.number().optional(),
+  height: z.coerce.number().optional(),
   
   // Corrida
-  restingHr: z.coerce.number().min(30),
-  vo2Max: z.coerce.number().min(20),
-  thresholdPace: z.string().regex(/^\d{1,2}:\d{2}$/, 'Formato MM:SS.'),
-  thresholdHr: z.coerce.number().min(100),
+  restingHr: z.coerce.number().optional(),
+  vo2Max: z.coerce.number().optional(),
+  thresholdPace: z.string().optional().or(z.literal('')),
+  thresholdHr: z.coerce.number().optional(),
   raceName: z.string().optional(),
-  raceDistance: z.string().min(1, "Selecione a distância."),
-  raceDate: z.string().min(1, "Data da prova obrigatória."),
+  raceDistance: z.string().optional().or(z.literal('')),
+  raceDate: z.string().optional().or(z.literal('')),
   raceGoalType: z.enum(['pace', 'time']).default('pace'),
   targetPace: z.string().optional(),
   targetTime: z.string().optional(),
-  trainingDays: z.array(z.string()).min(1, "Selecione pelo menos um dia."),
-  longRunDay: z.string().min(1, "Selecione o dia do longão"),
+  trainingDays: z.array(z.string()).default([]),
+  longRunDay: z.string().optional().or(z.literal('')),
   planGenerationType: z.enum(['full', 'blocks']).default('blocks'),
-  experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']),
-  trainingHistory: z.string().min(5, 'Descreva seu histórico.'),
+  experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']).optional(),
+  trainingHistory: z.string().optional().or(z.literal('')),
   
   // Dieta
   aestheticGoal: z.enum(['cutting', 'bulking', 'recomp', 'performance']).optional(),
@@ -144,7 +145,7 @@ export default function ProfilePage() {
         thresholdPace: '05:00', 
         thresholdHr: 165,
         trainingDays: ['Segunda', 'Quarta', 'Sexta'], 
-        longRunDay: 'Sexta', 
+        longRunDay: '', 
         planGenerationType: 'blocks',
         experienceLevel: 'beginner',
         raceName: '',
@@ -167,7 +168,6 @@ export default function ProfilePage() {
   const trainingDays = watch('trainingDays') || [];
   
   const availableLongRunDays = useMemo(() => {
-    // Mantém a ordem do array weekDays (Domingo primeiro)
     return weekDays.filter(day => trainingDays.includes(day.id));
   }, [trainingDays]);
 
@@ -184,7 +184,7 @@ export default function ProfilePage() {
             raceName: p.raceName || '',
             experienceLevel: p.experienceLevel || 'beginner',
             planGenerationType: p.planGenerationType || 'blocks',
-            trainingHistory: p.trainingHistory || 'Atleta em evolução.',
+            trainingHistory: p.trainingHistory || '',
             aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
             trainingTiming: p.dietPreferences?.trainingTiming || 'manha',
             mealCount: p.dietPreferences?.mealCount || 4,
@@ -195,9 +195,9 @@ export default function ProfilePage() {
             strengthSplit: p.strengthPreferences?.splitPreference || 'full_body',
             strengthObjective: p.strengthPreferences?.objective || 'performance',
             strengthFrequency: p.strengthPreferences?.frequency || 3,
-            strengthDays: p.strengthPreferences?.trainingDays || ['Terça', 'Quinta', 'Sábado'],
-            strengthEquipment: p.strengthPreferences?.equipment || ['Academia Completa'],
-            strengthFocus: p.strengthPreferences?.focusAreas || ['Core / Estabilidade'],
+            strengthDays: p.strengthPreferences?.trainingDays || [],
+            strengthEquipment: p.strengthPreferences?.equipment || [],
+            strengthFocus: p.strengthPreferences?.focusAreas || [],
             legDay: p.strengthPreferences?.legDay || '',
             limitations: p.strengthPreferences?.limitations || '',
             prBench: p.strengthPreferences?.prBench || 0,
@@ -268,6 +268,19 @@ export default function ProfilePage() {
 
   const handleGenerate = async () => {
     if (!context || !context.activeProfile) return;
+    
+    // Validação mínima para gerar o plano
+    const data = getValues();
+    if (!data.thresholdHr || !data.vo2Max || !data.raceDate || !data.raceDistance) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Dados Insuficientes', 
+        description: 'Preencha os campos de Fisiologia e Prova Alvo na aba Corrida antes de gerar o plano.' 
+      });
+      setActiveTab('corrida');
+      return;
+    }
+
     setIsProcessing(true);
     try {
         await context.generateRunningPlanAsync(context.activeProfile);
@@ -628,14 +641,14 @@ export default function ProfilePage() {
                                         <FormField control={form.control} name="mealCount" render={({field}) => (
                                             <FormItem>
                                                 <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Frequência Alimentar</FormLabel>
-                                                <FormControl><Input type="number" {...field} className="bg-black/30 h-14 text-center font-black text-xl rounded-xl" /></FormControl>
+                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-black/30 h-14 text-center font-black text-xl rounded-xl" /></FormControl>
                                             </FormItem>
                                         )} />
                                     </div>
                                     <FormField control={form.control} name="supplements" render={({field}) => (
                                         <FormItem>
                                             <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Suplementação de Base</FormLabel>
-                                            <FormControl><Input placeholder="Ex: Whey Isolate, Creatina, Beta-Alanina, Géis de Carboidrato..." {...field} className="bg-black/30 h-14 font-medium italic px-6 rounded-xl" /></FormControl>
+                                            <FormControl><Input placeholder="Ex: Whey Isolate, Creatina, Beta-Alanina, Géis de Carboidrato..." {...field} value={field.value ?? ''} className="bg-black/30 h-14 font-medium italic px-6 rounded-xl" /></FormControl>
                                         </FormItem>
                                     )} />
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-border/20 pt-10">
@@ -837,7 +850,7 @@ export default function ProfilePage() {
                             onClick={handleSaveActiveTab}
                         >
                             {isSaving ? <Loader2 className="animate-spin mr-3 size-6" /> : <CheckCircle2 className="mr-3 size-6" />}
-                            SALVAR PERFIL
+                            SALVAR TELA ATUAL
                         </Button>
                         
                         {isOwner && (
