@@ -53,12 +53,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
 
-  // 1. Chave de API do usuário logado
+  // 1. Chave de API do usuário logado (Seja treinador ou atleta)
   const userConfigRef = useMemo(() => user ? doc(db, 'user_data', user.uid) : null, [db, user]);
   const { data: userConfig, loading: loadingConfig } = useDoc<any>(userConfigRef);
   const userApiKey = userConfig?.apiKey || null;
 
-  // 2. Chave de API do Treinador (Fallback se o usuário for um atleta vinculado e não tiver chave própria)
+  // 2. Chave de API do Treinador (Fallback se o usuário logado for um atleta vinculado e não tiver chave própria)
   const [trainerApiKey, setTrainerApiKey] = useState<string | null>(null);
 
   // Monitorar perfis onde sou o Treinador (Dono)
@@ -68,14 +68,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [db, user]);
   const { data: coachProfiles } = useCollection<AthleteProfile>(coachProfilesQuery);
 
-  // Monitorar perfis onde sou o Atleta (Vinculado)
+  // Monitorar perfis onde sou o Atleta (Vinculado por e-mail)
   const athleteProfilesQuery = useMemo(() => {
     if (!user?.email) return null;
     return query(collection(db, 'athletes'), where('athleteEmail', '==', user.email));
   }, [db, user]);
   const { data: athleteProfiles } = useCollection<AthleteProfile>(athleteProfilesQuery);
 
-  // Combinar perfis sem duplicatas
+  // Combinar perfis
   const profiles = useMemo(() => {
     const map = new Map<string, AthleteProfile>();
     (coachProfiles || []).forEach(p => map.set(p.id, p));
@@ -85,7 +85,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const activeProfile = useMemo(() => profiles.find(p => p.id === activeProfileId) || null, [profiles, activeProfileId]);
 
-  // Efeito para buscar a chave do treinador se necessário (Herança de API Key)
+  // Efeito para buscar a chave do treinador caso o usuário logado seja o atleta vinculado e não tenha chave própria
   useEffect(() => {
     if (activeProfile && user && activeProfile.ownerUid !== user.uid && !userApiKey) {
       const trainerRef = doc(db, 'user_data', activeProfile.ownerUid);
@@ -105,12 +105,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [activeProfile, user, userApiKey, db]);
 
-  // Chave efetiva que será usada pelo motor de IA
+  // Chave que será efetivamente usada
   const effectiveApiKey = userApiKey || trainerApiKey;
 
   const setApiKey = (key: string | null) => {
     if (!user || !userConfigRef) {
-      toast({ variant: "destructive", title: "Erro", description: "Faça login para salvar a chave." });
+      toast({ variant: "destructive", title: "Erro", description: "Faça login para salvar sua chave." });
       return;
     }
     setDoc(userConfigRef, { apiKey: key }, { merge: true }).catch(err => {
@@ -126,7 +126,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const saveProfile = async (data: Partial<AthleteProfile>) => {
     if (!user) {
-      toast({ variant: "destructive", title: "Ação Negada", description: "Faça login para salvar perfis na nuvem." });
+      toast({ variant: "destructive", title: "Ação Negada", description: "Faça login para salvar perfis." });
       throw new Error("No user");
     }
 
@@ -154,7 +154,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const docRef = doc(db, 'athletes', id);
     deleteDoc(docRef).then(() => {
       if (activeProfileId === id) setActiveProfileId(null);
-      toast({ title: "Atleta removido com sucesso!" });
+      toast({ title: "Perfil removido com sucesso." });
     }).catch(err => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,

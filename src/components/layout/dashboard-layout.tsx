@@ -105,9 +105,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       let description = `Erro: ${error.code}. Domínio: ${currentDomain}. Verifique se este domínio está autorizado no console.`;
       
       if (error.code === 'auth/identity-toolkit-api-has-not-been-used-in-project' || error.code === 'auth/operation-not-allowed') {
-        description = "A API de Autenticação não está ativa. No Console Firebase, vá em Authentication > Login Method e clique em 'Get Started'.";
+        description = "A API de Autenticação não está ativa. No Console Firebase, clique em 'Get Started' na aba Authentication.";
       } else if (error.code === 'auth/unauthorized-domain') {
-        description = `O domínio '${currentDomain}' não está autorizado no Console Firebase (Authentication > Settings > Authorized Domains).`;
+        description = `O domínio '${currentDomain}' não está autorizado. No Console Firebase, vá em Authentication > Settings > Authorized Domains e adicione este domínio.`;
       }
       
       toast({ 
@@ -280,7 +280,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <DialogHeader>
             <DialogTitle className="text-primary font-headline italic font-black uppercase">Sua Chave Gemini</DialogTitle>
             <DialogDescription className="text-xs">
-              Insira sua API Key do Google para processar seus treinos. Caso você seja um atleta e não possua uma chave, o sistema tentará usar a chave do seu treinador.
+              Insira sua API Key do Google para processar seus treinos. Atletas vinculados usarão a chave do treinador como fallback automático.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

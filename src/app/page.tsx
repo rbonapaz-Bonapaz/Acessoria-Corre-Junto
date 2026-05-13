@@ -93,8 +93,11 @@ export default function Home() {
         <div className="bg-card border p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full space-y-6">
           <Lock className="size-12 text-primary mx-auto" />
           <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Área Restrita</p>
-          <Button asChild className="w-full h-14 bg-primary text-black font-black uppercase italic rounded-2xl shadow-lg shadow-primary/20">
-            <Link href="/about">Saiba Mais</Link>
+          <Button onClick={() => {
+            const loginBtn = document.querySelector('button[onClick*="handleLogin"]');
+            if (loginBtn) (loginBtn as HTMLElement).click();
+          }} className="w-full h-14 bg-primary text-black font-black uppercase italic rounded-2xl shadow-lg shadow-primary/20">
+            Entrar com Google
           </Button>
         </div>
       </div>
