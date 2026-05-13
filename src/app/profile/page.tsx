@@ -21,7 +21,7 @@ import {
     FormLabel, 
     FormMessage, 
     FormDescription 
-} from '@/components/form';
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { 
     Select, 
@@ -48,7 +48,9 @@ import {
     History as HistoryIcon,
     CalendarCheck,
     Users,
-    Info
+    Info,
+    Trash2,
+    AlertTriangle
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -56,10 +58,20 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { 
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
 
-// Domingo como primeiro dia da semana
 const weekDays = [
   { id: 'Domingo', label: 'DOM' },
   { id: 'Segunda', label: 'SEG' },
@@ -132,6 +144,7 @@ export default function ProfilePage() {
   const avatarFileRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -234,6 +247,16 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteProfile = async () => {
+    if (!context?.activeProfile?.id) return;
+    setIsDeleting(true);
+    try {
+      await context.deleteProfile(context.activeProfile.id);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!context || !context.activeProfile) return;
     setIsProcessing(true);
@@ -268,6 +291,34 @@ export default function ProfilePage() {
                 <Button variant="outline" size="sm" onClick={() => context.exportData()} className="flex-1 sm:flex-none gap-2 text-[10px] font-bold h-10 uppercase italic">
                   <Download size={14}/> Backup JSON
                 </Button>
+                {isOwner && context.activeProfile && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="flex-1 sm:flex-none gap-2 text-[10px] font-bold h-10 uppercase italic">
+                        <Trash2 size={14}/> Excluir Atleta
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-card border-border">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="font-headline font-black uppercase italic text-destructive flex items-center gap-2">
+                          <AlertTriangle size={20}/> Atenção Total
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm">
+                          Esta ação excluirá permanentemente o perfil de <strong>{context.activeProfile.name}</strong> e todo o seu histórico de treinos. Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="font-bold uppercase italic">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleDeleteProfile}
+                          className="bg-destructive text-white font-bold uppercase italic"
+                        >
+                          Confirmar Exclusão
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
           </header>
 

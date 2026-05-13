@@ -28,9 +28,9 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType | null>(null);
 
-const STORAGE_KEY_PROFILES = 'corre_junto_profiles';
-const STORAGE_KEY_API_KEY = 'corre_junto_api_key';
-const STORAGE_KEY_ACTIVE_ID = 'corre_junto_active_id';
+const STORAGE_KEY_PROFILES = 'corre_junto_profiles_v2';
+const STORAGE_KEY_API_KEY = 'corre_junto_api_key_v2';
+const STORAGE_KEY_ACTIVE_ID = 'corre_junto_active_id_v2';
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -41,22 +41,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
 
   useEffect(() => {
+    // Sincronização inicial com o LocalStorage
     const savedProfiles = localStorage.getItem(STORAGE_KEY_PROFILES);
     const savedApiKey = localStorage.getItem(STORAGE_KEY_API_KEY);
     const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_ID);
 
-    if (savedProfiles) setProfiles(JSON.parse(savedProfiles));
+    if (savedProfiles) {
+      try {
+        setProfiles(JSON.parse(savedProfiles));
+      } catch (e) {
+        console.error("Falha ao parsear perfis do storage", e);
+      }
+    }
     if (savedApiKey) setApiKeyInternal(savedApiKey);
     if (savedActiveId) setActiveProfileId(savedActiveId);
 
     setIsHydrated(true);
   }, []);
 
+  // Sempre que os dados mudarem, salvamos no storage
   useEffect(() => {
     if (isHydrated) {
       localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(profiles));
       if (apiKey) localStorage.setItem(STORAGE_KEY_API_KEY, apiKey);
       if (activeProfileId) localStorage.setItem(STORAGE_KEY_ACTIVE_ID, activeProfileId);
+      else localStorage.removeItem(STORAGE_KEY_ACTIVE_ID);
     }
   }, [profiles, apiKey, activeProfileId, isHydrated]);
 
@@ -86,7 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteProfile = async (id: string) => {
     setProfiles(prev => prev.filter(p => p.id !== id));
     if (activeProfileId === id) setActiveProfileId(null);
-    toast({ title: "Atleta removido localmente" });
+    toast({ title: "Atleta removido com sucesso!" });
   };
 
   const activeProfile = profiles.find(p => p.id === activeProfileId) || null;
@@ -118,7 +127,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setPlanGenerationStatus('pending');
     try {
-      // Ajusta o volume semanal baseado na nova categorização de experiência por distância
       let weeklyMileageGoal = 30;
       if (profile.experienceLevel === 'beginner') weeklyMileageGoal = 25;
       else if (profile.experienceLevel === 'intermediate') weeklyMileageGoal = 45;
@@ -174,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       exportData: () => {
         const data = JSON.stringify({ profiles, apiKey });
         const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
-        const a = document.createElement('a'); a.href = url; a.download = `corre_junto_local_backup.json`; a.click();
+        const a = document.createElement('a'); a.href = url; a.download = `corre_junto_backup.json`; a.click();
       },
       importData: (json: string) => {
         try {
