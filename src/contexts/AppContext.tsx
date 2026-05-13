@@ -83,6 +83,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const activeProfile = useMemo(() => profiles.find(p => p.id === activeProfileId) || null, [profiles, activeProfileId]);
 
   useEffect(() => {
+    // Se o usuário logado está em um perfil que não é dele e ele não tem chave própria,
+    // buscamos a chave do dono (treinador) do perfil.
     if (activeProfile && user && activeProfile.ownerUid !== user.uid && !userApiKey) {
       const trainerRef = doc(db, 'user_data', activeProfile.ownerUid);
       const unsubscribe = onSnapshot(trainerRef, (snap) => {

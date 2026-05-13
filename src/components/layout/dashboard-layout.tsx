@@ -101,7 +101,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ title: "Sincronização Ativa!", description: "Acessando seu laboratório de performance." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      toast({ variant: "destructive", title: "Falha na Autenticação", description: "Verifique a configuração do seu projeto Firebase." });
+      let errorMessage = "Certifique-se de que a API Identity Toolkit está ATIVA no console do Google e que o domínio está autorizado.";
+      
+      if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = "O provedor Google não está ativado no Firebase Console. Vá em Authentication > Método de Login e ative o Google.";
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = `O domínio ${window.location.hostname} não está autorizado no Firebase Console > Authentication > Settings > Authorized Domains.`;
+      }
+
+      toast({ 
+        variant: "destructive", 
+        title: "Falha na Autenticação", 
+        description: errorMessage,
+        duration: 10000,
+      });
     }
   };
 
