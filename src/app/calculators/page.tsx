@@ -30,6 +30,12 @@ import {
   Info,
   Lightbulb
 } from "lucide-react";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -290,501 +296,226 @@ export default function CalculatorsPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
-        <header className="px-4">
-          <h1 className="text-3xl md:text-5xl font-headline font-black uppercase italic tracking-tighter leading-none">
-            <span className="text-white">CENTRAL DE</span> <br/>
-            <span className="text-primary">CÁLCULOS ELITE</span>
-          </h1>
-          <p className="text-muted-foreground text-sm md:text-lg font-medium max-w-2xl mt-4">
-            Ferramentas técnicas calibradas para precisão de performance. Entenda seus números para dominar seu asfalto.
-          </p>
-        </header>
+      <TooltipProvider>
+        <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+          <header className="px-4">
+            <h1 className="text-3xl md:text-5xl font-headline font-black uppercase italic tracking-tighter leading-none">
+              <span className="text-white">CENTRAL DE</span> <br/>
+              <span className="text-primary">CÁLCULOS ELITE</span>
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-lg font-medium max-w-2xl mt-4">
+              Ferramentas técnicas calibradas para precisão de performance. Entenda seus números para dominar seu asfalto.
+            </p>
+          </header>
 
-        <Tabs defaultValue="essenciais" className="w-full">
-          <div className="px-4 sticky top-16 z-20 bg-background/95 backdrop-blur-md py-4 border-b border-border/10">
-            <TabsList className="grid w-full grid-cols-2 bg-secondary/20 p-1.5 rounded-2xl h-auto gap-2 shadow-inner">
-              <TabsTrigger value="essenciais" className="py-4 font-black text-xs md:text-sm uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">
-                <Zap className="size-4" /> Básicos
-              </TabsTrigger>
-              <TabsTrigger value="planejamento" className="py-4 font-black text-xs md:text-sm uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">
-                <Target className="size-4" /> Planejamento
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <Tabs defaultValue="essenciais" className="w-full">
+            <div className="px-4 sticky top-16 z-20 bg-background/95 backdrop-blur-md py-4 border-b border-border/10">
+              <TabsList className="grid w-full grid-cols-2 bg-secondary/20 p-1.5 rounded-2xl h-auto gap-2 shadow-inner">
+                <TabsTrigger value="essenciais" className="py-4 font-black text-xs md:text-sm uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">
+                  <Zap className="size-4" /> Básicos
+                </TabsTrigger>
+                <TabsTrigger value="planejamento" className="py-4 font-black text-xs md:text-sm uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">
+                  <Target className="size-4" /> Planejamento
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-          {/* --- ABA ESSENCIAIS --- */}
-          <TabsContent value="essenciais" className="mt-8 space-y-8 px-4 animate-in slide-in-from-bottom-4 duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* PACE */}
-              <Card className="bg-card/40 border-border/50 flex flex-col hover:border-primary/40 transition-colors rounded-2xl shadow-xl overflow-hidden">
-                <CardHeader className="pb-4 bg-secondary/10 border-b border-border/10">
-                   <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
-                     <Activity className="size-3" /> Calcular Pace
-                   </CardTitle>
-                   <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Descubra o ritmo médio necessário para o tempo alvo.</p>
-                </CardHeader>
-                <CardContent className="space-y-6 pt-6">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Distância (km)</Label>
-                    <Input type="number" value={pDist} onChange={e => setPDist(e.target.value)} className="bg-black/30 h-14 text-2xl font-black border-border/40 focus:border-primary text-center rounded-xl" />
-                    <div className="grid grid-cols-4 gap-2">
-                      {["5", "10", "21.1", "42.2"].map(v => (
-                        <Button key={v} variant="secondary" size="sm" className={cn("h-10 text-[9px] font-black uppercase rounded-lg transition-all", pDist === v ? "bg-primary text-black" : "bg-secondary/40 hover:bg-secondary/60")} onClick={() => setPDist(v)}>
-                          {v === "21.1" ? "Meia" : v === "42.2" ? "Marat" : v + "k"}
-                        </Button>
-                      ))}
+            {/* --- ABA ESSENCIAIS --- */}
+            <TabsContent value="essenciais" className="mt-8 space-y-8 px-4 animate-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* PACE */}
+                <Card className="bg-card/40 border-border/50 flex flex-col hover:border-primary/40 transition-colors rounded-2xl shadow-xl overflow-hidden">
+                  <CardHeader className="pb-4 bg-secondary/10 border-b border-border/10">
+                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
+                      <Activity className="size-3" /> Calcular Pace
+                    </CardTitle>
+                    <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Descubra o ritmo médio necessário para o tempo alvo.</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6 pt-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Distância (km)</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help" /></TooltipTrigger>
+                          <TooltipContent><p className="max-w-xs text-[10px]">A distância total que você pretende percorrer.</p></TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Input type="number" value={pDist} onChange={e => setPDist(e.target.value)} className="bg-black/30 h-14 text-2xl font-black border-border/40 focus:border-primary text-center rounded-xl" />
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest text-center block">Tempo Final</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="space-y-1">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest text-center block">Tempo Final</Label>
+                      <div className="grid grid-cols-3 gap-2">
                         <Input type="number" placeholder="H" value={pTimeH} onChange={e => setPTimeH(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
-                        <span className="text-[8px] block text-center opacity-50 uppercase font-bold">Horas</span>
-                      </div>
-                      <div className="space-y-1">
                         <Input type="number" placeholder="M" value={pTimeM} onChange={e => setPTimeM(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
-                        <span className="text-[8px] block text-center opacity-50 uppercase font-bold">Min</span>
-                      </div>
-                      <div className="space-y-1">
                         <Input type="number" placeholder="S" value={pTimeS} onChange={e => setPTimeS(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
-                        <span className="text-[8px] block text-center opacity-50 uppercase font-bold">Seg</span>
                       </div>
                     </div>
-                  </div>
-                  <Button className="w-full h-14 bg-primary text-black font-black uppercase text-xs tracking-widest rounded-xl shadow-lg shadow-primary/10" onClick={calcPaceAction}>Calcular</Button>
-                  {pResult && (
-                    <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 group relative shadow-inner">
-                      <div className="text-[10px] font-black uppercase text-emerald-400 mb-1 tracking-widest">Ritmo Médio</div>
-                      <div className="text-4xl font-black italic text-emerald-400 leading-none">{pResult} <small className="text-xs font-bold opacity-60">min/km</small></div>
-                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 size-8 hover:bg-emerald-500/20" onClick={() => copyToClipboard(pResult, "Pace")}>
-                        <Copy className="size-4" />
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <Button className="w-full h-14 bg-primary text-black font-black uppercase text-xs tracking-widest rounded-xl shadow-lg shadow-primary/10" onClick={calcPaceAction}>Calcular</Button>
+                  </CardContent>
+                </Card>
 
-              {/* TEMPO */}
-              <Card className="bg-card/40 border-border/50 flex flex-col hover:border-primary/40 transition-colors rounded-2xl shadow-xl overflow-hidden">
-                <CardHeader className="pb-4 bg-secondary/10 border-b border-border/10">
-                   <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
-                     <Clock className="size-3" /> Calcular Tempo
-                   </CardTitle>
-                   <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Estime seu tempo de chegada baseando-se no ritmo.</p>
-                </CardHeader>
-                <CardContent className="space-y-6 pt-6">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Distância (km)</Label>
-                    <Input type="number" value={tDist} onChange={e => setTDist(e.target.value)} className="bg-black/30 h-14 text-2xl font-black text-center rounded-xl" />
-                    <div className="grid grid-cols-4 gap-2">
-                      {["5", "10", "21.1", "42.2"].map(v => (
-                        <Button key={v} variant="secondary" size="sm" className={cn("h-10 text-[9px] font-black uppercase rounded-lg", tDist === v ? "bg-primary text-black" : "bg-secondary/40")} onClick={() => setTDist(v)}>
-                          {v === "21.1" ? "Meia" : v === "42.2" ? "Marat" : v + "k"}
-                        </Button>
-                      ))}
+                {/* TEMPO */}
+                <Card className="bg-card/40 border-border/50 flex flex-col hover:border-primary/40 transition-colors rounded-2xl shadow-xl overflow-hidden">
+                  <CardHeader className="pb-4 bg-secondary/10 border-b border-border/10">
+                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
+                      <Clock className="size-3" /> Calcular Tempo
+                    </CardTitle>
+                    <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Estime seu tempo de chegada baseando-se no ritmo.</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6 pt-6">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Distância (km)</Label>
+                      <Input type="number" value={tDist} onChange={e => setTDist(e.target.value)} className="bg-black/30 h-14 text-2xl font-black text-center rounded-xl" />
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Pace Alvo (min/km)</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Pace Alvo (min/km)</Label>
+                      <div className="grid grid-cols-2 gap-2">
                         <Input type="number" placeholder="Min" value={tPaceM} onChange={e => setTPaceM(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
-                        <span className="text-[8px] block text-center opacity-50 uppercase font-bold">Minutos</span>
-                      </div>
-                      <div className="space-y-1">
                         <Input type="number" placeholder="Seg" value={tPaceS} onChange={e => setTPaceS(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
-                        <span className="text-[8px] block text-center opacity-50 uppercase font-bold">Segundos</span>
                       </div>
                     </div>
-                  </div>
-                  <Button className="w-full h-14 bg-primary text-black font-black uppercase text-xs tracking-widest rounded-xl" onClick={calcTimeAction}>Calcular</Button>
-                  {tResult && (
-                    <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 group relative shadow-inner">
-                      <div className="text-[10px] font-black uppercase text-emerald-400 mb-1 tracking-widest">Tempo Previsto</div>
-                      <div className="text-4xl font-black italic text-emerald-400 leading-none">{tResult}</div>
-                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 size-8" onClick={() => copyToClipboard(tResult, "Tempo")}>
-                        <Copy className="size-4" />
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <Button className="w-full h-14 bg-primary text-black font-black uppercase text-xs tracking-widest rounded-xl" onClick={calcTimeAction}>Calcular</Button>
+                  </CardContent>
+                </Card>
 
-              {/* DISTÂNCIA */}
-              <Card className="bg-card/40 border-border/50 flex flex-col hover:border-primary/40 transition-colors rounded-2xl shadow-xl overflow-hidden">
-                <CardHeader className="pb-4 bg-secondary/10 border-b border-border/10">
-                   <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
-                     <Milestone className="size-3" /> Calcular Distância
-                   </CardTitle>
-                   <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Quanto você percorrerá no tempo que tem disponível?</p>
-                </CardHeader>
-                <CardContent className="space-y-6 pt-6">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Tempo Total</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Input type="number" placeholder="H" value={dTimeH} onChange={e => setDTimeH(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
-                      <Input type="number" placeholder="M" value={dTimeM} onChange={e => setDTimeM(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
-                      <Input type="number" placeholder="S" value={dTimeS} onChange={e => setDTimeS(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
+                {/* DISTÂNCIA */}
+                <Card className="bg-card/40 border-border/50 flex flex-col hover:border-primary/40 transition-colors rounded-2xl shadow-xl overflow-hidden">
+                  <CardHeader className="pb-4 bg-secondary/10 border-b border-border/10">
+                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
+                      <Milestone className="size-3" /> Calcular Distância
+                    </CardTitle>
+                    <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Quanto você percorrerá no tempo que tem disponível?</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6 pt-6">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Tempo Total</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Input type="number" placeholder="H" value={dTimeH} onChange={e => setDTimeH(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
+                        <Input type="number" placeholder="M" value={dTimeM} onChange={e => setDTimeM(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
+                        <Input type="number" placeholder="S" value={dTimeS} onChange={e => setDTimeS(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Pace Médio</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input type="number" placeholder="Min" value={dPaceM} onChange={e => setDPaceM(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
-                      <Input type="number" placeholder="Seg" value={dPaceS} onChange={e => setDPaceS(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Pace Médio</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input type="number" placeholder="Min" value={dPaceM} onChange={e => setDPaceM(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
+                        <Input type="number" placeholder="Seg" value={dPaceS} onChange={e => setDPaceS(e.target.value)} className="bg-black/30 h-12 text-center text-lg font-black rounded-xl" />
+                      </div>
                     </div>
-                  </div>
-                  <Button className="w-full h-14 bg-primary text-black font-black uppercase text-xs tracking-widest rounded-xl" onClick={calcDistAction}>Calcular</Button>
-                  {dResult && (
-                    <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 group relative shadow-inner">
-                      <div className="text-[10px] font-black uppercase text-emerald-400 mb-1 tracking-widest">Distância Estimada</div>
-                      <div className="text-4xl font-black italic text-emerald-400 leading-none">{dResult}</div>
-                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 size-8" onClick={() => copyToClipboard(dResult, "Distância")}>
-                        <Copy className="size-4" />
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <Button className="w-full h-14 bg-primary text-black font-black uppercase text-xs tracking-widest rounded-xl" onClick={calcDistAction}>Calcular</Button>
+                  </CardContent>
+                </Card>
 
-              {/* ESTEIRA */}
-              <Card className="bg-card/40 border-border/50 flex flex-col hover:border-primary/40 transition-colors rounded-2xl shadow-xl overflow-hidden">
-                <CardHeader className="pb-4 bg-secondary/10 border-b border-border/10">
-                   <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
-                     <MoveRight className="size-3" /> Conversor Esteira
-                   </CardTitle>
-                   <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Alinhe seu pace (min/km) com a velocidade (km/h).</p>
-                </CardHeader>
-                <CardContent className="space-y-8 pt-6">
-                   <div className="space-y-4">
+                {/* ESTEIRA */}
+                <Card className="bg-card/40 border-border/50 flex flex-col hover:border-primary/40 transition-colors rounded-2xl shadow-xl overflow-hidden">
+                  <CardHeader className="pb-4 bg-secondary/10 border-b border-border/10">
+                    <CardTitle className="text-[10px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
+                      <MoveRight className="size-3" /> Conversor Esteira
+                    </CardTitle>
+                    <p className="text-[9px] text-muted-foreground italic leading-tight mt-1">Alinhe seu pace (min/km) com a velocidade (km/h).</p>
+                  </CardHeader>
+                  <CardContent className="space-y-8 pt-6">
+                    <div className="space-y-4">
                       <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Ritmo ➔ Velocidade</Label>
                       <div className="flex gap-2">
                         <Input type="number" placeholder="Min" value={ePaceM} onChange={e => setEPaceM(e.target.value)} className="bg-black/30 h-14 text-center text-lg font-black rounded-xl flex-1" />
                         <Input type="number" placeholder="Seg" value={ePaceS} onChange={e => setEPaceS(e.target.value)} className="bg-black/30 h-14 text-center text-lg font-black rounded-xl flex-1" />
                         <Button variant="outline" className="shrink-0 h-14 w-14 border-primary/30 text-primary hover:bg-primary/20 rounded-xl" onClick={calcVelFromPace}><MoveRight size={20} /></Button>
                       </div>
-                      {eResVel && <div className="text-lg font-black text-center text-primary animate-in fade-in py-2 bg-primary/5 rounded-xl border border-primary/10 tracking-widest">{eResVel}</div>}
-                   </div>
-                   <div className="space-y-4 border-t border-border/20 pt-6">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Velocidade ➔ Ritmo</Label>
-                      <div className="flex gap-2">
-                        <Input type="number" value={eVel} onChange={e => setEVel(e.target.value)} className="bg-black/30 h-14 text-center flex-1 text-2xl font-black rounded-xl" />
-                        <Button variant="outline" className="shrink-0 h-14 w-14 border-primary/30 text-primary hover:bg-primary/20 rounded-xl" onClick={calcPaceFromVel}><MoveRight size={20} /></Button>
-                      </div>
-                      {eResPace && <div className="text-lg font-black text-center text-primary animate-in fade-in py-2 bg-primary/5 rounded-xl border border-primary/10 tracking-widest">{eResPace} min/km</div>}
-                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* --- ABA PLANEJAMENTO --- */}
-          <TabsContent value="planejamento" className="mt-8 space-y-8 px-4 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* ESTRATÉGIA DE PACE */}
-              <Card className="lg:col-span-2 bg-card/40 border-border/50 overflow-hidden shadow-2xl rounded-3xl">
-                <CardHeader className="bg-secondary/10 border-b border-border/20 py-8 px-8">
-                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                     <CardTitle className="text-lg font-black uppercase italic text-primary flex items-center gap-3 tracking-tighter">
-                       <TrendingUp size={24} /> Pacing de Prova Estratégico
-                     </CardTitle>
-                     <div className="flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full border border-primary/20">
-                        <Lightbulb size={14} className="text-primary" />
-                        <span className="text-[9px] font-black uppercase text-muted-foreground italic">Distribuição técnica de esforço</span>
-                     </div>
-                   </div>
-                </CardHeader>
-                <CardContent className="pt-10 px-8 pb-12 space-y-12">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Perfil da Estratégia</Label>
-                      <span className="text-[10px] text-primary italic font-bold">Influencia como você gasta energia</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
-                       {[
-                         { id: "negative", label: "Negativo", desc: "Inicie conservador e termine forte (ideal para RPs).", color: "bg-[#a761d4]" },
-                         { id: "even", label: "Constante", desc: "Mantenha o mesmo ritmo do início ao fim (ideal para controle total).", color: "bg-[#a761d4]" },
-                         { id: "positive", label: "Positivo", desc: "Comece rápido e controle a queda no final (Estratégia agressiva).", color: "bg-[#a761d4]" }
-                       ].map(type => (
-                         <Button 
-                           key={type.id} 
-                           size="lg" 
-                           variant={sType === type.id ? "default" : "secondary"} 
-                           className={cn(
-                             "flex-1 h-14 font-black uppercase px-3 italic rounded-2xl transition-all border-2 border-transparent", 
-                             sType === type.id ? `${type.color} text-white shadow-xl shadow-purple-500/20 border-white/10` : "bg-secondary/40 text-muted-foreground hover:bg-secondary/60"
-                           )} 
-                           onClick={() => setSType(type.id as any)}
-                         >
-                            {type.label}
-                         </Button>
-                       ))}
-                    </div>
-                    <p className="text-center text-sm italic text-muted-foreground min-h-[1.5rem] animate-in fade-in duration-300 font-medium">
-                      {sType === "negative" && "Inicie conservador e termine forte (ideal para RPs)."}
-                      {sType === "even" && "Mantenha o mesmo ritmo do início ao fim (ideal para controle total)."}
-                      {sType === "positive" && "Comece rápido e controle a queda no final (Estratégia agressiva)."}
-                    </p>
-                  </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
-                    <div className="space-y-4">
-                       <Label className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Distância (km)</Label>
-                       <Input type="number" value={sDist} onChange={e => setSDist(e.target.value)} className="bg-black/30 h-16 font-black text-4xl border-border/40 focus:border-accent text-center rounded-2xl" />
-                       <div className="grid grid-cols-4 gap-2">
-                          {[
-                            { label: "5K", val: "5" },
-                            { label: "10K", val: "10" },
-                            { label: "MEIA", val: "21.1" },
-                            { label: "MARATONA", val: "42.2" }
-                          ].map(d => (
-                            <Button key={d.label} variant="secondary" className={cn("h-10 text-[10px] font-black rounded-xl transition-all", sDist === d.val ? "bg-primary text-black" : "bg-secondary/40")} onClick={() => setSDist(d.val)}>
-                              {d.label}
-                            </Button>
-                          ))}
-                       </div>
-                    </div>
-                    <div className="space-y-4">
-                       <Label className="text-xs font-black uppercase italic tracking-widest text-muted-foreground text-center block">Tempo Alvo</Label>
-                       <div className="grid grid-cols-3 gap-3">
-                          <div className="space-y-1">
-                            <Input type="number" placeholder="H" value={sTimeH} onChange={e => setSTimeH(e.target.value)} className="bg-black/30 h-16 text-center font-black text-3xl rounded-2xl" />
-                            <span className="text-[10px] block text-center font-bold opacity-40 uppercase">H</span>
-                          </div>
-                          <div className="space-y-1">
-                            <Input type="number" placeholder="M" value={sTimeM} onChange={e => setSTimeM(e.target.value)} className="bg-black/30 h-16 text-center font-black text-3xl rounded-2xl" />
-                            <span className="text-[10px] block text-center font-bold opacity-40 uppercase">Min</span>
-                          </div>
-                          <div className="space-y-1">
-                            <Input type="number" placeholder="S" value={sTimeS} onChange={e => setSTimeS(e.target.value)} className="bg-black/30 h-16 text-center font-black text-3xl rounded-2xl" />
-                            <span className="text-[10px] block text-center font-bold opacity-40 uppercase">Seg</span>
-                          </div>
-                       </div>
-                    </div>
-                  </div>
-
-                  <Button className="w-full h-16 bg-primary text-black font-black uppercase italic tracking-[0.2em] text-xl shadow-2xl shadow-primary/20 rounded-2xl hover:scale-[1.01] active:scale-[0.98] transition-all" onClick={calcStrategyAction}>Gerar Estratégia</Button>
-
-                  {sResult && (
-                    <div className="space-y-10 animate-in slide-in-from-bottom-8 duration-700">
-                       <div className="p-8 rounded-3xl bg-secondary/20 border border-primary/20 relative shadow-2xl overflow-hidden">
-                          <div className="absolute -top-10 -right-10 size-40 bg-primary/5 blur-3xl rounded-full" />
-                          <Button variant="ghost" size="icon" className="absolute top-6 right-6 text-muted-foreground hover:text-primary transition-colors" onClick={copyStrategyElite}>
-                            <Copy size={20} />
-                          </Button>
-                          <h3 className="text-center font-black uppercase italic text-lg mb-8 tracking-widest">Ritmo Médio Alvo: <span className="text-primary text-3xl ml-2">{sResult.avgPace} <small className="text-sm">min/km</small></span></h3>
-                          <div className="space-y-6">
-                             {sResult.segments.map((seg: any, i: number) => (
-                               <div key={i} className="flex justify-between items-center border-b border-border/10 pb-5 last:border-0 last:pb-0">
-                                  <div className="space-y-1">
-                                    <div className="text-sm font-black text-white italic uppercase tracking-wider">{seg.label}</div>
-                                    <div className="text-[11px] text-muted-foreground font-medium max-w-[200px] leading-tight">{seg.desc}</div>
-                                  </div>
-                                  <div className="text-primary font-black italic text-2xl tracking-tighter">{seg.pace}</div>
-                               </div>
-                             ))}
-                          </div>
-                       </div>
-
-                       <div className="space-y-6">
-                          <div className="text-xs font-black uppercase italic text-primary tracking-[0.2em] flex items-center gap-2 px-1">
-                            <IterationCcw size={16} /> Checkpoints por Quilômetro
-                          </div>
-                          <div className="rounded-3xl border border-border/30 bg-black/20 overflow-hidden shadow-2xl">
-                             <div className="grid grid-cols-3 p-5 bg-secondary/40 text-[10px] font-black text-muted-foreground uppercase italic border-b border-border/20 tracking-widest">
-                                <span>KM</span>
-                                <span className="text-center">Passagem</span>
-                                <span className="text-right">Ritmo do Trecho</span>
-                             </div>
-                             <div className="divide-y divide-border/10 max-h-[500px] overflow-y-auto custom-scrollbar">
-                                {sResult.splits.map((split: any, idx: number) => (
-                                  <div key={idx} className={cn("grid grid-cols-3 p-5 hover:bg-white/5 transition-colors items-center", idx === sResult.splits.length -1 && "bg-primary/10 border-t border-primary/30")}>
-                                     <span className="text-sm font-bold text-white italic">{split.km}</span>
-                                     <span className="text-center text-primary font-black italic text-lg">{split.time}</span>
-                                     <span className="text-right text-[11px] text-muted-foreground italic font-bold">{split.pace}</span>
-                                  </div>
-                                ))}
-                             </div>
-                          </div>
-                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <div className="space-y-8">
-                {/* PREVISÃO */}
-                <Card className="bg-card/40 border-border/50 rounded-2xl shadow-xl">
-                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6">
-                    <CardTitle className="text-[11px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
-                      <IterationCcw className="size-4" /> Previsão de Prova (Riegel)
+            {/* --- ABA PLANEJAMENTO --- */}
+            <TabsContent value="planejamento" className="mt-8 space-y-8 px-4 animate-in fade-in duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* ESTRATÉGIA DE PACE */}
+                <Card className="lg:col-span-2 bg-card/40 border-border/50 overflow-hidden shadow-2xl rounded-3xl">
+                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-8 px-8">
+                    <CardTitle className="text-lg font-black uppercase italic text-primary flex items-center gap-3 tracking-tighter">
+                      <TrendingUp size={24} /> Pacing de Prova Estratégico
                     </CardTitle>
-                    <p className="text-[9px] text-muted-foreground italic leading-tight mt-2">Usa um resultado real para projetar seu potencial em outras distâncias.</p>
                   </CardHeader>
-                  <CardContent className="pt-8 px-6 space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <Label className="text-[9px] font-bold uppercase tracking-widest opacity-70">Distância Ref. (km)</Label>
-                          <Input type="number" value={prDist} onChange={e => setPRDist(e.target.value)} className="bg-black/20 h-12 font-black text-lg rounded-xl text-center" />
-                       </div>
-                       <div className="space-y-2">
-                          <Label className="text-[9px] font-bold uppercase tracking-widest opacity-70">Tempo Ref.</Label>
-                          <div className="flex gap-1.5">
-                            <Input type="number" placeholder="M" value={prTimeM} onChange={e => setPRTimeM(e.target.value)} className="bg-black/20 h-12 text-center px-1 font-black rounded-xl flex-1" />
-                            <Input type="number" placeholder="S" value={prTimeS} onChange={e => setPRTimeS(e.target.value)} className="bg-black/20 h-12 text-center px-1 font-black rounded-xl flex-1" />
-                          </div>
-                       </div>
-                    </div>
-                    <Button variant="outline" className="w-full h-12 text-[11px] border-primary/30 text-primary font-black uppercase italic tracking-widest rounded-xl hover:bg-primary hover:text-black transition-all" onClick={calcPredictorAction}>Simular Projeções</Button>
-                    {prRes && (
-                      <div className="space-y-3 border-t border-border/20 pt-6 animate-in zoom-in-95">
-                        {prRes.map(r => (
-                          <div key={r.dist} className="flex justify-between items-center p-4 rounded-2xl bg-black/30 border border-border/20 hover:border-primary/20 transition-all">
-                            <span className="text-xs font-black uppercase italic text-muted-foreground tracking-tighter">{r.dist}</span>
-                            <div className="text-right">
-                               <div className="text-lg font-black text-white italic leading-none">{r.time}</div>
-                               <div className="text-[10px] text-primary italic font-bold mt-1 tracking-widest">{r.pace} min/km</div>
-                            </div>
-                          </div>
+                  <CardContent className="pt-10 px-8 pb-12 space-y-12">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Perfil da Estratégia</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild><Info className="size-4 text-muted-foreground cursor-help" /></TooltipTrigger>
+                          <TooltipContent><p className="max-w-xs text-sm">Define como você distribuirá seu esforço ao longo da prova.</p></TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {["negative", "even", "positive"].map(type => (
+                          <Button 
+                            key={type} 
+                            variant={sType === type ? "default" : "secondary"} 
+                            className={cn("h-14 font-black uppercase italic rounded-2xl", sType === type ? "bg-primary text-black" : "bg-secondary/40")}
+                            onClick={() => setSType(type as any)}
+                          >
+                            {type === 'negative' ? 'Negativo' : type === 'even' ? 'Constante' : 'Positivo'}
+                          </Button>
                         ))}
                       </div>
-                    )}
+                    </div>
+                    <Button className="w-full h-16 bg-primary text-black font-black uppercase italic tracking-widest text-xl rounded-2xl" onClick={calcStrategyAction}>Gerar Estratégia</Button>
                   </CardContent>
                 </Card>
 
                 {/* HIDRATAÇÃO */}
                 <Card className="bg-card/40 border-border/50 rounded-2xl shadow-xl">
-                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6 flex items-center justify-between">
+                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6">
                     <CardTitle className="text-[11px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
                       <Droplets className="size-4" /> Nutrição & Hidratação
                     </CardTitle>
-                    {hRes && (
-                      <Button variant="ghost" size="icon" onClick={copyHydrationElite} className="size-8 text-muted-foreground hover:text-primary">
-                        <Copy className="size-4" />
-                      </Button>
-                    )}
                   </CardHeader>
                   <CardContent className="pt-6 px-6 space-y-6">
-                    <p className="text-[9px] text-muted-foreground italic leading-tight">Previna a desidratação e o "bonking" (quebra de glicogênio) com cálculos de eletrólitos e géis.</p>
                     <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
                           <Label className="text-[9px] font-bold uppercase tracking-widest opacity-70">Peso (kg)</Label>
-                          <Input type="number" value={hWeight} onChange={e => setHWeight(e.target.value)} className="bg-black/20 h-12 font-black text-lg rounded-xl text-center" />
-                       </div>
-                       <div className="space-y-2">
-                          <Label className="text-[9px] font-bold uppercase tracking-widest opacity-70">Duração (H/M)</Label>
-                          <div className="flex gap-1.5">
-                            <Input type="number" placeholder="H" value={hDurH} onChange={e => setHDurH(e.target.value)} className="bg-black/20 h-12 text-center px-1 font-black rounded-xl flex-1" />
-                            <Input type="number" placeholder="M" value={hDurM} onChange={e => setHDurM(e.target.value)} className="bg-black/20 h-12 text-center px-1 font-black rounded-xl flex-1" />
-                          </div>
-                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <Label className="text-[9px] font-bold uppercase tracking-widest opacity-70">Clima</Label>
-                          <Select value={hClimate} onValueChange={setHClimate}>
-                             <SelectTrigger className="h-12 text-xs bg-black/20 font-black rounded-xl border-border/40"><SelectValue /></SelectTrigger>
-                             <SelectContent className="bg-card border-border">
-                               <SelectItem value="0.8">Frio</SelectItem>
-                               <SelectItem value="1.0">Moderado</SelectItem>
-                               <SelectItem value="1.25">Quente</SelectItem>
-                               <SelectItem value="1.5">Extremo</SelectItem>
-                             </SelectContent>
-                          </Select>
-                       </div>
-                       <div className="space-y-2">
-                          <Label className="text-[9px] font-bold uppercase tracking-widest opacity-70">Intensidade</Label>
-                          <Select value={hInt} onValueChange={setHInt}>
-                             <SelectTrigger className="h-12 text-xs bg-black/20 font-black rounded-xl border-border/40"><SelectValue /></SelectTrigger>
-                             <SelectContent className="bg-card border-border">
-                               <SelectItem value="0.8">Leve (Z2)</SelectItem>
-                               <SelectItem value="1.0">Moderado (Z3)</SelectItem>
-                               <SelectItem value="1.2">Forte (Z4)</SelectItem>
-                               <SelectItem value="1.4">Máximo (Z5)</SelectItem>
-                             </SelectContent>
-                          </Select>
-                       </div>
+                          <Tooltip>
+                            <TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help" /></TooltipTrigger>
+                            <TooltipContent><p className="max-w-xs text-[10px]">Utilizado para calcular a taxa de suor e perda de eletrólitos.</p></TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <Input type="number" value={hWeight} onChange={e => setHWeight(e.target.value)} className="bg-black/20 h-12 font-black text-lg rounded-xl text-center" />
+                      </div>
                     </div>
                     <Button variant="outline" className="w-full h-12 text-[11px] border-primary/30 text-primary font-black uppercase italic tracking-widest rounded-xl hover:bg-primary hover:text-black" onClick={calcHidraAction}>Calcular Planejamento</Button>
-                    {hRes && (
-                      <div className="grid grid-cols-2 gap-4 animate-in zoom-in-95">
-                         <div className="p-4 rounded-2xl bg-black/30 border border-border/20 text-center shadow-xl">
-                            <div className="text-[9px] font-black uppercase text-muted-foreground mb-1 tracking-widest">Total Líquido</div>
-                            <div className="text-2xl font-black text-primary italic leading-none">{hRes.vol}ml</div>
-                         </div>
-                         <div className="p-4 rounded-2xl bg-black/30 border border-border/20 text-center shadow-xl">
-                            <div className="text-[9px] font-black uppercase text-muted-foreground mb-1 tracking-widest">Dose / 15min</div>
-                            <div className="text-2xl font-black text-primary italic leading-none">{hRes.per15}ml</div>
-                         </div>
-                         <div className="col-span-2 p-5 rounded-2xl bg-primary/5 border border-primary/10 space-y-3 shadow-inner">
-                            <div className="flex items-center gap-3 text-xs mb-1 text-primary italic font-black uppercase tracking-widest">
-                               <Zap size={16} className="text-yellow-500 fill-yellow-500" /> Nutrição Esportiva:
-                            </div>
-                            <div className="text-[11px] text-muted-foreground font-medium italic leading-relaxed space-y-2">
-                               <p>• <strong className="text-white">Eletrólitos:</strong> {hRes.caps} cápsula(s) de 250mg de sódio.</p>
-                               <p>• <strong className="text-white">Energia:</strong> ~{hRes.carb}g de carboidratos (aprox. {Math.max(1, Math.ceil(hRes.carb / 25))} géis).</p>
-                            </div>
-                         </div>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
 
                 {/* ZONAS FC */}
                 <Card className="bg-card/40 border-border/50 rounded-2xl shadow-xl">
-                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6 flex items-center justify-between">
+                  <CardHeader className="bg-secondary/10 border-b border-border/20 py-5 px-6">
                     <CardTitle className="text-[11px] font-black uppercase italic text-primary flex items-center gap-2 tracking-widest">
                       <Heart className="size-4" /> Zonas de Esforço (FC)
                     </CardTitle>
-                    {fcZones && (
-                      <Button variant="ghost" size="icon" onClick={copyZonesElite} className="size-8 text-muted-foreground hover:text-primary">
-                        <Copy className="size-4" />
-                      </Button>
-                    )}
                   </CardHeader>
                   <CardContent className="pt-6 px-6 space-y-6">
-                    <p className="text-[9px] text-muted-foreground italic leading-tight">Calibre suas faixas de treino. O Limiar de Lactato (L2) é o padrão ouro para performance.</p>
                     <div className="grid grid-cols-3 gap-3">
-                       <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase tracking-tighter opacity-60">FC Máx</Label>
-                          <Input type="number" value={fcMax} onChange={e => setFCMax(e.target.value)} className="bg-black/20 h-12 px-1 text-center font-black rounded-xl" />
-                       </div>
-                       <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase tracking-tighter opacity-60">Repouso</Label>
-                          <Input type="number" placeholder="Opc." value={fcRest} onChange={e => setFCRest(e.target.value)} className="bg-black/20 h-12 px-1 text-center font-black rounded-xl" />
-                       </div>
-                       <div className="space-y-2">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
                           <Label className="text-[9px] font-black uppercase tracking-tighter opacity-60">Limiar L2</Label>
-                          <Input type="number" placeholder="L2" value={fcLthr} onChange={e => setFCLthr(e.target.value)} className="bg-black/20 h-12 px-1 text-center font-black rounded-xl" />
-                       </div>
+                          <Tooltip>
+                            <TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help" /></TooltipTrigger>
+                            <TooltipContent><p className="max-w-xs text-[10px]">Sua frequência cardíaca no ponto de transição aeróbica-anaeróbica (Padrão Ouro).</p></TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <Input type="number" placeholder="L2" value={fcLthr} onChange={e => setFCLthr(e.target.value)} className="bg-black/20 h-12 px-1 text-center font-black rounded-xl" />
+                      </div>
                     </div>
                     <Button variant="outline" className="w-full h-12 text-[11px] border-primary/30 text-primary font-black uppercase italic tracking-widest rounded-xl hover:bg-primary hover:text-black transition-all" onClick={calcZonesAction}>Gerar Zonas</Button>
-                    {fcZones && (
-                      <div className="space-y-2 animate-in fade-in">
-                        {fcZones.map(z => (
-                          <div key={z.label} className="flex items-center justify-between p-3.5 rounded-2xl bg-black/20 text-[11px] border border-border/10 shadow-sm">
-                             <div className="flex items-center gap-3">
-                                <div className={cn("w-1.5 h-6 rounded-full", z.color)} />
-                                <span className="font-black text-white uppercase italic tracking-tighter leading-none">{z.label}</span>
-                             </div>
-                             <span className="font-black text-primary tracking-widest">{z.range} <small className="font-normal opacity-50 text-[9px]">bpm</small></span>
-                          </div>
-                        ))}
-                        <p className="text-[10px] text-muted-foreground italic mt-5 flex items-start gap-3 bg-secondary/30 p-4 rounded-2xl leading-relaxed shadow-inner">
-                          <Info size={14} className="shrink-0 mt-0.5 text-primary" /> 
-                          {fcLthr ? "Cálculo avançado baseado no Limiar de Lactato (Padrão Elite). Ideal para quem usa medidores precisos." : "Cálculo baseado em percentual simples da FC Máxima. Para mais precisão, use a FC de Limiar (L2)."}
-                        </p>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </TooltipProvider>
     </DashboardLayout>
   );
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -14,14 +13,14 @@ import {
   Send, 
   Bot, 
   User, 
-  Sparkles, 
   Loader2, 
   MessageSquare,
   History,
   Copy,
   Check,
   Paperclip,
-  X
+  X,
+  Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -45,11 +44,11 @@ export default function CoachPage() {
   const profile = context?.activeProfile;
   const plan = context?.trainingPlan;
 
-  const [messages, setMessages] = React.useState<Message[]>([]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [attachedImage, setAttachedImage] = React.useState<string | null>(null);
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
+  const [messages, setMessages] = React.useState<Message[]>([]);
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -121,6 +120,7 @@ export default function CoachPage() {
       const planContext = plan ? `Atualmente no bloco ${plan.blockType}. Objetivo: ${profile?.raceDistance} em ${profile?.raceDate}.` : "Sem plano ativo no momento.";
 
       const response = await chatWithAICoach({
+        apiKey: context.apiKey || undefined,
         conversationHistory: messages.map(m => ({ role: m.role, parts: m.parts })),
         workoutHistory: workoutHistoryContext,
         trainingPlan: planContext,
@@ -164,7 +164,7 @@ export default function CoachPage() {
             </TabsTrigger>
             <TabsTrigger 
               value="historico" 
-              className="py-4 font-headline font-black text-xs md:text-sm uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl opacity-60"
+              className="py-4 font-headline font-black text-xs md:text-sm uppercase italic gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl"
             >
               <History className="size-4" /> Arquivo
             </TabsTrigger>

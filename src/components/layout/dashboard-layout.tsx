@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -45,6 +44,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 const items = [
   { title: "DASHBOARD", url: "/", icon: LayoutDashboard },
@@ -55,7 +55,7 @@ const items = [
   { title: "CALCULADORAS", url: "/calculators", icon: Calculator },
   { title: "DICIONÁRIO", url: "/dictionary", icon: BookOpen },
   { title: "INTEGRAÇÕES", url: "/integrations", icon: Link2 },
-  { title: "MEU PERFIL", url: "/profile", icon: User },
+  { title: "PERFIL ATLETA", url: "/profile", icon: User },
   { title: "SOBRE", url: "/about", icon: Info },
 ];
 
@@ -65,6 +65,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useUser();
   const [showKeyModal, setShowKeyModal] = React.useState(false);
   const [tempKey, setTempKey] = React.useState("");
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (context?.isHydrated && !context.apiKey && user) {
@@ -76,6 +77,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     if (tempKey.trim() && context) {
       context.setApiKey(tempKey.trim());
       setShowKeyModal(false);
+      toast({ title: "Sua IA está ativa!", description: "O sistema agora usará sua própria cota do Google." });
     }
   };
 
@@ -92,13 +94,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="flex min-h-screen bg-background w-full">
         <Sidebar collapsible="icon" className="border-r border-border/50">
-          <SidebarHeader className="py-8 px-6">
-            <div className="flex items-center gap-2">
-              <span className="font-headline font-black text-2xl tracking-tighter group-data-[collapsible=icon]:hidden italic">
-                <span className="text-white">CORRE</span>
-                <span className="text-primary">JUNTO</span>
-              </span>
-            </div>
+          <SidebarHeader className="py-8 px-4 flex items-center justify-center overflow-hidden">
+            <LogoDisplay />
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
@@ -112,7 +109,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         tooltip={item.title}
                         className={cn(
                           "transition-all duration-200 h-10 px-6",
-                          pathname === item.url ? "bg-secondary/50 text-white" : "text-muted-foreground hover:text-white"
+                          pathname === item.url ? "bg-primary text-black" : "text-muted-foreground hover:text-white"
                         )}
                       >
                         <Link href={item.url}>
@@ -126,22 +123,28 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarFooter className="p-4 border-t border-border/20">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton className="w-full text-muted-foreground hover:text-white" onClick={() => setShowKeyModal(true)}>
-                  <Key className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Configurar IA</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+          <SidebarFooter className="p-4 border-t border-border/20 space-y-2">
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                className={cn(
+                  "w-full h-12 border transition-all rounded-xl",
+                  context?.apiKey ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground border-border/20"
+                )} 
+                onClick={() => setShowKeyModal(true)}
+              >
+                <Key className="size-4" />
+                <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">
+                  {context?.apiKey ? "IA ATIVA" : "Configurar IA"}
+                </span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset className="flex-1 flex flex-col min-w-0">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-6 sticky top-0 bg-background/80 backdrop-blur-md z-30 justify-between">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="text-muted-foreground hover:text-white" />
-              <div className="font-headline font-black text-lg uppercase italic tracking-tighter hidden md:flex items-center gap-3">
+              <div className="font-headline font-black text-lg uppercase italic tracking-tighter flex items-center gap-3">
                 <span className="text-white">
                    {items.find(i => i.url === pathname)?.title || "PORTAL"}
                 </span>
@@ -176,7 +179,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               Sua Gemini API Key será salva na nuvem para uso em todos os seus dispositivos.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-6 py-4">
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground leading-relaxed">
                 1. Gere sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-accent underline font-bold">Google AI Studio</a>.
@@ -186,15 +189,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 placeholder="Cole sua API Key aqui..."
                 value={tempKey}
                 onChange={(e) => setTempKey(e.target.value)}
-                className="bg-secondary/50 border-border h-12 font-mono text-sm"
+                className="bg-secondary/50 border-border h-14 font-mono text-sm rounded-xl focus:border-primary text-center"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black">Ativar Inteligência</Button>
+            <Button onClick={handleSaveKey} className="w-full font-black uppercase tracking-widest bg-primary text-black h-16 rounded-2xl shadow-xl shadow-primary/20 text-lg italic">Ativar Inteligência</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </SidebarProvider>
+  );
+}
+
+function LogoDisplay() {
+  return (
+    <div className="font-headline font-black text-3xl italic tracking-tighter flex flex-col items-center leading-none">
+      <span className="text-white">CORRE</span>
+      <span className="text-primary">JUNTO</span>
+    </div>
   );
 }

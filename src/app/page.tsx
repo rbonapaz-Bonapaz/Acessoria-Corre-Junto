@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -8,7 +7,7 @@ import {
   Area, 
   AreaChart, 
   ResponsiveContainer, 
-  Tooltip, 
+  Tooltip as RechartsTooltip, 
   XAxis, 
   YAxis 
 } from "recharts";
@@ -27,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { TrainingContext } from "@/contexts/TrainingContext";
 import Link from "next/link";
 
-const data = [
+const chartData = [
   { day: "Dom", previsto: 0, real: 0 },
   { day: "Seg", previsto: 5, real: 4.8 },
   { day: "Ter", previsto: 8, real: 8.2 },
@@ -75,34 +74,30 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Card className="lg:col-span-2 bg-card border-border shadow-md">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="font-headline">Comparação de Volume</CardTitle>
-                  <CardDescription>Previsto vs. Realizado (km)</CardDescription>
-                </div>
-                <Badge variant="outline" className="text-accent border-accent/20 bg-accent/5">Semana Atual</Badge>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2">
+          <Card className="lg:col-span-2 bg-card/40 border-border shadow-2xl rounded-3xl overflow-hidden">
+            <CardHeader className="p-8 border-b border-border/20">
+              <CardTitle className="font-headline font-black uppercase italic text-white flex items-center gap-3">
+                <TrendingUp size={24} className="text-primary" /> Comparação de Volume
+              </CardTitle>
+              <CardDescription className="text-xs font-bold uppercase tracking-widest">Previsto vs. Realizado (km)</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="h-[300px] w-full">
+            <CardContent className="p-8">
+              <div className="h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={data}>
+                  <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem' }}
+                    <RechartsTooltip 
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '1rem' }}
                       itemStyle={{ color: 'hsl(var(--foreground))' }}
                     />
-                    <Area name="Realizado" type="monotone" dataKey="real" stroke="hsl(var(--accent))" fillOpacity={1} fill="url(#colorReal)" strokeWidth={2} />
+                    <Area name="Realizado" type="monotone" dataKey="real" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorReal)" strokeWidth={3} />
                     <Area name="Previsto" type="monotone" dataKey="previsto" stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" fill="transparent" strokeWidth={1} />
                   </AreaChart>
                 </ResponsiveContainer>

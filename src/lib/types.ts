@@ -41,6 +41,8 @@ export interface IntegrationData {
 export interface AthleteProfile {
   id: string;
   name: string;
+  ownerUid: string;
+  athleteEmail?: string;
   avatarUrl?: string;
   location?: string;
   birthDate: string;
@@ -62,6 +64,8 @@ export interface AthleteProfile {
   planGenerationType: PlanGenerationType;
   experienceLevel: ExperienceLevel;
   trainingHistory: string;
+  referenceDocumentUri?: string; // Novo campo para PDF/Print de referência
+  trainingPlan?: TrainingPlan;
   dietPreferences?: DietPreferences;
   strengthPreferences?: StrengthPreferences;
   integrations?: {
@@ -115,31 +119,4 @@ export interface TrainingPlan {
   blockType: string;
   durationWeeks: number;
   weeklyPlans: WeeklyPlan[];
-}
-
-export interface ChatMessage {
-  role: 'user' | 'model';
-  parts: string;
-}
-
-export interface FeedbackLogItem {
-  id: string;
-  date: string;
-  workoutId: string;
-  perceivedEffort: number;
-  notes: string;
-}
-
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  unlockedAt: string;
-}
-
-export interface PersonalRecord {
-  id: string;
-  distance: string;
-  time: string;
-  date: string;
 }
