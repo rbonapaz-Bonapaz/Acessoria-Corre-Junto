@@ -130,15 +130,12 @@ export default function Home() {
                   <ProfileCard key={profile.id} profile={profile} onSwitch={() => context.switchProfile(profile.id)} />
                 ))}
                 
-                {/* Atletas vinculados não podem criar novos perfis */}
-                {(myAthletes.length > 0 || profiles.length === 0) && (
-                  <Link href="/profile" onClick={() => context.switchProfile(null)} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
-                    <div className="size-24 md:size-32 rounded-3xl bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
-                      <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                    <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white">Novo Atleta</span>
-                  </Link>
-                )}
+                <Link href="/profile" onClick={() => context.switchProfile(null)} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
+                  <div className="size-24 md:size-32 rounded-3xl bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
+                    <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white">Novo Atleta</span>
+                </Link>
               </div>
             </div>
 

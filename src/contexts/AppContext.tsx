@@ -18,7 +18,8 @@ import {
   collection, 
   query, 
   where, 
-  updateDoc 
+  updateDoc,
+  onSnapshot
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -84,15 +85,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const activeProfile = useMemo(() => profiles.find(p => p.id === activeProfileId) || null, [profiles, activeProfileId]);
 
-  // Efeito para buscar a chave do treinador se necessário
+  // Efeito para buscar a chave do treinador se necessário (Herança de API Key)
   useEffect(() => {
     if (activeProfile && user && activeProfile.ownerUid !== user.uid && !userApiKey) {
       const trainerRef = doc(db, 'user_data', activeProfile.ownerUid);
-      // Tentativa de leitura da chave do treinador
-      // Nota: As regras de segurança devem permitir esta leitura para e-mails vinculados
       const unsubscribe = onSnapshot(trainerRef, (snap) => {
-        if (snap.exists()) setTrainerApiKey(snap.data().apiKey || null);
-      }, () => setTrainerApiKey(null));
+        if (snap.exists()) {
+          setTrainerApiKey(snap.data().apiKey || null);
+        } else {
+          setTrainerApiKey(null);
+        }
+      }, (err) => {
+        console.error("Erro ao buscar chave do treinador:", err);
+        setTrainerApiKey(null);
+      });
       return () => unsubscribe();
     } else {
       setTrainerApiKey(null);
@@ -100,7 +106,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [activeProfile, user, userApiKey, db]);
 
   // Chave efetiva que será usada pelo motor de IA
-  const apiKey = userApiKey || trainerApiKey;
+  const effectiveApiKey = userApiKey || trainerApiKey;
 
   const setApiKey = (key: string | null) => {
     if (!user || !userConfigRef) {
@@ -110,7 +116,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setDoc(userConfigRef, { apiKey: key }, { merge: true }).catch(err => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: userConfigRef.path,
-        operation: 'update',
+        operation: 'write',
         requestResourceData: { apiKey: key }
       }));
     });
@@ -180,8 +186,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
-    if (!apiKey) {
-      toast({ variant: "destructive", title: "Configuração Pendente", description: "Insira sua Gemini API Key no menu lateral ou peça ao seu treinador." });
+    if (!effectiveApiKey) {
+      toast({ variant: "destructive", title: "IA Desconectada", description: "Configure sua Gemini API Key ou peça para seu treinador configurar a dele." });
       return;
     }
 
@@ -193,7 +199,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       else if (profile.experienceLevel === 'advanced') weeklyMileageGoal = 75;
 
       const result = await generateTrainingBlock({
-        apiKey,
+        apiKey: effectiveApiKey,
         raceName: profile.raceName,
         currentVDOT: profile.vo2Max,
         hrZone1End: Math.round(profile.thresholdHr * 0.8),
@@ -222,22 +228,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await saveProfile({ ...profile, trainingPlan: result });
       
       setPlanGenerationStatus('success');
-      toast({ title: "Ciclo Calibrado!", description: "Os novos treinos já estão sincronizados." });
+      toast({ title: "Ciclo Gerado!", description: "Sua planilha de elite foi sincronizada." });
     } catch (error: any) {
       setPlanGenerationStatus('error');
-      toast({ variant: "destructive", title: "Erro no Motor de IA", description: error.message });
+      toast({ variant: "destructive", title: "Erro na IA", description: error.message });
     }
   };
 
-  // Helper para observar mudanças no documento do treinador
-  function onSnapshot(ref: any, onNext: (snap: any) => void, onError: (err: any) => void) {
-    const { onSnapshot: firestoreOnSnapshot } = require('firebase/firestore');
-    return firestoreOnSnapshot(ref, onNext, onError);
-  }
-
   return (
     <AppContext.Provider value={{
-      isHydrated: !loadingConfig, apiKey, setApiKey, profiles,
+      isHydrated: !loadingConfig, apiKey: effectiveApiKey, setApiKey, profiles,
       activeProfile,
       switchProfile, saveProfile, deleteProfile,
       trainingPlan: activeProfile?.trainingPlan || null,
@@ -245,19 +245,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       planGenerationStatus,
       generateRunningPlanAsync,
       exportData: () => {
-        const data = JSON.stringify({ profiles, apiKey });
+        const data = JSON.stringify({ profiles, userApiKey });
         const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
-        const a = document.createElement('a'); a.href = url; a.download = `corre_junto_cloud_backup.json`; a.click();
+        const a = document.createElement('a'); a.href = url; a.download = `corre_junto_backup.json`; a.click();
       },
       importData: async (json: string) => {
         try {
             const data = JSON.parse(json);
             if (data.profiles) {
-              for (const p of data.profiles) {
-                await saveProfile(p);
-              }
+              for (const p of data.profiles) { await saveProfile(p); }
             }
-            toast({ title: 'Dados Importados para a Nuvem' });
+            toast({ title: 'Dados Importados' });
         } catch (e) { toast({ variant: 'destructive', title: 'Erro na importação' }); }
       },
       toggleIntegration: (service, connected) => {
