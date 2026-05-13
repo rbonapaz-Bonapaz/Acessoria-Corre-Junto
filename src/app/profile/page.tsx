@@ -45,7 +45,9 @@ import {
     Upload,
     Activity,
     User,
-    Calendar
+    Calendar,
+    Timer,
+    Gauge
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -57,13 +59,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { AthleteProfile } from '@/lib/types';
 
 const weekDays = [
+  { id: 'Domingo', label: 'DOM' },
   { id: 'Segunda', label: 'SEG' },
   { id: 'Terça', label: 'TER' },
   { id: 'Quarta', label: 'QUA' },
   { id: 'Quinta', label: 'QUI' },
   { id: 'Sexta', label: 'SEX' },
   { id: 'Sábado', label: 'SÁB' },
-  { id: 'Domingo', label: 'DOM' },
 ] as const;
 
 const profileSchema = z.object({
@@ -81,11 +83,10 @@ const profileSchema = z.object({
   raceName: z.string().optional(),
   raceDistance: z.string().optional().default('10k'),
   raceDate: z.string().optional(),
-  raceGoalType: z.enum(['pace', 'time']).default('pace'),
   targetPace: z.string().optional(),
   targetTime: z.string().optional(),
   trainingDays: z.array(z.string()).default(['Segunda', 'Quarta', 'Sexta']),
-  longRunDay: z.string().optional().default('Sexta'),
+  longRunDay: z.string().optional().default('Domingo'),
   planGenerationType: z.enum(['full', 'blocks']).default('blocks'),
   experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']).optional().default('beginner'),
   trainingHistory: z.string().optional(),
@@ -118,11 +119,11 @@ export default function ProfilePage() {
     defaultValues: {
       name: '',
       trainingDays: ['Segunda', 'Quarta', 'Sexta'],
-      raceGoalType: 'pace',
       planGenerationType: 'blocks',
       experienceLevel: 'beginner',
       raceDistance: '10k',
       weeklyMileageGoal: 60,
+      longRunDay: 'Domingo',
     }
   });
 
@@ -133,7 +134,6 @@ export default function ProfilePage() {
       const p = context.activeProfile;
       reset({
         ...p,
-        raceGoalType: p.targetTime ? 'time' : 'pace',
         aestheticGoal: p.dietPreferences?.aestheticGoal,
         trainingTiming: p.dietPreferences?.trainingTiming,
         mealCount: p.dietPreferences?.mealCount,
@@ -147,7 +147,6 @@ export default function ProfilePage() {
   }, [context?.isHydrated, context?.activeProfile, reset]);
 
   const watchAvatarUrl = watch('avatarUrl');
-  const watchGoalType = watch('raceGoalType');
   const watchReferenceDoc = watch('referenceDocumentUri');
   const watchTrainingDays = watch('trainingDays');
 
@@ -288,7 +287,7 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                {/* ABA CORRIDA - LAYOUT IMAGE 2 REPLICADO */}
+                {/* ABA CORRIDA */}
                 <TabsContent value="corrida" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                   <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
                     <CardHeader className="py-6 px-8 space-y-1">
@@ -359,7 +358,6 @@ export default function ProfilePage() {
                                   ? watchTrainingDays.filter((d) => d !== day.id)
                                   : [...watchTrainingDays, day.id];
                                 setValue('trainingDays', newVal);
-                                // Limpa o dia do longão se ele não estiver mais disponível
                                 if (watch('longRunDay') === day.id && !newVal.includes(day.id)) {
                                   setValue('longRunDay', '');
                                 }
@@ -378,8 +376,15 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Seletores de Plano */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Configurações Adicionais */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <FormField control={form.control} name="weeklyMileageGoal" render={({field}) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="text-[11px] font-black uppercase text-white italic">VOLUME SEMANAL (KM)</FormLabel>
+                            <FormControl><Input type="number" {...field} className="bg-black/40 border-border/40 h-12 text-center font-black rounded-xl" /></FormControl>
+                          </FormItem>
+                        )} />
+
                         <FormField control={form.control} name="longRunDay" render={({field}) => (
                           <FormItem className="space-y-2">
                             <FormLabel className="text-[11px] font-black uppercase text-white italic">DIA DE LONGÃO</FormLabel>
@@ -398,10 +403,7 @@ export default function ProfilePage() {
                         
                         <FormField control={form.control} name="planGenerationType" render={({field}) => (
                           <FormItem className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <FormLabel className="text-[11px] font-black uppercase text-white italic">ESTRATÉGIA CICLO</FormLabel>
-                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Escolha como o plano será gerado.</p></TooltipContent></Tooltip>
-                            </div>
+                            <FormLabel className="text-[11px] font-black uppercase text-white italic">ESTRATÉGIA CICLO</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-12 font-black italic rounded-xl px-4"><SelectValue/></SelectTrigger></FormControl>
                               <SelectContent>
@@ -414,14 +416,14 @@ export default function ProfilePage() {
 
                         <FormField control={form.control} name="experienceLevel" render={({field}) => (
                           <FormItem className="space-y-2">
-                            <FormLabel className="text-[11px] font-black uppercase text-white italic">NÍVEL DE EXPERIÊNCIA</FormLabel>
+                            <FormLabel className="text-[11px] font-black uppercase text-white italic">EXPERIÊNCIA</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-12 font-black italic rounded-xl px-4"><SelectValue/></SelectTrigger></FormControl>
                               <SelectContent>
-                                <SelectItem value="run_walk" className="font-black italic uppercase">Começando (Até 20km/sem)</SelectItem>
-                                <SelectItem value="beginner" className="font-black italic uppercase">Intermediário (30-45km/sem)</SelectItem>
-                                <SelectItem value="intermediate" className="font-black italic uppercase">Avançado (50-65km/sem)</SelectItem>
-                                <SelectItem value="advanced" className="font-black italic uppercase">Elite (Acima 70km/sem)</SelectItem>
+                                <SelectItem value="run_walk" className="font-black italic uppercase">Começando</SelectItem>
+                                <SelectItem value="beginner" className="font-black italic uppercase">Iniciante</SelectItem>
+                                <SelectItem value="intermediate" className="font-black italic uppercase">Intermediário</SelectItem>
+                                <SelectItem value="advanced" className="font-black italic uppercase">Avançado / Elite</SelectItem>
                               </SelectContent>
                             </Select>
                           </FormItem>
@@ -430,9 +432,14 @@ export default function ProfilePage() {
 
                       {/* Bloco de Prova Alvo */}
                       <div className="pt-8 border-t border-border/20 space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex items-center gap-3">
+                           <Trophy className="text-primary size-6 animate-bounce" />
+                           <h3 className="text-lg font-black uppercase italic text-white tracking-tighter">OBJETIVO: PROVA ALVO</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                            <FormField control={form.control} name="raceName" render={({field}) => (
-                            <FormItem className="space-y-2">
+                            <FormItem className="space-y-2 lg:col-span-2">
                               <FormLabel className="text-[11px] font-black uppercase text-white italic">NOME DA PROVA</FormLabel>
                               <FormControl><Input placeholder="Ex: Maratona de Porto Alegre" {...field} className="bg-black/40 border-border/40 h-12 font-black italic rounded-xl px-4" /></FormControl>
                             </FormItem>
@@ -443,8 +450,43 @@ export default function ProfilePage() {
                               <FormControl><Input type="date" {...field} className="bg-black/40 border-border/40 h-12 font-black italic rounded-xl px-4" /></FormControl>
                             </FormItem>
                           )} />
+                          <FormField control={form.control} name="raceDistance" render={({field}) => (
+                            <FormItem className="space-y-2">
+                              <FormLabel className="text-[11px] font-black uppercase text-white italic">DISTÂNCIA</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-12 font-black italic rounded-xl px-4"><SelectValue placeholder="Distância" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                  <SelectItem value="5k" className="font-black italic">5 KM</SelectItem>
+                                  <SelectItem value="10k" className="font-black italic">10 KM</SelectItem>
+                                  <SelectItem value="21k" className="font-black italic">MEIA MARATONA</SelectItem>
+                                  <SelectItem value="42k" className="font-black italic">MARATONA</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormItem>
+                          )} />
                         </div>
-                        <p className="text-[11px] font-medium italic text-muted-foreground text-center">Atleta em evolução buscando performance.</p>
+
+                        {/* Metas de Performance */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-primary/5 p-6 rounded-2xl border border-primary/10">
+                           <FormField control={form.control} name="targetPace" render={({field}) => (
+                            <FormItem className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Gauge className="size-3 text-primary" />
+                                <FormLabel className="text-[11px] font-black uppercase text-white italic">PACE ALVO (MIN/KM)</FormLabel>
+                              </div>
+                              <FormControl><Input placeholder="Ex: 4:15" {...field} className="bg-black/40 border-border/40 h-12 text-center font-black rounded-xl" /></FormControl>
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name="targetTime" render={({field}) => (
+                            <FormItem className="space-y-2">
+                               <div className="flex items-center gap-2">
+                                <Timer className="size-3 text-primary" />
+                                <FormLabel className="text-[11px] font-black uppercase text-white italic">TEMPO ALVO (HH:MM:SS)</FormLabel>
+                              </div>
+                              <FormControl><Input placeholder="Ex: 02:59:59" {...field} className="bg-black/40 border-border/40 h-12 text-center font-black rounded-xl" /></FormControl>
+                            </FormItem>
+                          )} />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

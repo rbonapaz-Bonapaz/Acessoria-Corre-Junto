@@ -4,7 +4,7 @@
 import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { analyzeWorkout } from "@/ai/flows/analyze-workout-flow";
-import { AppContext } from "@/contexts/AppContext";
+import { TrainingContext } from "@/contexts/TrainingContext";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +46,7 @@ import { useRouter } from "next/navigation";
 const dayOrder = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 export default function TrainingPage() {
-  const context = React.useContext(AppContext);
+  const context = React.useContext(TrainingContext);
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
@@ -140,7 +140,6 @@ export default function TrainingPage() {
   const handleExportPDF = () => {
     if (!plan || !profile) return;
     toast({ title: "Gerando PDF...", description: "Preparando versão otimizada para impressão." });
-    // Usamos o print nativo do navegador com estilos específicos para gerar PDF
     window.print();
   };
 
@@ -176,7 +175,7 @@ export default function TrainingPage() {
             </div>
           </header>
 
-          {/* Versão para Impressão (Oculta na Tela) */}
+          {/* Versão para Impressão */}
           <div className="hidden print:block space-y-8 p-10 bg-white text-black min-h-screen">
             <div className="flex justify-between items-center border-b-4 border-black pb-4">
                <h1 className="text-4xl font-black italic uppercase">Planilha de Treino <span className="text-emerald-600">CorreJunto</span></h1>
