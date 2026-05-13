@@ -9,21 +9,17 @@ Se você estiver recebendo o erro **"Configuração Necessária"** ou **"API em 
 
 ### 1. Ativar o Motor de Autenticação
 1. Vá em **Build** > **Authentication**.
-2. Se aparecer um botão azul **"Get Started" (Começar)**, clique nele. **Mesmo que você já tenha clicado antes, clique novamente se ele aparecer.**
-3. Na aba **Sign-in method**, clique em **Add new provider** e escolha **Google**. Ative e salve.
+2. Clique na aba **Sign-in method** (Método de login).
+3. Clique em **Add new provider** e escolha **Google**. Ative e salve.
 
-### 2. E-mail de Suporte (PASSO ESQUECIDO)
+### 2. E-mail de Suporte (PASSO MAIS IMPORTANTE)
 1. Vá na **Engrenagem (Configurações do Projeto)** no topo do menu lateral esquerdo > **Project Settings**.
-2. Na aba **General**, procure pelo campo **Support email**.
-3. **Selecione seu e-mail da lista.** Sem isso, o Google não permite o login.
+2. Na aba **General**, procure pelo campo **Support email** (E-mail de suporte ao público).
+3. **Selecione seu e-mail da lista.** Sem isso, o Google não permite o login por segurança.
 
 ### 3. Autorizar o Domínio
-1. Volte em **Authentication** > aba **Settings** > **Authorized domains**.
+1. Volte em **Authentication** > aba **Settings** (Configurações) > **Authorized domains** (Domínios autorizados).
 2. Clique em **Add domain** e adicione: `acessoria-corre-junto.vercel.app`.
-
-### 4. Firestore (Banco de Dados)
-1. Vá em **Build** > **Firestore Database** > **Create Database**.
-2. Escolha uma localização (ex: `southamerica-east1`) e inicie em **Modo de Teste**.
 
 ---
 
