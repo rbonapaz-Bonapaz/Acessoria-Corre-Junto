@@ -44,7 +44,8 @@ import {
     CalendarCheck,
     Info,
     FileText,
-    Upload
+    Upload,
+    Timer
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -211,7 +212,7 @@ export default function ProfilePage() {
                 <h1 className="font-headline text-2xl md:text-3xl uppercase font-black italic">
                   <span className="text-white">MEU</span> <span className="text-primary">PERFIL</span>
                 </h1>
-                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest italic">Sincronização em Tempo Real</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest italic">Sincronização Cloud-First</p>
               </div>
             </div>
           </header>
@@ -242,7 +243,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="space-y-1 text-center sm:text-left">
                           <CardTitle className="font-headline text-2xl uppercase italic font-black">Biometria</CardTitle>
-                          <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground italic">Dados essenciais para cálculos de carga.</CardDescription>
+                          <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground italic">Dados sincronizados entre dispositivos.</CardDescription>
                         </div>
                       </div>
                     </CardHeader>
@@ -278,43 +279,58 @@ export default function ProfilePage() {
                 </TabsContent>
 
                 <TabsContent value="corrida" className="mt-6 space-y-8">
+                  {/* SEÇÃO: FISIOLOGIA (OS 4 CAMPOS CRÍTICOS) */}
                   <Card className="bg-card/50 border-border/50 rounded-2xl overflow-hidden">
                     <CardHeader className="bg-primary/5 border-b border-border/50">
-                      <CardTitle className="font-headline text-2xl uppercase italic text-primary font-black flex items-center gap-3">
-                        <Activity size={28}/> Fisiologia do Atleta
-                      </CardTitle>
+                      <div className="flex items-center gap-3">
+                        <Activity size={24} className="text-primary" />
+                        <CardTitle className="font-headline text-lg uppercase italic text-white font-black">Fisiologia do Atleta</CardTitle>
+                      </div>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
+                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8">
                       <FormField control={form.control} name="vo2Max" render={({field}) => (
                         <FormItem>
-                          <div className="flex items-center gap-2">
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">VDOT (Jack Daniels)</FormLabel>
-                            <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Índice de performance aeróbica baseado nos seus tempos.</p></TooltipContent></Tooltip>
+                          <div className="flex items-center gap-1">
+                            <FormLabel className="text-[9px] font-black uppercase tracking-tight text-muted-foreground">VDOT (IA)</FormLabel>
+                            <Tooltip><TooltipTrigger asChild><Info className="size-2 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[9px]">Score de performance Jack Daniels.</p></TooltipContent></Tooltip>
                           </div>
-                          <FormControl><Input type="number" step="0.1" {...field} className="bg-primary/5 border-primary/30 h-16 text-2xl font-black text-primary text-center rounded-2xl" /></FormControl>
+                          <FormControl><Input type="number" step="0.1" {...field} className="bg-primary/5 border-primary/30 h-14 text-xl font-black text-primary text-center rounded-xl" /></FormControl>
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="thresholdPace" render={({field}) => (
+                        <FormItem>
+                          <FormLabel className="text-[9px] font-black uppercase tracking-tight text-muted-foreground">Pace Limiar</FormLabel>
+                          <FormControl><Input placeholder="4:20" {...field} className="bg-black/40 h-14 text-xl font-black text-center rounded-xl border-border/40" /></FormControl>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="thresholdHr" render={({field}) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">FC Limiar (L2)</FormLabel>
-                          <FormControl><Input type="number" {...field} className="bg-black/40 h-16 text-2xl font-black text-center rounded-2xl border-border/40 focus:border-primary" /></FormControl>
+                          <FormLabel className="text-[9px] font-black uppercase tracking-tight text-muted-foreground">FC Limiar (L2)</FormLabel>
+                          <FormControl><Input type="number" {...field} className="bg-black/40 h-14 text-xl font-black text-center rounded-xl border-border/40" /></FormControl>
                         </FormItem>
                       )} />
-                      <FormField control={form.control} name="experienceLevel" render={({field}) => (
+                      <FormField control={form.control} name="restingHr" render={({field}) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nível do Atleta</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="bg-black/30 h-16 font-black rounded-xl border-border/40"><SelectValue/></SelectTrigger></FormControl>
-                            <SelectContent>
-                              <SelectItem value="run_walk">Corrida & Caminhada</SelectItem>
-                              <SelectItem value="beginner">Iniciante</SelectItem>
-                              <SelectItem value="intermediate">Intermediário</SelectItem>
-                              <SelectItem value="advanced">Avançado</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormLabel className="text-[9px] font-black uppercase tracking-tight text-muted-foreground">FC Repouso</FormLabel>
+                          <FormControl><Input type="number" {...field} className="bg-black/40 h-14 text-xl font-black text-center rounded-xl border-border/40" /></FormControl>
                         </FormItem>
                       )} />
                     </CardContent>
+                    <CardFooter className="bg-secondary/10 py-3 border-t border-border/30">
+                        <FormField control={form.control} name="experienceLevel" render={({field}) => (
+                          <FormItem className="w-full">
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl><SelectTrigger className="bg-transparent border-none h-8 font-black text-[10px] uppercase italic"><SelectValue placeholder="Selecione seu nível..." /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                <SelectItem value="run_walk">Corrida & Caminhada</SelectItem>
+                                <SelectItem value="beginner">Iniciante</SelectItem>
+                                <SelectItem value="intermediate">Intermediário</SelectItem>
+                                <SelectItem value="advanced">Avançado</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                    </CardFooter>
                   </Card>
 
                   {/* SEÇÃO UNIFICADA: PROVA ALVO */}
@@ -434,7 +450,7 @@ export default function ProfilePage() {
                          ) : (
                            <div className="flex flex-col items-center gap-2">
                              <Upload className="size-10 text-muted-foreground opacity-30" />
-                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground italic">Arraste seu plano anterior ou orientações médicas/técnicas</p>
+                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground italic">Arraste seu plano anterior ou orientações técnicas</p>
                            </div>
                          )}
                        </div>
