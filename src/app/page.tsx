@@ -65,9 +65,6 @@ export default function Home() {
   const activeProfile = context?.activeProfile;
   const profiles = context?.profiles || [];
 
-  // Lógica de papéis: 
-  // Treinador (Dono): Perfis que ele criou
-  // Atleta (Vinculado): Perfis onde o email dele foi inserido pelo treinador na aba Vínculo
   const myAthletes = profiles.filter(p => p.ownerUid === user?.uid || p.ownerUid === 'local-user');
   const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid && p.athleteEmail === user?.email && p.ownerUid !== 'local-user');
 
@@ -84,14 +81,14 @@ export default function Home() {
     );
   }
 
-  // Tela de Seleção de Perfil
   if (!activeProfile) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 animate-in fade-in duration-1000">
         <div className="max-w-5xl w-full space-y-12">
           <div className="text-center space-y-4">
-            <h1 className="text-5xl md:text-7xl font-headline font-black uppercase italic tracking-tighter text-white">
-              LABORATÓRIO <span className="text-primary">CORREJUNTO</span>
+            <h1 className="text-5xl md:text-7xl font-headline font-black uppercase italic tracking-tighter">
+              <span className="text-white">LABORATÓRIO</span> <br/>
+              <span className="text-white">CORRE</span><span className="text-primary">JUNTO</span>
             </h1>
             <p className="text-muted-foreground text-sm md:text-xl font-medium max-w-2xl mx-auto italic">
               Selecione um perfil para gerenciar sua assessoria ou visualizar seu plano de atleta.
@@ -99,7 +96,6 @@ export default function Home() {
           </div>
 
           <div className="space-y-12">
-            {/* Seção de Gestão (Treinador) */}
             <div className="space-y-6">
               <div className="flex items-center justify-between px-2 border-b border-border/20 pb-4">
                 <div className="flex items-center gap-2">
@@ -121,7 +117,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Seção de Atleta (Perfis Vinculados) */}
             {linkedProfiles.length > 0 && (
               <div className="space-y-6 pt-6">
                 <div className="flex items-center gap-2 px-2 border-b border-border/20 pb-4">
@@ -153,7 +148,6 @@ export default function Home() {
     );
   }
 
-  // Dashboard do Atleta Selecionado
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-in fade-in duration-500">
