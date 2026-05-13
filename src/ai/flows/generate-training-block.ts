@@ -12,52 +12,52 @@ import { getAiWithKey } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateTrainingBlockInputSchema = z.object({
-  apiKey: z.string().optional().describe('Chave de API do usuário.'),
+  apiKey: z.string().optional().describe('Chave de API do usuário para processamento.'),
   raceName: z.string().optional().describe('Nome da prova alvo.'),
-  currentVDOT: z.number().describe('Score VDOT atual.'),
-  hrZone1End: z.number().describe('FC final Z1.'),
-  hrZone2End: z.number().describe('FC final Z2.'),
-  hrZone3End: z.number().describe('FC final Z3.'),
-  hrZone4End: z.number().describe('FC final Z4.'),
-  hrMax: z.number().describe('FC máxima.'),
-  trainingBlockType: z.enum(['Base', 'Construction', 'Polishing']).describe('Fase do bloco.'),
-  planGenerationType: z.enum(['full', 'blocks']).describe('Estratégia: 4 semanas ou ciclo completo.'),
-  raceDate: z.string().describe('Data da prova.'),
-  weeklyMileageGoal: z.number().describe('Meta de volume semanal em km.'),
-  targetRaceDistance: z.string().describe('Distância alvo.'),
-  targetPace: z.string().optional().describe('Pace alvo (min/km).'),
-  targetTime: z.string().optional().describe('Tempo alvo (HH:MM:SS).'),
-  currentLongRunDistance: z.number().describe('Distância atual do longão.'),
-  weeklyAvailability: z.string().describe('Dias disponíveis.'),
-  injuryHistory: z.string().describe('Histórico de lesões.'),
-  preferredWorkoutDays: z.string().describe('Dias intensos.'),
-  legDay: z.string().optional().describe('Dia de treino de perna.'),
-  referenceFileDataUri: z.string().optional().describe('URI de arquivo de referência.'),
+  currentVDOT: z.number().describe('Score VDOT/VO2 atual do atleta.'),
+  hrZone1End: z.number().describe('Limite superior da Zona 1.'),
+  hrZone2End: z.number().describe('Limite superior da Zona 2.'),
+  hrZone3End: z.number().describe('Limite superior da Zona 3.'),
+  hrZone4End: z.number().describe('Limite superior da Zona 4.'),
+  hrMax: z.number().describe('Frequência cardíaca máxima.'),
+  trainingBlockType: z.enum(['Base', 'Construction', 'Polishing']).describe('Fase atual do bloco de treinamento.'),
+  planGenerationType: z.enum(['full', 'blocks']).describe('Se deve gerar 4 semanas ou o ciclo até a prova.'),
+  raceDate: z.string().describe('Data da prova alvo no formato YYYY-MM-DD.'),
+  weeklyMileageGoal: z.number().describe('Meta de volume semanal em quilômetros.'),
+  targetRaceDistance: z.string().describe('Distância da prova (ex: 10k, 21k, 42k).'),
+  targetPace: z.string().optional().describe('Pace alvo para a prova (min/km).'),
+  targetTime: z.string().optional().describe('Tempo alvo para a prova (HH:MM:SS).'),
+  currentLongRunDistance: z.number().describe('Distância atual do treino longo mais recente.'),
+  weeklyAvailability: z.string().describe('Dias da semana disponíveis para treino.'),
+  injuryHistory: z.string().describe('Histórico de lesões para moderação de carga.'),
+  preferredWorkoutDays: z.string().describe('Dias preferidos para treinos de qualidade/tiros.'),
+  legDay: z.string().optional().describe('Dia da semana reservado para treino de pernas na musculação.'),
+  referenceFileDataUri: z.string().optional().describe('URI de dados de arquivo de referência (PDF/Imagem).'),
 });
 
 export type GenerateTrainingBlockInput = z.infer<typeof GenerateTrainingBlockInputSchema>;
 
 const WorkoutSchema = z.object({
-  id: z.string().describe('ID único.'),
-  day: z.string().describe('Dia da semana.'),
-  type: z.string().describe('Tipo de treino.'),
-  distance: z.string().describe('Distância.'),
-  paceZone: z.string().describe('Zona de ritmo.'),
-  description: z.string().describe('Descrição detalhada.'),
+  id: z.string().describe('ID único (UUID)'),
+  day: z.string().describe('Dia da semana (Domingo, Segunda, Terça, Quarta, Quinta, Sexta, Sábado)'),
+  type: z.string().describe('Tipo de treino (Rodagem, Intervalado, Longão, Tempo Run, OFF)'),
+  distance: z.string().describe('Volume do treino (ex: 10km ou 45min)'),
+  paceZone: z.string().describe('Zona de intensidade (Z1, Z2, Z3, Z4, Z5)'),
+  description: z.string().describe('Descrição técnica detalhada da sessão.'),
 });
 
 const WeeklyPlanSchema = z.object({
-  weekNumber: z.number().describe('Número da semana.'),
-  focus: z.string().describe('Foco da semana.'),
-  runs: z.array(WorkoutSchema).describe('Lista de treinos.'),
-  strength: z.string().describe('Recomendações de força.'),
-  notes: z.string().describe('Notas gerais.'),
+  weekNumber: z.number().describe('Número da semana no bloco.'),
+  focus: z.string().describe('Foco principal da semana (ex: Volume, Intensidade, Recuperação).'),
+  runs: z.array(WorkoutSchema).describe('Lista de treinos da semana iniciando no DOMINGO.'),
+  strength: z.string().describe('Recomendações de fortalecimento específicas.'),
+  notes: z.string().describe('Notas técnicas do treinador.'),
 });
 
 const GenerateTrainingBlockOutputSchema = z.object({
-  blockType: z.string().describe('Descrição da fase.'),
-  durationWeeks: z.number().describe('Semanas geradas.'),
-  weeklyPlans: z.array(WeeklyPlanSchema).describe('Planos semanais.'),
+  blockType: z.string().describe('Descrição da fase do treinamento.'),
+  durationWeeks: z.number().describe('Total de semanas geradas.'),
+  weeklyPlans: z.array(WeeklyPlanSchema).describe('Planos semanais detalhados.'),
 });
 
 export type GenerateTrainingBlockOutput = z.infer<typeof GenerateTrainingBlockOutputSchema>;
@@ -66,31 +66,28 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    system: `Você é um treinador de corrida de elite. 
-    REGRAS OBRIGATÓRIAS:
-    1. O primeiro dia da semana é SEMPRE Domingo.
-    2. Responda rigorosamente em PORTUGUÊS (Brasil).
+    system: `Você é um treinador de corrida de elite especialista em fisiologia do exercício e periodização.
+    REGRAS CRÍTICAS:
+    1. A semana começa SEMPRE no DOMINGO.
+    2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
     3. Use o esquema JSON fornecido.
-    4. Se houver um arquivo de referência, ele é sua fonte primária de verdade para ritmos.`,
+    4. Se o atleta tiver um "Leg Day", o dia seguinte deve ser obrigatoriamente OFF ou Rodagem Leve (Z1).
+    5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
     prompt: [
-      { text: `Gere um plano de performance para: ${input.raceName || 'Performance Geral'}.
+      { text: `Gere um plano de performance para a prova "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
           
-          Contexto:
-          - Distância Alvo: ${input.targetRaceDistance} em ${input.raceDate}.
-          - Objetivo: ${input.targetPace || input.targetTime || 'Melhor performance'}.
-          - Volume Alvo: ${input.weeklyMileageGoal}km/semana.
-          
-          Fisiologia:
-          - VDOT: ${input.currentVDOT}
-          - Zonas FC: Z1:${input.hrZone1End}, Z2:${input.hrZone2End}, Z3:${input.hrZone3End}, Z4:${input.hrZone4End}. Máx:${input.hrMax}.
-          
-          Preferências:
-          - Estratégia: ${input.planGenerationType === 'full' ? 'Ciclo Completo até a prova' : 'Bloco de 4 semanas'}.
+          Contexto do Atleta:
+          - VDOT/VO2: ${input.currentVDOT}.
+          - Volume semanal alvo: ${input.weeklyMileageGoal}km.
           - Disponibilidade: ${input.weeklyAvailability}.
-          - Leg Day: ${input.legDay} (Evite tiros no dia seguinte).
-        `},
+          - Dias intensos preferidos: ${input.preferredWorkoutDays}.
+          - Musculação de pernas (Leg Day): ${input.legDay || 'Não informado'}.
+          - Objetivo de tempo/pace: ${input.targetPace || input.targetTime || 'Máxima performance'}.
+          
+          Fisiologia (Zonas FC):
+          - Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}. Máx: ${input.hrMax}.` },
       ...(input.referenceFileDataUri ? [{ media: { url: input.referenceFileDataUri } }] : []),
-      { text: 'Gere o plano garantindo que a semana comece no Domingo.' }
+      { text: 'Gere o plano garantindo que cada semana comece no Domingo e termine no Sábado.' }
     ],
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {
@@ -101,12 +98,12 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     }
   });
 
-  if (!output) throw new Error('O motor de IA não retornou um plano válido. Tente novamente.');
+  if (!output) throw new Error('A Inteligência Artificial falhou ao construir o plano. Verifique sua conexão ou API Key.');
   
-  // Garante IDs únicos se a IA não gerou
+  // Garantir IDs únicos para cada treino
   output.weeklyPlans.forEach(week => {
     week.runs.forEach(run => {
-      if (!run.id) run.id = Math.random().toString(36).substring(7);
+      if (!run.id) run.id = Math.random().toString(36).substring(2, 11);
     });
   });
 

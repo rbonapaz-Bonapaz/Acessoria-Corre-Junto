@@ -101,7 +101,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [user, authLoading, isHydrated, firestore, toast, activeProfile, trainingPlan, apiKey]);
+  }, [user, authLoading, isHydrated, firestore, toast]);
 
   const login = async () => {
     try {
@@ -115,6 +115,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
+      // Limpa dados locais ao deslogar se desejado, ou mantém para modo convidado
       toast({ title: "Sessão encerrada" });
     } catch (e) {
       toast({ variant: 'destructive', title: "Erro ao sair" });
@@ -131,7 +132,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       const docRef = doc(firestore, 'user_data', user.uid);
       await setDoc(docRef, { profile: updatedProfile }, { merge: true });
     }
-    toast({ title: 'Dados Salvos' });
+    toast({ title: 'Dados Salvos', description: 'Suas informações foram sincronizadas com sucesso.' });
   }, [user, firestore, activeProfile, toast]);
 
   const updateWorkout = useCallback(async (workoutId: string, updates: Partial<Workout>) => {
@@ -161,21 +162,24 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       const docRef = doc(firestore, 'user_data', user.uid);
       await setDoc(docRef, { apiKey: cleanKey }, { merge: true });
     }
-    toast({ title: "Chave Configurada" });
+    toast({ title: "Chave Configurada", description: "O Coach IA agora está ativo." });
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
-    if (!apiKey) {
-      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua API Key." });
+    // Busca a chave mais atualizada (estado ou storage)
+    const currentKey = apiKey || localStorage.getItem(STORAGE_KEYS.API_KEY);
+    
+    if (!currentKey || currentKey.trim() === "") {
+      toast({ variant: "destructive", title: "IA Desativada", description: "Configure sua Gemini API Key para gerar o ciclo." });
       return;
     }
 
     setPlanGenerationStatus('pending');
-    toast({ title: "Gerando Ciclo IA...", description: "Analisando seu perfil biométrico." });
+    toast({ title: "Gerando Ciclo IA...", description: "Analisando seu perfil biométrico e prova alvo." });
 
     try {
       const result = await generateTrainingBlock({
-        apiKey: apiKey,
+        apiKey: currentKey,
         raceName: profile.raceName,
         currentVDOT: profile.vo2Max || 40,
         hrZone1End: Math.round((profile.thresholdHr || 160) * 0.8),
@@ -185,7 +189,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
         hrMax: (profile.thresholdHr || 160) + 20,
         trainingBlockType: 'Construction',
         planGenerationType: profile.planGenerationType || 'blocks',
-        raceDate: profile.raceDate || new Date().toISOString(),
+        raceDate: profile.raceDate || new Date().toISOString().split('T')[0],
         weeklyMileageGoal: profile.weeklyMileageGoal || 60,
         targetRaceDistance: profile.raceDistance || '10k',
         targetPace: profile.targetPace,
@@ -207,10 +211,11 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       }
       
       setPlanGenerationStatus('success');
-      toast({ title: "Plano Gerado com Sucesso!" });
+      toast({ title: "Plano Gerado!", description: "Sua planilha técnica está pronta para visualização." });
     } catch (error: any) {
       setPlanGenerationStatus('error');
-      toast({ variant: "destructive", title: "Erro na IA", description: error.message });
+      console.error(error);
+      toast({ variant: "destructive", title: "Erro na IA", description: error.message || "Falha na comunicação com o Gemini." });
     }
   };
 

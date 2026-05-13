@@ -107,7 +107,6 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("perfil");
   const avatarFileRef = useRef<HTMLInputElement>(null);
-  const refDocFileRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [targetType, setTargetType] = useState<'pace' | 'time'>('pace');
@@ -171,14 +170,14 @@ export default function ProfilePage() {
         experienceLevel: p.experienceLevel || 'beginner',
         trainingHistory: p.trainingHistory || '',
         referenceDocumentUri: p.referenceDocumentUri || '',
-        aestheticGoal: p.dietPreferences?.aestheticGoal,
-        trainingTiming: p.dietPreferences?.trainingTiming,
+        aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
+        trainingTiming: p.dietPreferences?.trainingTiming || 'manha',
         mealCount: p.dietPreferences?.mealCount || 4,
         supplements: p.dietPreferences?.supplements || '',
         allergies: p.dietPreferences?.allergies || '',
         legDay: p.strengthPreferences?.legDay || '',
-        strengthSplit: p.strengthPreferences?.splitPreference,
-        strengthObjective: p.strengthPreferences?.objective,
+        strengthSplit: p.strengthPreferences?.splitPreference || 'full_body',
+        strengthObjective: p.strengthPreferences?.objective || 'performance',
       } as any);
       
       if (p.targetTime && !p.targetPace) setTargetType('time');
@@ -187,7 +186,6 @@ export default function ProfilePage() {
   }, [context?.isHydrated, context?.activeProfile, reset]);
 
   const watchAvatarUrl = watch('avatarUrl');
-  const watchReferenceDoc = watch('referenceDocumentUri');
   const watchTrainingDays = watch('trainingDays');
 
   const availableLongRunDays = useMemo(() => {
@@ -198,14 +196,6 @@ export default function ProfilePage() {
     if (e.target.files?.[0]) {
       const uri = await fileToDataURI(e.target.files[0]);
       setValue('avatarUrl', uri);
-    }
-  };
-
-  const handleRefDocChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      const uri = await fileToDataURI(e.target.files[0]);
-      setValue('referenceDocumentUri', uri);
-      toast({ title: "Documento Carregado", description: "O Coach lerá este guia na próxima geração." });
     }
   };
 
@@ -248,7 +238,7 @@ export default function ProfilePage() {
     
     const isValid = await form.trigger();
     if (!isValid) {
-      toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha o nome e campos obrigatórios." });
+      toast({ variant: "destructive", title: "Dados Incompletos", description: "Preencha os campos obrigatórios." });
       return;
     }
 
@@ -290,7 +280,7 @@ export default function ProfilePage() {
     <DashboardLayout>
       <TooltipProvider>
         <div className="space-y-8 pb-20 max-w-5xl mx-auto animate-in fade-in duration-700">
-          {!context?.apiKey && (
+          {(!context?.apiKey || context.apiKey.trim() === "") && (
             <div className="mx-2 bg-primary/10 border border-primary/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4">
               <div className="flex items-center gap-4">
                 <div className="size-10 rounded-full bg-primary flex items-center justify-center text-black">
@@ -301,7 +291,9 @@ export default function ProfilePage() {
                   <p className="text-[10px] text-muted-foreground font-bold uppercase">Configure sua Gemini API Key para desbloquear o Coach IA.</p>
                 </div>
               </div>
-              <p className="text-[10px] italic text-muted-foreground max-w-xs text-center md:text-right">A chave está localizada no menu lateral inferior.</p>
+              <Button variant="outline" className="text-[10px] font-black uppercase italic tracking-widest border-primary/30 text-primary hover:bg-primary/20" onClick={() => (window as any).showKeyModal?.()}>
+                CONFIGURAR AGORA
+              </Button>
             </div>
           )}
 
@@ -353,7 +345,7 @@ export default function ProfilePage() {
                       <FormField control={form.control} name="name" render={({field}) => (
                         <FormItem className="space-y-2">
                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic flex items-center gap-2">
-                            <UserIcon className="size-3" /> Nome do Atleta
+                            <UserIcon className="size-3" /> Nome Completo
                           </FormLabel>
                           <FormControl><Input {...field} value={field.value || ''} className="bg-black/30 h-10 font-bold text-sm rounded-xl border-border/40 focus:border-primary px-4" /></FormControl>
                         </FormItem>
@@ -386,7 +378,7 @@ export default function ProfilePage() {
                   <Card className="bg-card/40 border-border/50 rounded-2xl overflow-hidden shadow-xl">
                     <CardHeader className="py-6 px-8 space-y-1">
                       <h2 className="text-xl md:text-2xl font-headline font-black uppercase italic text-primary leading-none">INTELIGÊNCIA DE CORRIDA</h2>
-                      <p className="text-muted-foreground text-[10px] font-medium uppercase tracking-widest">Fisiologia e Disponibilidade de Elite</p>
+                      <p className="text-muted-foreground text-[10px] font-medium uppercase tracking-widest">Fisiologia e Disponibilidade Semanal</p>
                     </CardHeader>
                     
                     <CardContent className="p-8 space-y-10">
@@ -395,7 +387,7 @@ export default function ProfilePage() {
                           <FormItem className="space-y-1.5">
                             <div className="flex items-center gap-2">
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">FC REPOUSO</FormLabel>
-                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Batimentos por minuto ao acordar.</p></TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Frequência cardíaca basal ao acordar.</p></TooltipContent></Tooltip>
                             </div>
                             <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
@@ -404,7 +396,7 @@ export default function ProfilePage() {
                           <FormItem className="space-y-1.5">
                              <div className="flex items-center gap-2">
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">VO2 MÁX / VDOT</FormLabel>
-                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Seu índice de performance atual.</p></TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Seu nível de performance (VDOT).</p></TooltipContent></Tooltip>
                             </div>
                             <FormControl><Input type="number" step="0.1" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
@@ -413,7 +405,7 @@ export default function ProfilePage() {
                           <FormItem className="space-y-1.5">
                             <div className="flex items-center gap-2">
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">PACE LIMIAR</FormLabel>
-                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Seu ritmo de limiar de lactato (T-Pace).</p></TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Pace de limiar de lactato (T-Pace).</p></TooltipContent></Tooltip>
                             </div>
                             <FormControl><Input {...field} value={field.value || ''} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
@@ -422,7 +414,7 @@ export default function ProfilePage() {
                           <FormItem className="space-y-1.5">
                             <div className="flex items-center gap-2">
                               <FormLabel className="text-[9px] font-black uppercase text-white italic">FC LIMIAR (L2)</FormLabel>
-                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">FC no ponto de transição anaeróbica.</p></TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Batimentos no limiar anaeróbico.</p></TooltipContent></Tooltip>
                             </div>
                             <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                           </FormItem>
@@ -433,10 +425,10 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                              <CalendarIcon className="size-4 text-primary" />
-                             <span className="text-[10px] font-black uppercase text-white italic tracking-widest">DISPONIBILIDADE SEMANAL (DOMINGO FIRST)</span>
+                             <span className="text-[10px] font-black uppercase text-white italic tracking-widest">DISPONIBILIDADE (DOMINGO FIRST)</span>
                           </div>
                           <span className="text-[9px] font-black uppercase text-primary italic tracking-widest bg-primary/10 px-3 py-1 rounded-full">
-                            {watchTrainingDays.length} DIAS / SEMANA
+                            {watchTrainingDays.length} DIAS ATIVOS
                           </span>
                         </div>
                         
@@ -472,8 +464,8 @@ export default function ProfilePage() {
                         <div className="space-y-4">
                           <FormField control={form.control} name="experienceLevel" render={({field}) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-[10px] font-black uppercase text-white italic">NÍVEL DE EXPERIÊNCIA</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              <FormLabel className="text-[10px] font-black uppercase text-white italic">EXPERIÊNCIA</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || 'beginner'}>
                                 <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue/></SelectTrigger></FormControl>
                                 <SelectContent className="bg-card border-border">
                                   <SelectItem value="run_walk" className="font-bold italic uppercase">Começando</SelectItem>
@@ -487,7 +479,7 @@ export default function ProfilePage() {
 
                           <FormField control={form.control} name="weeklyMileageGoal" render={({field}) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-[10px] font-black uppercase text-white italic">DISTÂNCIA SEMANAL (KM)</FormLabel>
+                              <FormLabel className="text-[10px] font-black uppercase text-white italic">VOLUME SEMANAL (KM)</FormLabel>
                               <FormControl><Input type="number" {...field} value={field.value || 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                             </FormItem>
                           )} />
@@ -497,7 +489,7 @@ export default function ProfilePage() {
                           <FormField control={form.control} name="planGenerationType" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">ESTRATÉGIA DE CICLO</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              <Select onValueChange={field.onChange} value={field.value || 'blocks'}>
                                 <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue/></SelectTrigger></FormControl>
                                 <SelectContent>
                                   <SelectItem value="blocks" className="font-bold italic uppercase">Blocos (4 Semanas)</SelectItem>
@@ -510,7 +502,7 @@ export default function ProfilePage() {
                           <FormField control={form.control} name="longRunDay" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">DIA DO LONGÃO (LSD)</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              <Select onValueChange={field.onChange} value={field.value || ''}>
                                 <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                                 <SelectContent className="bg-card border-border">
                                   {availableLongRunDays.length > 0 ? (
@@ -547,7 +539,7 @@ export default function ProfilePage() {
                           <FormField control={form.control} name="raceDistance" render={({field}) => (
                             <FormItem className="space-y-2">
                               <FormLabel className="text-[10px] font-black uppercase text-white italic">DISTÂNCIA</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              <Select onValueChange={field.onChange} value={field.value || '10k'}>
                                 <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue placeholder="Distância" /></SelectTrigger></FormControl>
                                 <SelectContent>
                                   <SelectItem value="5k" className="font-bold italic">5 KM</SelectItem>
@@ -605,7 +597,7 @@ export default function ProfilePage() {
                        <FormField control={form.control} name="aestheticGoal" render={({field}) => (
                          <FormItem className="space-y-2">
                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">OBJETIVO CORPORAL</FormLabel>
-                           <Select onValueChange={field.onChange} value={field.value}>
+                           <Select onValueChange={field.onChange} value={field.value || 'performance'}>
                              <FormControl><SelectTrigger className="bg-black/30 h-12 font-bold text-sm rounded-xl border-border/40 px-6 transition-all focus:border-orange-500"><SelectValue placeholder="Qual sua meta..." /></SelectTrigger></FormControl>
                              <SelectContent className="bg-card border-border">
                                <SelectItem value="performance" className="font-bold italic uppercase">PERFORMANCE PURA</SelectItem>
@@ -634,9 +626,10 @@ export default function ProfilePage() {
                             <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">DIA DE TREINO DE PERNA (LEG DAY)</FormLabel>
                             <Tooltip><TooltipTrigger asChild><Info className="size-4 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">A IA evitará intensidade alta no dia seguinte ao Leg Day.</p></TooltipContent></Tooltip>
                           </div>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
                             <FormControl><SelectTrigger className="bg-black/30 h-12 font-bold text-sm rounded-xl border-border/40 px-6 transition-all focus:border-purple-500"><SelectValue placeholder="Escolha o dia da musculação de perna..." /></SelectTrigger></FormControl>
                             <SelectContent className="bg-card border-border">
+                              <SelectItem value="None" className="font-bold italic">NENHUM</SelectItem>
                               {weekDays.map(d => <SelectItem key={d.id} value={d.id} className="font-bold italic uppercase">{d.id}</SelectItem>)}
                             </SelectContent>
                           </Select>

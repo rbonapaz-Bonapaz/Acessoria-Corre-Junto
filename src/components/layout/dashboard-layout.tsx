@@ -72,6 +72,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (context?.apiKey) setTempKey(context.apiKey);
+    // Expor a função para abrir o modal globalmente para facilitar o acesso do Perfil
+    (window as any).showKeyModal = () => setShowKeyModal(true);
   }, [context?.apiKey]);
 
   const handleSaveKey = () => {
@@ -89,6 +91,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+
+  const isIAActive = context?.apiKey && context.apiKey.trim() !== "";
 
   return (
     <SidebarProvider>
@@ -128,13 +132,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton 
                 className={cn(
                   "w-full h-12 border transition-all rounded-xl",
-                  context?.apiKey ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground border-border/20"
+                  isIAActive ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground border-border/20"
                 )} 
                 onClick={() => setShowKeyModal(true)}
               >
                 <Key className="size-4" />
                 <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">
-                  {context?.apiKey ? "IA ATIVA" : "Configurar IA"}
+                  {isIAActive ? "IA ATIVA" : "Configurar IA"}
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
