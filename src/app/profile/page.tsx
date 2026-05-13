@@ -36,27 +36,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { 
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { 
     Loader2, 
     Zap, 
     Camera, 
     Dumbbell, 
     Download,
-    CalendarDays,
-    Activity,
     CheckCircle2,
-    Info,
-    Clock,
-    Target,
-    Link2,
     ShieldCheck,
     Utensils,
-    Flame
+    Flame,
+    Target,
+    Activity,
+    Trophy,
+    History as HistoryIcon,
+    Link2
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -70,23 +63,21 @@ const weekDays = [
   { id: 'Sábado', label: 'SÁB' },
 ] as const;
 
-const focusAreasOptions = [
-  'Mobilidade / Alongamento',
-  'Core / Estabilidade',
-  'Glúteos / Posteriores',
-  'Quadríceps / Força',
-  'Panturrilha / Tendões',
-  'Bíceps / Braços',
-  'Peitoral / Ombros',
-  'Costas / Postura',
-];
-
 const equipmentOptions = [
   'Academia Completa',
   'Halteres / Kettlebells',
   'Elásticos / Mini-bands',
   'Peso do Corpo (Calistenia)',
   'Barra Fixa / Paralelas',
+];
+
+const focusAreasOptions = [
+  'Mobilidade / Alongamento',
+  'Core / Estabilidade',
+  'Glúteos / Posteriores',
+  'Quadríceps / Força',
+  'Panturrilha / Tendões',
+  'Braços / Ombros',
 ];
 
 const profileSchema = z.object({
@@ -114,7 +105,7 @@ const profileSchema = z.object({
   longRunDay: z.string().min(1, "Selecione o dia do longão"),
   planGenerationType: z.enum(['full', 'blocks']).default('blocks'),
   experienceLevel: z.enum(['run_walk', 'beginner', 'intermediate', 'advanced']),
-  trainingHistory: z.string().min(5, 'Descreva seu histórico de forma técnica.'),
+  trainingHistory: z.string().min(5, 'Descreva seu histórico.'),
   
   // Dieta
   aestheticGoal: z.enum(['cutting', 'bulking', 'recomp', 'performance']).optional(),
@@ -193,6 +184,9 @@ export default function ProfilePage() {
             targetPace: p.targetPace || '',
             targetTime: p.targetTime || '',
             raceName: p.raceName || '',
+            experienceLevel: p.experienceLevel || 'beginner',
+            planGenerationType: p.planGenerationType || 'blocks',
+            trainingHistory: p.trainingHistory || 'Atleta em evolução.',
             aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
             trainingTiming: p.dietPreferences?.trainingTiming || 'manha',
             mealCount: p.dietPreferences?.mealCount || 4,
@@ -216,6 +210,7 @@ export default function ProfilePage() {
   }, [context?.isHydrated, context?.activeProfile, reset]);
 
   const watchAvatarUrl = watch('avatarUrl');
+  const watchGoalType = watch('raceGoalType');
   const isOwner = context?.activeProfile?.ownerUid === user?.uid;
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,15 +304,16 @@ export default function ProfilePage() {
                 <div className="space-y-8">
                     <Tabs defaultValue="perfil" className="w-full" value={activeTab} onValueChange={setActiveTab}>
                         <TabsList className="grid w-full grid-cols-5 h-auto bg-secondary/20 p-1 rounded-xl">
-                            <TabsTrigger value="perfil" className="py-2.5 font-bold text-[10px] uppercase">Perfil</TabsTrigger>
-                            <TabsTrigger value="corrida" className="py-2.5 font-bold text-[10px] uppercase">Corrida</TabsTrigger>
-                            <TabsTrigger value="alimentacao" className="py-2.5 font-bold text-[10px] uppercase">Dieta</TabsTrigger>
-                            <TabsTrigger value="musculacao" className="py-2.5 font-bold text-[10px] uppercase">Força</TabsTrigger>
-                            <TabsTrigger value="compartilhamento" className="py-2.5 font-bold text-[10px] uppercase">Vínculo</TabsTrigger>
+                            <TabsTrigger value="perfil" className="py-2.5 font-bold text-[10px] uppercase italic">Perfil</TabsTrigger>
+                            <TabsTrigger value="corrida" className="py-2.5 font-bold text-[10px] uppercase italic">Corrida</TabsTrigger>
+                            <TabsTrigger value="alimentacao" className="py-2.5 font-bold text-[10px] uppercase italic">Dieta</TabsTrigger>
+                            <TabsTrigger value="musculacao" className="py-2.5 font-bold text-[10px] uppercase italic">Força</TabsTrigger>
+                            <TabsTrigger value="compartilhamento" className="py-2.5 font-bold text-[10px] uppercase italic">Vínculo</TabsTrigger>
                         </TabsList>
 
+                        {/* --- ABA PERFIL --- */}
                         <TabsContent value="perfil" className="mt-6 space-y-6 animate-in fade-in">
-                            <Card className="bg-card/50">
+                            <Card className="bg-card/50 border-border/50">
                                 <CardHeader>
                                     <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
                                         <div className="relative">
@@ -339,23 +335,23 @@ export default function ProfilePage() {
                                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-border/50">
                                     <FormField control={form.control} name="name" render={({field}) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase">Nome Completo</FormLabel>
-                                            <FormControl><Input {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                            <FormLabel className="text-xs font-bold uppercase tracking-widest">Nome Completo</FormLabel>
+                                            <FormControl><Input {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )} />
                                     <FormField control={form.control} name="birthDate" render={({field}) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase">Data de Nascimento</FormLabel>
-                                            <FormControl><Input type="date" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                            <FormLabel className="text-xs font-bold uppercase tracking-widest">Nascimento</FormLabel>
+                                            <FormControl><Input type="date" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )} />
                                     <FormField control={form.control} name="gender" render={({field}) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase">Gênero</FormLabel>
+                                            <FormLabel className="text-xs font-bold uppercase tracking-widest">Gênero</FormLabel>
                                             <Select onValueChange={field.onChange} value={field.value}>
-                                                <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                 <SelectContent>
                                                     <SelectItem value="male">Masculino</SelectItem>
                                                     <SelectItem value="female">Feminino</SelectItem>
@@ -367,15 +363,15 @@ export default function ProfilePage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <FormField control={form.control} name="currentWeight" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Peso (kg)</FormLabel>
-                                                <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-xs font-bold uppercase tracking-widest">Peso (kg)</FormLabel>
+                                                <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
                                         <FormField control={form.control} name="height" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Altura (cm)</FormLabel>
-                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-xs font-bold uppercase tracking-widest">Altura (cm)</FormLabel>
+                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
@@ -384,87 +380,257 @@ export default function ProfilePage() {
                             </Card>
                         </TabsContent>
 
+                        {/* --- ABA CORRIDA --- */}
                         <TabsContent value="corrida" className="mt-6 space-y-6 animate-in fade-in">
-                            <Card className="bg-card/50">
-                                <CardHeader>
-                                  <CardTitle className="font-headline text-xl md:text-2xl uppercase italic text-primary">Inteligência de Corrida</CardTitle>
+                            <Card className="bg-card/50 border-border/50">
+                                <CardHeader className="bg-primary/5 border-b border-border/50">
+                                  <CardTitle className="font-headline text-xl uppercase italic text-primary flex items-center gap-3">
+                                    <Activity size={24}/> Fisiologia e Prova Alvo
+                                  </CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-8 pt-6 border-t border-border/50">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <CardContent className="space-y-10 pt-8">
+                                    {/* Fisiologia */}
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                         <FormField control={form.control} name="restingHr" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">FC Repouso</FormLabel>
-                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">FC Repouso</FormLabel>
+                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-black/20 h-12 text-lg font-black" /></FormControl>
                                             </FormItem>
                                         )} />
                                         <FormField control={form.control} name="vo2Max" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">VDOT</FormLabel>
-                                                <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">VDOT (IA)</FormLabel>
+                                                <FormControl><Input type="number" step="0.1" {...field} value={field.value ?? ''} className="bg-black/20 h-12 text-lg font-black text-primary" /></FormControl>
                                             </FormItem>
                                         )} />
                                         <FormField control={form.control} name="thresholdPace" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Pace Limiar</FormLabel>
-                                                <FormControl><Input placeholder="05:00" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pace Limiar</FormLabel>
+                                                <FormControl><Input placeholder="05:00" {...field} value={field.value ?? ''} className="bg-black/20 h-12 text-lg font-black" /></FormControl>
                                             </FormItem>
                                         )} />
                                         <FormField control={form.control} name="thresholdHr" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">FC Limiar (L2)</FormLabel>
-                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">FC Limiar (L2)</FormLabel>
+                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} className="bg-black/20 h-12 text-lg font-black" /></FormControl>
                                             </FormItem>
                                         )} />
                                     </div>
 
-                                    <div className="space-y-4 border-t pt-6">
-                                        <FormLabel className="text-xs font-bold uppercase">Dias de Corrida</FormLabel>
-                                        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                                            {weekDays.map(day => (
-                                                <FormField key={day.id} control={form.control} name="trainingDays" render={({ field }) => (
-                                                    <FormItem className="space-y-0">
-                                                        <FormControl>
-                                                            <div 
-                                                                onClick={() => {
-                                                                    const current = field.value || [];
-                                                                    if (current.includes(day.id)) field.onChange(current.filter(d => d !== day.id));
-                                                                    else field.onChange([...current, day.id]);
-                                                                }}
-                                                                className={cn(
-                                                                    "h-12 rounded-lg border-2 flex flex-col items-center justify-center cursor-pointer transition-all",
-                                                                    field.value?.includes(day.id) 
-                                                                        ? "border-primary bg-primary/10 text-primary" 
-                                                                        : "border-border/50 bg-secondary/10 text-muted-foreground"
-                                                                )}
-                                                            >
-                                                                <span className="text-[10px] font-black">{day.label}</span>
-                                                            </div>
-                                                        </FormControl>
+                                    {/* Prova Alvo */}
+                                    <div className="space-y-6 border-t border-border/30 pt-8">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Trophy className="size-4 text-primary" />
+                                            <h4 className="text-xs font-black uppercase italic tracking-widest">Planejamento de Prova</h4>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormField control={form.control} name="raceName" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Nome da Prova</FormLabel>
+                                                    <FormControl><Input placeholder="Ex: Maratona de SP" {...field} value={field.value ?? ''} className="bg-black/20 h-12" /></FormControl>
+                                                </FormItem>
+                                            )} />
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <FormField control={form.control} name="raceDistance" render={({field}) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Distância</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
+                                                            <FormControl><SelectTrigger className="bg-black/20 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                            <SelectContent>
+                                                                <SelectItem value="5k">5 km</SelectItem>
+                                                                <SelectItem value="10k">10 km</SelectItem>
+                                                                <SelectItem value="21k">Meia Maratona</SelectItem>
+                                                                <SelectItem value="42k">Maratona</SelectItem>
+                                                                <SelectItem value="ultra">Ultra / Trail</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
                                                     </FormItem>
                                                 )} />
-                                            ))}
+                                                <FormField control={form.control} name="raceDate" render={({field}) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Data Alvo</FormLabel>
+                                                        <FormControl><Input type="date" {...field} value={field.value ?? ''} className="bg-black/20 h-12" /></FormControl>
+                                                    </FormItem>
+                                                )} />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormField control={form.control} name="raceGoalType" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Tipo de Meta</FormLabel>
+                                                    <div className="flex gap-2 bg-black/20 p-1 rounded-xl">
+                                                        <Button type="button" variant={watchGoalType === 'pace' ? 'default' : 'ghost'} className="flex-1 h-10 text-[10px] uppercase font-black" onClick={() => setValue('raceGoalType', 'pace')}>Pace Alvo</Button>
+                                                        <Button type="button" variant={watchGoalType === 'time' ? 'default' : 'ghost'} className="flex-1 h-10 text-[10px] uppercase font-black" onClick={() => setValue('raceGoalType', 'time')}>Tempo Alvo</Button>
+                                                    </div>
+                                                </FormItem>
+                                            )} />
+                                            {watchGoalType === 'pace' ? (
+                                                <FormField control={form.control} name="targetPace" render={({field}) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Ritmo Pretendido (min/km)</FormLabel>
+                                                        <FormControl><Input placeholder="04:15" {...field} value={field.value ?? ''} className="bg-primary/5 border-primary/20 h-12 text-lg font-black" /></FormControl>
+                                                    </FormItem>
+                                                )} ) : (
+                                                <FormField control={form.control} name="targetTime" render={({field}) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Tempo Pretendido (HH:MM:SS)</FormLabel>
+                                                        <FormControl><Input placeholder="03:30:00" {...field} value={field.value ?? ''} className="bg-primary/5 border-primary/20 h-12 text-lg font-black" /></FormControl>
+                                                    </FormItem>
+                                                )}
+                                            )}
                                         </div>
                                     </div>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6">
-                                        <FormField control={form.control} name="raceDistance" render={({field}) => (
+
+                                    {/* Calendário */}
+                                    <div className="space-y-6 border-t border-border/30 pt-8">
+                                        <div className="flex items-center gap-2">
+                                            <Target className="size-4 text-primary" />
+                                            <h4 className="text-xs font-black uppercase italic tracking-widest">Disponibilidade de Treino</h4>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <FormLabel className="text-[10px] font-bold uppercase text-muted-foreground">Dias de Corrida (IA priorizará estes dias)</FormLabel>
+                                            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                                                {weekDays.map(day => (
+                                                    <FormField key={day.id} control={form.control} name="trainingDays" render={({ field }) => (
+                                                        <FormItem className="space-y-0">
+                                                            <FormControl>
+                                                                <div 
+                                                                    onClick={() => {
+                                                                        const current = field.value || [];
+                                                                        if (current.includes(day.id)) field.onChange(current.filter(d => d !== day.id));
+                                                                        else field.onChange([...current, day.id]);
+                                                                    }}
+                                                                    className={cn(
+                                                                        "h-14 rounded-xl border-2 flex flex-col items-center justify-center cursor-pointer transition-all",
+                                                                        field.value?.includes(day.id) 
+                                                                            ? "border-primary bg-primary/20 text-primary shadow-lg shadow-primary/10" 
+                                                                            : "border-border/30 bg-black/20 text-muted-foreground"
+                                                                    )}
+                                                                >
+                                                                    <span className="text-[10px] font-black italic">{day.label}</span>
+                                                                </div>
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )} />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormField control={form.control} name="longRunDay" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Dia do Longão</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-black/20 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )} />
+                                            <FormField control={form.control} name="experienceLevel" render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-bold uppercase tracking-widest">Nível de Experiência</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl><SelectTrigger className="bg-black/20 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="run_walk">Corrida & Caminhada</SelectItem>
+                                                            <SelectItem value="beginner">Iniciante</SelectItem>
+                                                            <SelectItem value="intermediate">Intermediário</SelectItem>
+                                                            <SelectItem value="advanced">Avançado (Elite)</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )} />
+                                        </div>
+                                    </div>
+
+                                    {/* Comentários/Histórico */}
+                                    <div className="space-y-4 border-t border-border/30 pt-8">
+                                        <div className="flex items-center gap-2">
+                                            <HistoryIcon className="size-4 text-primary" />
+                                            <h4 className="text-xs font-black uppercase italic tracking-widest">Comentários para o Treinador IA</h4>
+                                        </div>
+                                        <FormField control={form.control} name="trainingHistory" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Distância Alvo</FormLabel>
+                                                <FormControl>
+                                                    <Textarea 
+                                                        placeholder="Descreva seu histórico recente, lesões passadas ou preferências técnicas..." 
+                                                        className="bg-black/20 min-h-[120px] rounded-xl font-medium italic" 
+                                                        {...field} 
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        {/* --- ABA DIETA --- */}
+                        <TabsContent value="alimentacao" className="mt-6 space-y-6 animate-in fade-in">
+                            <Card className="bg-card/50 border-border/50">
+                                <CardHeader className="bg-orange-500/5 border-b border-border/50">
+                                  <CardTitle className="font-headline text-xl uppercase italic text-orange-500 flex items-center gap-3">
+                                    <Utensils size={24}/> Nutrição & Metabolismo
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-8 pt-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <FormField control={form.control} name="aestheticGoal" render={({field}) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[10px] font-bold uppercase">Objetivo Estético</FormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
-                                                    <FormControl><SelectTrigger className="bg-secondary/10 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                    <FormControl><SelectTrigger className="bg-black/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                     <SelectContent>
-                                                        <SelectItem value="5k">5 km</SelectItem>
-                                                        <SelectItem value="10k">10 km</SelectItem>
-                                                        <SelectItem value="21k">Meia Maratona</SelectItem>
-                                                        <SelectItem value="42k">Maratona</SelectItem>
+                                                        <SelectItem value="performance">Performance</SelectItem>
+                                                        <SelectItem value="cutting">Cutting (Definição)</SelectItem>
+                                                        <SelectItem value="bulking">Bulking (Ganho)</SelectItem>
+                                                        <SelectItem value="recomp">Recomp (Troca)</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </FormItem>
                                         )} />
-                                        <FormField control={form.control} name="raceDate" render={({field}) => (
+                                        <FormField control={form.control} name="trainingTiming" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Data da Prova</FormLabel>
-                                                <FormControl><Input type="date" {...field} value={field.value ?? ''} className="bg-secondary/10 h-12" /></FormControl>
+                                                <FormLabel className="text-[10px] font-bold uppercase">Horário do Treino</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl><SelectTrigger className="bg-black/10 h-12"><SelectValue/></SelectTrigger></FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="jejum">Jejum</SelectItem>
+                                                        <SelectItem value="manha">Manhã</SelectItem>
+                                                        <SelectItem value="meio-dia">Meio-dia</SelectItem>
+                                                        <SelectItem value="tarde">Tarde</SelectItem>
+                                                        <SelectItem value="noite">Noite</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormItem>
+                                        )} />
+                                        <FormField control={form.control} name="mealCount" render={({field}) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[10px] font-bold uppercase">Refeições p/ Dia</FormLabel>
+                                                <FormControl><Input type="number" {...field} className="bg-black/10 h-12" /></FormControl>
+                                            </FormItem>
+                                        )} />
+                                    </div>
+                                    <FormField control={form.control} name="supplements" render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel className="text-[10px] font-bold uppercase">Suplementação Atual</FormLabel>
+                                            <FormControl><Input placeholder="Ex: Whey, Creatina, Gel de Carboidrato..." {...field} className="bg-black/10 h-12" /></FormControl>
+                                        </FormItem>
+                                    )} />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-8">
+                                        <FormField control={form.control} name="preferredFoods" render={({field}) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[10px] font-bold uppercase">Alimentos Preferidos</FormLabel>
+                                                <FormControl><Textarea placeholder="Alimentos que você gosta e facilitam a dieta..." className="bg-black/10 min-h-[100px] rounded-xl" {...field} /></FormControl>
+                                            </FormItem>
+                                        )} />
+                                        <FormField control={form.control} name="excludedFoods" render={({field}) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[10px] font-bold uppercase">Alimentos Excluídos</FormLabel>
+                                                <FormControl><Textarea placeholder="O que você não come de jeito nenhum..." className="bg-black/10 min-h-[100px] rounded-xl" {...field} /></FormControl>
                                             </FormItem>
                                         )} />
                                     </div>
@@ -472,79 +638,21 @@ export default function ProfilePage() {
                             </Card>
                         </TabsContent>
 
-                        <TabsContent value="alimentacao" className="mt-6 space-y-6 animate-in fade-in">
-                            <Card className="bg-card/50">
-                                <CardHeader>
-                                  <CardTitle className="font-headline text-xl md:text-2xl uppercase italic text-orange-500 flex items-center gap-2">
-                                    <Utensils size={24}/> Nutrição & Metabolismo
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border/50">
-                                    <FormField control={form.control} name="aestheticGoal" render={({field}) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase">Objetivo Estético</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="performance">Performance</SelectItem>
-                                                    <SelectItem value="cutting">Cutting (Definição)</SelectItem>
-                                                    <SelectItem value="bulking">Bulking (Ganho)</SelectItem>
-                                                    <SelectItem value="recomp">Recomp (Troca)</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </FormItem>
-                                    )} />
-                                    <FormField control={form.control} name="trainingTiming" render={({field}) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase">Horário do Treino</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="jejum">Jejum</SelectItem>
-                                                    <SelectItem value="manha">Manhã</SelectItem>
-                                                    <SelectItem value="meio-dia">Meio-dia</SelectItem>
-                                                    <SelectItem value="tarde">Tarde</SelectItem>
-                                                    <SelectItem value="noite">Noite</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </FormItem>
-                                    )} />
-                                    <FormField control={form.control} name="mealCount" render={({field}) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase">Refeições p/ Dia</FormLabel>
-                                            <FormControl><Input type="number" {...field} className="bg-secondary/10" /></FormControl>
-                                        </FormItem>
-                                    )} />
-                                    <FormField control={form.control} name="supplements" render={({field}) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase">Suplementação</FormLabel>
-                                            <FormControl><Input placeholder="Ex: Whey, Creatina, Gel" {...field} className="bg-secondary/10" /></FormControl>
-                                        </FormItem>
-                                    )} />
-                                    <FormField control={form.control} name="allergies" render={({field}) => (
-                                        <FormItem className="md:col-span-2">
-                                            <FormLabel className="text-xs font-bold uppercase">Alergias / Intolerâncias</FormLabel>
-                                            <FormControl><Input placeholder="Ex: Lactose, Glúten..." {...field} className="bg-secondary/10" /></FormControl>
-                                        </FormItem>
-                                    )} />
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
+                        {/* --- ABA FORÇA --- */}
                         <TabsContent value="musculacao" className="mt-6 space-y-6 animate-in fade-in">
-                            <Card className="bg-card/50">
-                                <CardHeader>
-                                  <CardTitle className="font-headline text-xl md:text-2xl uppercase italic text-purple-500 flex items-center gap-2">
+                            <Card className="bg-card/50 border-border/50">
+                                <CardHeader className="bg-purple-500/5 border-b border-border/50">
+                                  <CardTitle className="font-headline text-xl uppercase italic text-purple-500 flex items-center gap-3">
                                     <Dumbbell size={24}/> Treinamento de Força
                                   </CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-6 pt-6 border-t border-border/50">
+                                <CardContent className="space-y-10 pt-8">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <FormField control={form.control} name="strengthSplit" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Divisão (Split)</FormLabel>
+                                                <FormLabel className="text-[10px] font-bold uppercase">Divisão (Split)</FormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
-                                                    <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                    <FormControl><SelectTrigger className="bg-black/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                     <SelectContent>
                                                         <SelectItem value="full_body">Full Body</SelectItem>
                                                         <SelectItem value="upper_lower">Upper/Lower</SelectItem>
@@ -555,9 +663,9 @@ export default function ProfilePage() {
                                         )} />
                                         <FormField control={form.control} name="strengthObjective" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Foco</FormLabel>
+                                                <FormLabel className="text-[10px] font-bold uppercase">Foco do Treino</FormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
-                                                    <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                    <FormControl><SelectTrigger className="bg-black/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                     <SelectContent>
                                                         <SelectItem value="performance">Específico Corrida</SelectItem>
                                                         <SelectItem value="strength">Força Máxima</SelectItem>
@@ -569,9 +677,9 @@ export default function ProfilePage() {
                                         )} />
                                         <FormField control={form.control} name="legDay" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">Dia de Perna</FormLabel>
+                                                <FormLabel className="text-[10px] font-bold uppercase">Dia de Perna</FormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
-                                                    <FormControl><SelectTrigger className="bg-secondary/10"><SelectValue/></SelectTrigger></FormControl>
+                                                    <FormControl><SelectTrigger className="bg-black/10 h-12"><SelectValue/></SelectTrigger></FormControl>
                                                     <SelectContent>
                                                         {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
                                                     </SelectContent>
@@ -580,30 +688,71 @@ export default function ProfilePage() {
                                         )} />
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-6">
-                                        <FormField control={form.control} name="prBench" render={({field}) => (
+                                    <div className="space-y-4 border-t pt-8">
+                                        <FormLabel className="text-[10px] font-bold uppercase">Equipamentos Disponíveis</FormLabel>
+                                        <div className="flex flex-wrap gap-2">
+                                            {equipmentOptions.map(opt => (
+                                                <FormField key={opt} control={form.control} name="strengthEquipment" render={({ field }) => (
+                                                    <FormItem className="space-y-0">
+                                                        <FormControl>
+                                                            <div 
+                                                                onClick={() => {
+                                                                    const current = field.value || [];
+                                                                    if (current.includes(opt)) field.onChange(current.filter(o => o !== opt));
+                                                                    else field.onChange([...current, opt]);
+                                                                }}
+                                                                className={cn(
+                                                                    "px-4 py-2 rounded-full border text-[10px] font-black uppercase cursor-pointer transition-all",
+                                                                    field.value?.includes(opt) 
+                                                                        ? "bg-purple-500 border-purple-500 text-white" 
+                                                                        : "border-border/50 bg-black/10 text-muted-foreground hover:border-purple-500/50"
+                                                                )}
+                                                            >
+                                                                {opt}
+                                                            </div>
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )} />
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-8">
+                                        <FormField control={form.control} name="limitations" render={({field}) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">PR Supino (kg)</FormLabel>
-                                                <FormControl><Input type="number" {...field} className="bg-secondary/10" /></FormControl>
+                                                <FormLabel className="text-[10px] font-bold uppercase">Lesões ou Limitações</FormLabel>
+                                                <FormControl><Textarea placeholder="Algum desconforto ou restrição médica?" className="bg-black/10 min-h-[100px] rounded-xl" {...field} /></FormControl>
                                             </FormItem>
                                         )} />
-                                        <FormField control={form.control} name="prSquat" render={({field}) => (
-                                            <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">PR Agacham. (kg)</FormLabel>
-                                                <FormControl><Input type="number" {...field} className="bg-secondary/10" /></FormControl>
-                                            </FormItem>
-                                        )} />
-                                        <FormField control={form.control} name="prDeadlift" render={({field}) => (
-                                            <FormItem>
-                                                <FormLabel className="text-xs font-bold uppercase">PR Terra (kg)</FormLabel>
-                                                <FormControl><Input type="number" {...field} className="bg-secondary/10" /></FormControl>
-                                            </FormItem>
-                                        )} />
+                                        <div className="space-y-4">
+                                            <FormLabel className="text-[10px] font-bold uppercase">Recordes Pessoais (PRs)</FormLabel>
+                                            <div className="grid grid-cols-3 gap-3">
+                                                <FormField control={form.control} name="prBench" render={({field}) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-[9px] font-bold uppercase opacity-60">Supino (kg)</FormLabel>
+                                                        <FormControl><Input type="number" {...field} className="bg-black/10 h-10 text-center font-black" /></FormControl>
+                                                    </FormItem>
+                                                )} />
+                                                <FormField control={form.control} name="prSquat" render={({field}) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-[9px] font-bold uppercase opacity-60">Agacham. (kg)</FormLabel>
+                                                        <FormControl><Input type="number" {...field} className="bg-black/10 h-10 text-center font-black" /></FormControl>
+                                                    </FormItem>
+                                                )} />
+                                                <FormField control={form.control} name="prDeadlift" render={({field}) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-[9px] font-bold uppercase opacity-60">Terra (kg)</FormLabel>
+                                                        <FormControl><Input type="number" {...field} className="bg-black/10 h-10 text-center font-black" /></FormControl>
+                                                    </FormItem>
+                                                )} />
+                                            </div>
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
                         </TabsContent>
 
+                        {/* --- ABA COMPARTILHAMENTO --- */}
                         <TabsContent value="compartilhamento" className="mt-6 space-y-6 animate-in fade-in">
                             <Card className="bg-card/50 border-primary/20">
                                 <CardHeader>
@@ -644,12 +793,13 @@ export default function ProfilePage() {
                         </TabsContent>
                     </Tabs>
 
-                    <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-border/50">
+                    {/* --- BOTÕES DE AÇÃO --- */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-border/50 px-2">
                         <Button 
                             type="button" 
                             size="lg" 
                             disabled={isSaving} 
-                            className="flex-1 h-14 font-black uppercase tracking-widest bg-white text-black hover:bg-white/90"
+                            className="flex-1 h-14 font-black uppercase tracking-widest bg-white text-black hover:bg-white/90 shadow-xl"
                             onClick={handleSaveActiveTab}
                         >
                             {isSaving ? <Loader2 className="animate-spin mr-2 size-5" /> : <CheckCircle2 className="mr-2 size-5" />}
@@ -659,7 +809,7 @@ export default function ProfilePage() {
                         <Button 
                             type="button" 
                             size="lg" 
-                            className="flex-1 h-14 font-black uppercase tracking-widest bg-primary text-black"
+                            className="flex-1 h-14 font-black uppercase tracking-widest bg-primary text-black shadow-xl shadow-primary/20"
                             onClick={handleGenerate}
                             disabled={isProcessing}
                         >
@@ -673,18 +823,4 @@ export default function ProfilePage() {
       </div>
     </DashboardLayout>
   );
-}
-
-function MetricBox({ label, value, unit, highlight = 'default' }: { label: string, value: string, unit?: string, highlight?: 'default' | 'primary' | 'destructive' }) {
-    return (
-        <div className="bg-secondary/10 border p-3 rounded-xl text-center space-y-1">
-            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-none">{label}</p>
-            <p className={cn(
-                "text-sm md:text-base font-black italic uppercase",
-                highlight === 'primary' ? 'text-primary' : highlight === 'destructive' ? 'text-rose-500' : 'text-foreground'
-            )}>
-                {value} {unit && <span className="text-[9px] font-normal opacity-50">{unit}</span>}
-            </p>
-        </div>
-    );
 }
