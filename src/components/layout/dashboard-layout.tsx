@@ -101,14 +101,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error("Auth Error:", error);
       
-      let description = "Certifique-se de autorizar este domínio no Firebase Console.";
-      if (error.code === 'auth/identity-toolkit-api-has-not-been-used-in-project') {
-        description = "A API Identity Toolkit não está ativa. Por favor, ative 'Authentication' no Console do Firebase e tente novamente.";
+      const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'desconhecido';
+      let description = `Erro: ${error.code}. Domínio: ${currentDomain}. Verifique se este domínio está autorizado no console.`;
+      
+      if (error.code === 'auth/identity-toolkit-api-has-not-been-used-in-project' || error.code === 'auth/operation-not-allowed') {
+        description = "A API de Autenticação não está ativa. No Console Firebase, vá em Authentication > Login Method e clique em 'Get Started'.";
+      } else if (error.code === 'auth/unauthorized-domain') {
+        description = `O domínio '${currentDomain}' não está autorizado no Console Firebase (Authentication > Settings > Authorized Domains).`;
       }
       
       toast({ 
         variant: "destructive", 
-        title: "Erro de Autenticação", 
+        title: "Falha na Autenticação", 
         description
       });
     }
