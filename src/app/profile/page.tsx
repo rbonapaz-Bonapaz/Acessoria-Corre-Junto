@@ -71,6 +71,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
+import type { AthleteProfile } from '@/lib/types';
 
 const weekDays = [
   { id: 'Domingo', label: 'DOM' },
@@ -209,39 +210,52 @@ export default function ProfilePage() {
   };
 
   const handleSaveActiveTab = async () => {
-    if (!context) return;
+    if (!context || !context.activeProfile) return;
     setIsSaving(true);
     const data = getValues();
+    
+    const profileToUpdate: Partial<AthleteProfile> = {
+      ...data,
+      id: context.activeProfile.id,
+      dietPreferences: {
+        ...context.activeProfile.dietPreferences,
+        aestheticGoal: data.aestheticGoal,
+        trainingTiming: data.trainingTiming,
+        mealCount: data.mealCount,
+        supplements: data.supplements,
+        allergies: data.allergies,
+        preferredFoods: data.preferredFoods,
+        excludedFoods: data.excludedFoods
+      },
+      strengthPreferences: {
+        ...context.activeProfile.strengthPreferences,
+        splitPreference: data.strengthSplit,
+        objective: data.strengthObjective,
+        frequency: data.strengthFrequency,
+        trainingDays: data.strengthDays,
+        equipment: data.strengthEquipment,
+        focusAreas: data.strengthFocus,
+        legDay: data.legDay,
+        limitations: data.limitations,
+        prBench: data.prBench,
+        prSquat: data.prSquat,
+        prDeadlift: data.prDeadlift
+      }
+    };
+
     try {
-        await context.saveProfile({
-            ...context.activeProfile,
-            ...data,
-            dietPreferences: {
-                ...context.activeProfile?.dietPreferences,
-                aestheticGoal: data.aestheticGoal,
-                trainingTiming: data.trainingTiming,
-                mealCount: data.mealCount,
-                supplements: data.supplements,
-                allergies: data.allergies,
-                preferredFoods: data.preferredFoods,
-                excludedFoods: data.excludedFoods
-            },
-            strengthPreferences: {
-                ...context.activeProfile?.strengthPreferences,
-                splitPreference: data.strengthSplit,
-                objective: data.strengthObjective,
-                frequency: data.strengthFrequency,
-                trainingDays: data.strengthDays,
-                equipment: data.strengthEquipment,
-                focusAreas: data.strengthFocus,
-                legDay: data.legDay,
-                limitations: data.limitations,
-                prBench: data.prBench,
-                prSquat: data.prSquat,
-                prDeadlift: data.prDeadlift
-            }
-        } as any);
-        toast({ title: `Aba ${activeTab.toUpperCase()} Salva!` });
+        await context.saveProfile(profileToUpdate);
+        toast({ 
+          title: "Sincronizado!", 
+          description: `Os dados da aba ${activeTab.toUpperCase()} foram salvos na nuvem.`,
+          duration: 3000
+        });
+    } catch (err) {
+        toast({ 
+          variant: 'destructive', 
+          title: "Erro ao salvar", 
+          description: "Não foi possível enviar os dados para o servidor." 
+        });
     } finally {
         setTimeout(() => setIsSaving(false), 300);
     }
@@ -751,7 +765,7 @@ export default function ProfilePage() {
                                               <div 
                                                   key={opt}
                                                   onClick={() => {
-                                                      const current = getValues('strengthEquipment') || [];
+                                                      const current = watch('strengthEquipment') || [];
                                                       if (current.includes(opt)) setValue('strengthEquipment', current.filter(o => o !== opt));
                                                       else setValue('strengthEquipment', [...current, opt]);
                                                   }}
