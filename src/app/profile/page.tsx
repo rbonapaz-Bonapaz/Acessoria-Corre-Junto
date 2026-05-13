@@ -55,14 +55,15 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AthleteProfile } from '@/lib/types';
 
+// Domingo como primeiro dia do sistema
 const weekDays = [
+  { id: 'Domingo', label: 'DOM' },
   { id: 'Segunda', label: 'SEG' },
   { id: 'Terça', label: 'TER' },
   { id: 'Quarta', label: 'QUA' },
   { id: 'Quinta', label: 'QUI' },
   { id: 'Sexta', label: 'SEX' },
   { id: 'Sábado', label: 'SÁB' },
-  { id: 'Domingo', label: 'DOM' },
 ] as const;
 
 const profileSchema = z.object({
