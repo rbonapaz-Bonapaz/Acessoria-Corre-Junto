@@ -1,7 +1,6 @@
-
 'use server';
 /**
- * @fileOverview Um fluxo Genkit para gerar blocos de treinamento personalizados ou ciclos completos, agora com suporte a arquivos de referência.
+ * @fileOverview Um fluxo Genkit para gerar blocos de treinamento personalizados ou ciclos completos, agora com suporte a arquivos de referência e contextualização da prova alvo.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -69,22 +68,28 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   
   try {
     const { output } = await aiInstance.generate({
-      system: 'Você é um treinador de corrida de elite. Gere um plano de treinamento em PORTUGUÊS estruturado rigorosamente conforme o esquema de saída. Se houver um arquivo de referência anexado (PDF ou imagem), use-o como a fonte primária de verdade para os ritmos, histórico e orientações específicas.',
+      system: 'Você é um treinador de corrida de elite. Gere um plano de treinamento em PORTUGUÊS estruturado rigorosamente conforme o esquema de saída. Se houver um nome de prova alvo, use-o no seu tom para motivar o atleta. Se houver um arquivo de referência anexado (PDF ou imagem), use-o como a fonte primária de verdade para os ritmos e orientações específicas.',
       prompt: [
-        { text: `Gere um plano para o atleta:
-          ${input.raceName ? `Prova: ${input.raceName}` : ''}
-          Estratégia: ${input.planGenerationType} (full = até ${input.raceDate}; blocks = 4 semanas).
-          VDOT: ${input.currentVDOT}
-          Zonas FC: Z1 ate ${input.hrZone1End}, Z2 ate ${input.hrZone2End}, Z3 ate ${input.hrZone3End}, Z4 ate ${input.hrZone4End}. Max: ${input.hrMax}.
-          Alvo: ${input.targetRaceDistance} em ${input.raceDate}.
-          Objetivo: ${input.targetPace ? `Pace ${input.targetPace} min/km` : input.targetTime ? `Tempo ${input.targetTime}` : 'Performance'}.
-          Volume: ${input.weeklyMileageGoal}km/semana.
-          Leg Day: ${input.legDay} (NÃO agende Tiros ou Longões no dia seguinte).
-          Disponibilidade: ${input.weeklyAvailability}.
-          Histórico: ${input.injuryHistory}.
+        { text: `Gere um plano de elite para o atleta focando em: ${input.raceName || 'Performance Geral'}.
+          
+          Contexto da Prova:
+          - Prova: ${input.raceName || 'N/A'}
+          - Alvo: ${input.targetRaceDistance} em ${input.raceDate}.
+          - Objetivo: ${input.targetPace ? `Pace ${input.targetPace} min/km` : input.targetTime ? `Tempo ${input.targetTime}` : 'Melhor tempo possível'}.
+          
+          Fisiologia:
+          - VDOT Atual: ${input.currentVDOT}
+          - Zonas FC: Z1 ate ${input.hrZone1End}, Z2 ate ${input.hrZone2End}, Z3 ate ${input.hrZone3End}, Z4 ate ${input.hrZone4End}. Max: ${input.hrMax}.
+          
+          Restrições & Preferências:
+          - Estratégia: ${input.planGenerationType} (full = ciclo completo; blocks = 4 semanas).
+          - Volume Alvo: ${input.weeklyMileageGoal}km/semana.
+          - Leg Day: ${input.legDay} (Evite Tiros ou Longões no dia seguinte).
+          - Disponibilidade: ${input.weeklyAvailability}.
+          - Histórico: ${input.injuryHistory}.
         `},
         ...(input.referenceFileDataUri ? [{ media: { url: input.referenceFileDataUri } }] : []),
-        { text: 'Analise o arquivo anexado para extrair detalhes sobre treinos passados ou novas orientações que devem ser incorporadas a este ciclo gerado.' }
+        { text: 'Analise o arquivo anexado para extrair detalhes sobre treinos passados ou orientações específicas e incorpore-as ao novo ciclo. Use o nome da prova alvo na descrição dos focos semanais para criar conexão emocional.' }
       ],
       output: { schema: GenerateTrainingBlockOutputSchema }
     });
