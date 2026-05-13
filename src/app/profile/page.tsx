@@ -173,31 +173,43 @@ export default function ProfilePage() {
   }, [trainingDays]);
 
   useEffect(() => {
-    if (context?.isHydrated && context.activeProfile) {
-        const p = context.activeProfile;
-        reset({
-            ...p,
-            name: p.name || '',
-            athleteEmail: p.athleteEmail || '',
-            raceGoalType: p.targetTime ? 'time' : 'pace',
-            targetPace: p.targetPace || '',
-            targetTime: p.targetTime || '',
-            raceName: p.raceName || '',
-            raceDistance: p.raceDistance || '10k',
-            raceDate: p.raceDate || '',
-            experienceLevel: p.experienceLevel || 'beginner',
-            planGenerationType: p.planGenerationType || 'blocks',
-            trainingHistory: p.trainingHistory || '',
-            referenceDocumentUri: p.referenceDocumentUri || '',
-            aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
-            strengthSplit: p.strengthPreferences?.splitPreference || 'full_body',
-            strengthObjective: p.strengthPreferences?.objective || 'performance',
-            strengthFrequency: p.strengthPreferences?.frequency || 3,
-            strengthDays: p.strengthPreferences?.trainingDays || [],
-            strengthEquipment: p.strengthPreferences?.equipment || [],
-            strengthFocus: p.strengthPreferences?.focusAreas || [],
-            legDay: p.strengthPreferences?.legDay || '',
-        } as any);
+    if (context?.isHydrated) {
+        if (context.activeProfile) {
+            const p = context.activeProfile;
+            reset({
+                ...p,
+                name: p.name || '',
+                athleteEmail: p.athleteEmail || '',
+                raceGoalType: p.targetTime ? 'time' : 'pace',
+                targetPace: p.targetPace || '',
+                targetTime: p.targetTime || '',
+                raceName: p.raceName || '',
+                raceDistance: p.raceDistance || '10k',
+                raceDate: p.raceDate || '',
+                experienceLevel: p.experienceLevel || 'beginner',
+                planGenerationType: p.planGenerationType || 'blocks',
+                trainingHistory: p.trainingHistory || '',
+                referenceDocumentUri: p.referenceDocumentUri || '',
+                aestheticGoal: p.dietPreferences?.aestheticGoal || 'performance',
+                strengthSplit: p.strengthPreferences?.splitPreference || 'full_body',
+                strengthObjective: p.strengthPreferences?.objective || 'performance',
+                strengthFrequency: p.strengthPreferences?.frequency || 3,
+                strengthDays: p.strengthPreferences?.trainingDays || [],
+                strengthEquipment: p.strengthPreferences?.equipment || [],
+                strengthFocus: p.strengthPreferences?.focusAreas || [],
+                legDay: p.strengthPreferences?.legDay || '',
+            } as any);
+        } else {
+            reset({
+                name: '', 
+                athleteEmail: '',
+                trainingDays: ['Domingo', 'Terça', 'Quinta', 'Sábado'], 
+                raceGoalType: 'pace',
+                planGenerationType: 'blocks',
+                experienceLevel: 'beginner',
+                referenceDocumentUri: ''
+            });
+        }
     }
   }, [context?.isHydrated, context?.activeProfile, reset]);
 
@@ -205,7 +217,7 @@ export default function ProfilePage() {
   const watchGoalType = watch('raceGoalType');
   const watchReferenceDoc = watch('referenceDocumentUri');
 
-  const isOwner = context?.activeProfile?.ownerUid === user?.uid || context?.activeProfile?.ownerUid === 'local-user';
+  const isOwner = !context?.activeProfile || context?.activeProfile?.ownerUid === user?.uid || context?.activeProfile?.ownerUid === 'local-user';
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -228,15 +240,15 @@ export default function ProfilePage() {
   };
 
   const handleSaveActiveTab = async () => {
-    if (!context || !context.activeProfile) return;
+    if (!context) return;
     setIsSaving(true);
     const data = getValues();
     
     const profileToUpdate: Partial<AthleteProfile> = {
       ...data,
-      id: context.activeProfile.id,
+      id: context.activeProfile?.id,
       dietPreferences: {
-        ...context.activeProfile.dietPreferences,
+        ...context.activeProfile?.dietPreferences,
         aestheticGoal: data.aestheticGoal,
         trainingTiming: data.trainingTiming,
         mealCount: data.mealCount,
@@ -246,7 +258,7 @@ export default function ProfilePage() {
         excludedFoods: data.excludedFoods
       },
       strengthPreferences: {
-        ...context.activeProfile.strengthPreferences,
+        ...context.activeProfile?.strengthPreferences,
         splitPreference: data.strengthSplit,
         objective: data.strengthObjective,
         frequency: data.strengthFrequency,
@@ -262,10 +274,16 @@ export default function ProfilePage() {
     };
 
     try {
-        await context.saveProfile(profileToUpdate);
+        const saved = await context.saveProfile(profileToUpdate);
+        
+        // Se for um novo atleta, ativa-o automaticamente
+        if (!context.activeProfile) {
+            context.switchProfile(saved.id);
+        }
+
         toast({ 
           title: "Sincronizado!", 
-          description: `Os dados da aba ${activeTab.toUpperCase()} foram salvos na nuvem.`,
+          description: `Os dados de ${saved.name || 'atleta'} foram salvos na nuvem.`,
           duration: 3000
         });
     } catch (err) {
@@ -914,7 +932,7 @@ export default function ProfilePage() {
                           onClick={handleSaveActiveTab}
                       >
                           {isSaving ? <Loader2 className="animate-spin mr-3 size-6" /> : <CheckCircle2 className="mr-3 size-6" />}
-                          SALVAR {activeTab.toUpperCase()}
+                          SALVAR PERFIL
                       </Button>
                       
                       {isOwner && (
@@ -923,7 +941,7 @@ export default function ProfilePage() {
                               size="lg" 
                               className="flex-1 h-16 font-black uppercase tracking-[0.2em] italic bg-primary text-black shadow-2xl rounded-2xl"
                               onClick={handleGenerate}
-                              disabled={isProcessing}
+                              disabled={isProcessing || !context.activeProfile}
                           >
                               {isProcessing ? <Loader2 className="animate-spin mr-3 size-6" /> : <Zap className="mr-3 size-6" />} 
                               GERAR PLANILHA IA

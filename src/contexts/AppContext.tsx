@@ -150,12 +150,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const saveProfile = async (data: Partial<AthleteProfile>) => {
     const id = data.id || crypto.randomUUID();
     const docRef = doc(db, 'athletes', id);
+    
+    const ownerUid = data.ownerUid || (user ? user.uid : 'local-user');
+    
     const newProfile = {
       ...data,
       id,
-      ownerUid: data.ownerUid || (user ? user.uid : 'local-user'),
+      ownerUid,
     } as AthleteProfile;
 
+    // Mutation call (non-blocking per instructions)
     setDoc(docRef, newProfile, { merge: true }).catch(err => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,
