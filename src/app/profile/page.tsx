@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useState, useEffect, useRef } from 'react';
+import { useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,14 +38,12 @@ import {
     CheckCircle2,
     ShieldCheck,
     Utensils,
-    Target,
-    Activity,
     Trophy,
     CalendarCheck,
     Info,
     FileText,
     Upload,
-    Timer
+    Activity
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -147,6 +145,11 @@ export default function ProfilePage() {
   const watchAvatarUrl = watch('avatarUrl');
   const watchGoalType = watch('raceGoalType');
   const watchReferenceDoc = watch('referenceDocumentUri');
+  const watchTrainingDays = watch('trainingDays');
+
+  const availableLongRunDays = useMemo(() => {
+    return weekDays.filter(day => watchTrainingDays.includes(day.id));
+  }, [watchTrainingDays]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -202,75 +205,78 @@ export default function ProfilePage() {
   return (
     <DashboardLayout>
       <TooltipProvider>
-        <div className="space-y-8 pb-12 max-w-5xl mx-auto">
+        <div className="space-y-8 pb-20 max-w-5xl mx-auto animate-in fade-in duration-700">
           <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-2">
             <div className="flex items-center gap-4">
-              <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                <ShieldCheck size={28}/>
+              <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
+                <ShieldCheck size={32}/>
               </div>
               <div>
-                <h1 className="font-headline text-2xl md:text-3xl uppercase font-black italic">
+                <h1 className="font-headline text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-none">
                   <span className="text-white">MEU</span> <span className="text-primary">PERFIL</span>
                 </h1>
-                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest italic">Sincronização Cloud-First</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.2em] italic mt-1">Sincronização Cloud-First Ativa</p>
               </div>
             </div>
           </header>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-8">
-              <Tabs defaultValue="perfil" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4 h-auto bg-secondary/20 p-1 rounded-xl">
-                  <TabsTrigger value="perfil" className="py-2.5 font-bold text-[10px] uppercase italic">Geral</TabsTrigger>
-                  <TabsTrigger value="corrida" className="py-2.5 font-bold text-[10px] uppercase italic">Corrida</TabsTrigger>
-                  <TabsTrigger value="alimentacao" className="py-2.5 font-bold text-[10px] uppercase italic">Dieta</TabsTrigger>
-                  <TabsTrigger value="musculacao" className="py-2.5 font-bold text-[10px] uppercase italic">Força</TabsTrigger>
+              <Tabs defaultValue="perfil" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 h-auto bg-secondary/20 p-1.5 rounded-2xl gap-2 shadow-inner">
+                  <TabsTrigger value="perfil" className="py-4 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">GERAL</TabsTrigger>
+                  <TabsTrigger value="corrida" className="py-4 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">CORRIDA</TabsTrigger>
+                  <TabsTrigger value="alimentacao" className="py-4 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">DIETA</TabsTrigger>
+                  <TabsTrigger value="musculacao" className="py-4 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">FORÇA</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="perfil" className="mt-6 space-y-6">
-                  <Card className="bg-card/50 border-border/50 rounded-2xl overflow-hidden">
-                    <CardHeader>
-                      <div className="flex flex-col sm:flex-row items-center gap-6">
-                        <div className="relative">
-                          <Avatar className="h-24 w-24 md:h-28 md:w-28 border-4 border-primary/20 rounded-3xl">
+                {/* --- ABA GERAL --- */}
+                <TabsContent value="perfil" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                  <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
+                    <CardHeader className="bg-secondary/10 border-b border-border/10 py-8 px-8">
+                      <div className="flex flex-col sm:flex-row items-center gap-8">
+                        <div className="relative group">
+                          <Avatar className="h-32 w-32 md:h-40 md:w-40 border-4 border-primary/20 rounded-[2.5rem] shadow-2xl transition-transform group-hover:scale-105 duration-300">
                             <AvatarImage src={watchAvatarUrl} className="object-cover" />
-                            <AvatarFallback className="text-3xl font-black italic">{watch('name')?.[0] || '?'}</AvatarFallback>
+                            <AvatarFallback className="text-4xl font-black italic bg-secondary">{watch('name')?.[0] || '?'}</AvatarFallback>
                           </Avatar>
                           <input type="file" ref={avatarFileRef} className="sr-only" onChange={handleAvatarChange} accept="image/*" />
-                          <Button type="button" variant="secondary" size="icon" className="absolute -bottom-2 -right-2 rounded-xl h-10 w-10 bg-white text-black shadow-lg" onClick={() => avatarFileRef.current?.click()}>
-                            <Camera size={16}/>
+                          <Button type="button" variant="secondary" size="icon" className="absolute -bottom-2 -right-2 rounded-2xl h-12 w-12 bg-primary text-black hover:bg-white shadow-xl transition-all" onClick={() => avatarFileRef.current?.click()}>
+                            <Camera size={20}/>
                           </Button>
                         </div>
-                        <div className="space-y-1 text-center sm:text-left">
-                          <CardTitle className="font-headline text-2xl uppercase italic font-black">Biometria</CardTitle>
-                          <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground italic">Dados sincronizados entre dispositivos.</CardDescription>
+                        <div className="space-y-2 text-center sm:text-left">
+                          <CardTitle className="font-headline text-3xl md:text-4xl uppercase italic font-black tracking-tighter text-white">BIOMETRIA DE ELITE</CardTitle>
+                          <CardDescription className="text-[11px] uppercase font-bold tracking-[0.2em] text-muted-foreground italic">Dados biométricos para calibração do motor de IA.</CardDescription>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border/50">
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-12">
                       <FormField control={form.control} name="name" render={({field}) => (
-                        <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nome Completo</FormLabel>
-                          <FormControl><Input {...field} className="bg-black/30 h-14 font-bold rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                        <FormItem className="space-y-3">
+                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic flex items-center gap-2">
+                            <User className="size-3" /> Nome do Atleta
+                          </FormLabel>
+                          <FormControl><Input {...field} className="bg-black/30 h-16 font-black text-lg md:text-xl rounded-2xl border-border/40 focus:border-primary px-6" /></FormControl>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="birthDate" render={({field}) => (
-                        <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Data de Nascimento</FormLabel>
-                          <FormControl><Input type="date" {...field} className="bg-black/30 h-14 font-bold rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                        <FormItem className="space-y-3">
+                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Data de Nascimento</FormLabel>
+                          <FormControl><Input type="date" {...field} className="bg-black/30 h-16 font-black text-lg md:text-xl rounded-2xl border-border/40 focus:border-primary px-6" /></FormControl>
                         </FormItem>
                       )} />
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-6">
                         <FormField control={form.control} name="currentWeight" render={({field}) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Peso (kg)</FormLabel>
-                            <FormControl><Input type="number" step="0.1" {...field} className="bg-black/30 h-14 text-center font-black rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                          <FormItem className="space-y-3">
+                            <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Peso (kg)</FormLabel>
+                            <FormControl><Input type="number" step="0.1" {...field} className="bg-black/30 h-16 text-center font-black text-2xl rounded-2xl border-border/40 focus:border-primary" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="height" render={({field}) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Altura (cm)</FormLabel>
-                            <FormControl><Input type="number" {...field} className="bg-black/30 h-14 text-center font-black rounded-xl border-border/40 focus:border-primary" /></FormControl>
+                          <FormItem className="space-y-3">
+                            <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Altura (cm)</FormLabel>
+                            <FormControl><Input type="number" {...field} className="bg-black/30 h-16 text-center font-black text-2xl rounded-2xl border-border/40 focus:border-primary" /></FormControl>
                           </FormItem>
                         )} />
                       </div>
@@ -278,53 +284,55 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="corrida" className="mt-6 space-y-8">
-                  <Card className="bg-card/50 border-border/50 rounded-2xl overflow-hidden">
-                    <CardHeader className="bg-primary/5 border-b border-border/50">
-                      <div className="flex items-center gap-3">
-                        <Activity size={24} className="text-primary" />
-                        <CardTitle className="font-headline text-lg uppercase italic text-white font-black">Fisiologia do Atleta</CardTitle>
+                {/* --- ABA CORRIDA --- */}
+                <TabsContent value="corrida" className="mt-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                  {/* Bloco Fisiologia */}
+                  <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
+                    <CardHeader className="bg-primary/5 border-b border-border/10 py-6 px-8">
+                      <div className="flex items-center gap-4">
+                        <Activity size={28} className="text-primary" />
+                        <CardTitle className="font-headline text-2xl uppercase italic text-white font-black tracking-tighter">FISIOLOGIA DO ATLETA</CardTitle>
                       </div>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8">
+                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 md:p-10">
                       <FormField control={form.control} name="vo2Max" render={({field}) => (
-                        <FormItem>
-                          <div className="flex items-center gap-1">
-                            <FormLabel className="text-[9px] font-black uppercase tracking-tight text-muted-foreground">VDOT (IA)</FormLabel>
-                            <Tooltip><TooltipTrigger asChild><Info className="size-2 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[9px]">Score de performance Jack Daniels.</p></TooltipContent></Tooltip>
+                        <FormItem className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">VDOT (IA)</FormLabel>
+                            <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">Padrão Jack Daniels de performance.</p></TooltipContent></Tooltip>
                           </div>
-                          <FormControl><Input type="number" step="0.1" {...field} className="bg-primary/5 border-primary/30 h-14 text-xl font-black text-primary text-center rounded-xl" /></FormControl>
+                          <FormControl><Input type="number" step="0.1" {...field} className="bg-primary/10 border-primary/40 h-16 text-2xl font-black text-primary text-center rounded-2xl" /></FormControl>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="thresholdPace" render={({field}) => (
-                        <FormItem>
-                          <FormLabel className="text-[9px] font-black uppercase tracking-tight text-muted-foreground">Pace Limiar</FormLabel>
-                          <FormControl><Input placeholder="4:20" {...field} className="bg-black/40 h-14 text-xl font-black text-center rounded-xl border-border/40" /></FormControl>
+                        <FormItem className="space-y-3">
+                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Pace Limiar</FormLabel>
+                          <FormControl><Input placeholder="4:20" {...field} className="bg-black/40 h-16 text-2xl font-black text-center rounded-2xl border-border/40" /></FormControl>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="thresholdHr" render={({field}) => (
-                        <FormItem>
-                          <FormLabel className="text-[9px] font-black uppercase tracking-tight text-muted-foreground">FC Limiar (L2)</FormLabel>
-                          <FormControl><Input type="number" {...field} className="bg-black/40 h-14 text-xl font-black text-center rounded-xl border-border/40" /></FormControl>
+                        <FormItem className="space-y-3">
+                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">FC Limiar (L2)</FormLabel>
+                          <FormControl><Input type="number" {...field} className="bg-black/40 h-16 text-2xl font-black text-center rounded-2xl border-border/40" /></FormControl>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="restingHr" render={({field}) => (
-                        <FormItem>
-                          <FormLabel className="text-[9px] font-black uppercase tracking-tight text-muted-foreground">FC Repouso</FormLabel>
-                          <FormControl><Input type="number" {...field} className="bg-black/40 h-14 text-xl font-black text-center rounded-xl border-border/40" /></FormControl>
+                        <FormItem className="space-y-3">
+                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">FC Repouso</FormLabel>
+                          <FormControl><Input type="number" {...field} className="bg-black/40 h-16 text-2xl font-black text-center rounded-2xl border-border/40" /></FormControl>
                         </FormItem>
                       )} />
                     </CardContent>
-                    <CardFooter className="bg-secondary/10 py-3 border-t border-border/30">
+                    <CardFooter className="bg-secondary/10 py-4 border-t border-border/20 px-8">
                         <FormField control={form.control} name="experienceLevel" render={({field}) => (
                           <FormItem className="w-full">
                             <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl><SelectTrigger className="bg-transparent border-none h-8 font-black text-[10px] uppercase italic"><SelectValue placeholder="Selecione seu nível..." /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                <SelectItem value="run_walk">Corrida & Caminhada</SelectItem>
-                                <SelectItem value="beginner">Iniciante</SelectItem>
-                                <SelectItem value="intermediate">Intermediário</SelectItem>
-                                <SelectItem value="advanced">Avançado</SelectItem>
+                              <FormControl><SelectTrigger className="bg-transparent border-none h-10 font-black text-[11px] uppercase italic tracking-widest text-muted-foreground hover:text-white transition-colors"><SelectValue placeholder="DEFINIR NÍVEL DE EXPERIÊNCIA" /></SelectTrigger></FormControl>
+                              <SelectContent className="bg-card border-border">
+                                <SelectItem value="run_walk">CORRIDA & CAMINHADA</SelectItem>
+                                <SelectItem value="beginner">INICIANTE</SelectItem>
+                                <SelectItem value="intermediate">INTERMEDIÁRIO</SelectItem>
+                                <SelectItem value="advanced">AVANÇADO</SelectItem>
                               </SelectContent>
                             </Select>
                           </FormItem>
@@ -332,67 +340,68 @@ export default function ProfilePage() {
                     </CardFooter>
                   </Card>
 
-                  <Card className="bg-primary/5 border-primary/20 rounded-2xl overflow-hidden shadow-lg border-2">
-                    <CardHeader className="bg-primary/10 border-b border-primary/20 py-6">
-                      <div className="flex items-center gap-3">
-                        <Trophy className="text-primary size-7 animate-pulse" />
-                        <CardTitle className="font-headline text-xl uppercase italic font-black text-white tracking-tighter">Informações da Prova Alvo</CardTitle>
+                  {/* Bloco Prova Alvo */}
+                  <Card className="bg-primary/5 border-primary/20 rounded-3xl overflow-hidden shadow-2xl border-2 animate-in zoom-in-95 duration-700">
+                    <CardHeader className="bg-primary/10 border-b border-primary/20 py-8 px-10">
+                      <div className="flex items-center gap-4">
+                        <Trophy className="text-primary size-9 animate-pulse" />
+                        <CardTitle className="font-headline text-3xl md:text-4xl uppercase italic font-black text-white tracking-tighter">INFORMAÇÕES DA PROVA ALVO</CardTitle>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-8 pt-8">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <CardContent className="space-y-10 p-10 md:p-12">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <FormField control={form.control} name="raceName" render={({field}) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Nome da Prova</FormLabel>
-                            <FormControl><Input placeholder="Ex: Maratona de Porto Alegre" {...field} className="bg-black/40 h-14 font-black rounded-xl border-border/40" /></FormControl>
+                          <FormItem className="space-y-3">
+                            <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">NOME DA PROVA</FormLabel>
+                            <FormControl><Input placeholder="Ex: Maratona de Porto Alegre" {...field} className="bg-black/40 h-16 font-black text-xl rounded-2xl border-border/40 px-6 focus:border-primary" /></FormControl>
                           </FormItem>
                         )} />
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-6">
                           <FormField control={form.control} name="raceDistance" render={({field}) => (
-                            <FormItem>
-                              <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Distância</FormLabel>
+                            <FormItem className="space-y-3">
+                              <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">DISTÂNCIA</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl><SelectTrigger className="bg-black/40 h-14 font-black rounded-xl border-border/40"><SelectValue/></SelectTrigger></FormControl>
+                                <FormControl><SelectTrigger className="bg-black/40 h-16 font-black text-xl rounded-2xl border-border/40 text-center"><SelectValue/></SelectTrigger></FormControl>
                                 <SelectContent>
-                                  <SelectItem value="5k">5 km</SelectItem>
-                                  <SelectItem value="10k">10 km</SelectItem>
-                                  <SelectItem value="21k">21.1 km</SelectItem>
-                                  <SelectItem value="42k">42.2 km</SelectItem>
+                                  <SelectItem value="5k">5 KM</SelectItem>
+                                  <SelectItem value="10k">10 KM</SelectItem>
+                                  <SelectItem value="21k">21.1 KM</SelectItem>
+                                  <SelectItem value="42k">42.2 KM</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormItem>
                           )} />
                           <FormField control={form.control} name="raceDate" render={({field}) => (
-                            <FormItem>
-                              <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Data da Prova</FormLabel>
-                              <FormControl><Input type="date" {...field} className="bg-black/40 h-14 font-black rounded-xl border-border/40" /></FormControl>
+                            <FormItem className="space-y-3">
+                              <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">DATA DA PROVA</FormLabel>
+                              <FormControl><Input type="date" {...field} className="bg-black/40 h-16 font-black text-xl rounded-2xl border-border/40 px-4" /></FormControl>
                             </FormItem>
                           )} />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end border-t border-primary/10 pt-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-end border-t border-primary/10 pt-10">
                         <FormField control={form.control} name="raceGoalType" render={({field}) => (
-                          <FormItem className="space-y-3">
-                            <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Definir Meta por:</FormLabel>
-                            <div className="flex gap-2">
-                              <Button type="button" variant={watchGoalType === 'pace' ? 'default' : 'secondary'} className="flex-1 rounded-xl h-12 font-bold uppercase italic transition-all" onClick={() => setValue('raceGoalType', 'pace')}>Pace Médio</Button>
-                              <Button type="button" variant={watchGoalType === 'time' ? 'default' : 'secondary'} className="flex-1 rounded-xl h-12 font-bold uppercase italic transition-all" onClick={() => setValue('raceGoalType', 'time')}>Tempo Final</Button>
+                          <FormItem className="space-y-4">
+                            <FormLabel className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground italic text-center block">ESTRATÉGIA DE META</FormLabel>
+                            <div className="flex gap-4">
+                              <Button type="button" variant={watchGoalType === 'pace' ? 'default' : 'secondary'} className={cn("flex-1 h-14 font-black uppercase italic tracking-widest transition-all rounded-2xl", watchGoalType === 'pace' && "bg-primary text-black")} onClick={() => setValue('raceGoalType', 'pace')}>PACE MÉDIO</Button>
+                              <Button type="button" variant={watchGoalType === 'time' ? 'default' : 'secondary'} className={cn("flex-1 h-14 font-black uppercase italic tracking-widest transition-all rounded-2xl", watchGoalType === 'time' && "bg-primary text-black")} onClick={() => setValue('raceGoalType', 'time')}>TEMPO FINAL</Button>
                             </div>
                           </FormItem>
                         )} />
                         {watchGoalType === 'pace' ? (
                           <FormField control={form.control} name="targetPace" render={({field}) => (
-                            <FormItem>
-                              <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pace Alvo (min/km)</FormLabel>
-                              <FormControl><Input placeholder="4:30" {...field} className="bg-primary/20 border-primary/40 h-14 font-black text-center text-xl rounded-xl text-primary" /></FormControl>
+                            <FormItem className="space-y-3">
+                              <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Pace Alvo (min/km)</FormLabel>
+                              <FormControl><Input placeholder="4:30" {...field} className="bg-primary/20 border-primary/40 h-16 font-black text-center text-3xl rounded-2xl text-primary" /></FormControl>
                             </FormItem>
                           )} />
                         ) : (
                           <FormField control={form.control} name="targetTime" render={({field}) => (
-                            <FormItem>
-                              <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tempo Alvo (HH:MM:SS)</FormLabel>
-                              <FormControl><Input placeholder="03:30:00" {...field} className="bg-primary/20 border-primary/40 h-14 font-black text-center text-xl rounded-xl text-primary" /></FormControl>
+                            <FormItem className="space-y-3">
+                              <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Tempo Alvo (HH:MM:SS)</FormLabel>
+                              <FormControl><Input placeholder="03:30:00" {...field} className="bg-primary/20 border-primary/40 h-16 font-black text-center text-3xl rounded-2xl text-primary" /></FormControl>
                             </FormItem>
                           )} />
                         )}
@@ -400,28 +409,34 @@ export default function ProfilePage() {
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-card/50 border-border/50 rounded-2xl overflow-hidden">
-                    <CardHeader className="bg-secondary/20 border-b border-border/50">
-                       <div className="flex items-center gap-3"><CalendarCheck className="text-primary size-5"/><h3 className="text-xs font-black uppercase italic tracking-widest">Disponibilidade & Longão</h3></div>
+                  {/* Bloco Disponibilidade */}
+                  <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
+                    <CardHeader className="bg-secondary/20 border-b border-border/10 py-6 px-8">
+                       <div className="flex items-center gap-4"><CalendarCheck className="text-primary size-6"/><h3 className="text-sm font-black uppercase italic tracking-[0.2em]">LOGÍSTICA SEMANAL</h3></div>
                     </CardHeader>
-                    <CardContent className="pt-6 space-y-6">
-                      <div className="space-y-4">
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Dias Disponíveis</FormLabel>
-                        <div className="flex flex-wrap gap-3">
+                    <CardContent className="p-8 md:p-10 space-y-10">
+                      <div className="space-y-6">
+                        <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Dias de Treinamento</FormLabel>
+                        <div className="flex flex-wrap gap-4">
                           {weekDays.map((day) => (
                             <FormField key={day.id} control={form.control} name="trainingDays" render={({ field }) => (
-                              <FormItem key={day.id} className="flex flex-row items-center space-x-3 space-y-0 p-3 rounded-xl border bg-black/20 hover:bg-primary/5 transition-colors">
+                              <FormItem key={day.id} className="flex flex-row items-center space-x-3 space-y-0 p-4 md:p-5 rounded-2xl border border-border/40 bg-black/20 hover:bg-primary/5 transition-all cursor-pointer">
                                 <FormControl>
                                   <Checkbox
                                     checked={field.value?.includes(day.id)}
                                     onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...field.value, day.id])
-                                        : field.onChange(field.value?.filter((value) => value !== day.id))
+                                      const newVal = checked
+                                        ? [...field.value, day.id]
+                                        : field.value?.filter((value) => value !== day.id);
+                                      field.onChange(newVal);
+                                      // Se o dia do longão não estiver mais disponível, limpa ele
+                                      if (!checked && form.getValues('longRunDay') === day.id) {
+                                        setValue('longRunDay', '');
+                                      }
                                     }}
                                   />
                                 </FormControl>
-                                <FormLabel className="text-xs font-black italic cursor-pointer uppercase">{day.label}</FormLabel>
+                                <FormLabel className="text-xs md:text-sm font-black italic cursor-pointer uppercase tracking-widest">{day.label}</FormLabel>
                               </FormItem>
                             )} />
                           ))}
@@ -429,41 +444,51 @@ export default function ProfilePage() {
                       </div>
 
                       <FormField control={form.control} name="longRunDay" render={({field}) => (
-                        <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Dia do Longão (LSD)</FormLabel>
+                        <FormItem className="space-y-4">
+                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Dia do Longão (LSD)</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="bg-black/30 h-14 font-black rounded-xl border-border/40"><SelectValue placeholder="Selecione o dia..." /></SelectTrigger></FormControl>
-                            <SelectContent>
-                              {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
+                            <FormControl><SelectTrigger className="bg-black/30 h-16 font-black text-xl rounded-2xl border-border/40 px-6"><SelectValue placeholder="Escolha um dos dias de treino..." /></SelectTrigger></FormControl>
+                            <SelectContent className="bg-card border-border">
+                              {availableLongRunDays.length > 0 ? (
+                                availableLongRunDays.map(d => <SelectItem key={d.id} value={d.id} className="font-black italic uppercase">{d.id}</SelectItem>)
+                              ) : (
+                                <p className="p-4 text-xs italic text-muted-foreground text-center">Selecione seus dias de treino primeiro.</p>
+                              )}
                             </SelectContent>
                           </Select>
+                          <p className="text-[10px] text-muted-foreground italic uppercase tracking-wider">Apenas dias selecionados no calendário acima estão disponíveis.</p>
                         </FormItem>
                       )} />
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-card/50 border-border/50 rounded-2xl overflow-hidden">
-                    <CardHeader className="bg-secondary/20 border-b border-border/50">
-                       <div className="flex items-center gap-3"><FileText className="text-primary size-5"/><h3 className="text-xs font-black uppercase italic tracking-widest">IA Context Reference (PDF / Print)</h3></div>
+                  {/* Bloco Documentos IA */}
+                  <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
+                    <CardHeader className="bg-secondary/20 border-b border-border/10 py-6 px-8">
+                       <div className="flex items-center gap-4"><FileText className="text-primary size-6"/><h3 className="text-sm font-black uppercase italic tracking-[0.2em]">REFERÊNCIA TÉCNICA (IA CONTEXT)</h3></div>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent className="p-8 md:p-10">
                        <div 
                          className={cn(
-                           "border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all",
-                           watchReferenceDoc ? "border-primary bg-primary/10" : "border-border/40 hover:bg-primary/5"
+                           "border-3 border-dashed rounded-[2rem] p-12 text-center cursor-pointer transition-all duration-300",
+                           watchReferenceDoc ? "border-primary bg-primary/10 shadow-inner" : "border-border/40 hover:border-primary/50 hover:bg-primary/5"
                          )}
                          onClick={() => refDocFileRef.current?.click()}
                        >
                          <input type="file" ref={refDocFileRef} className="sr-only" onChange={handleRefDocChange} accept=".pdf,image/*" />
                          {watchReferenceDoc ? (
-                           <div className="flex flex-col items-center gap-2">
-                             <CheckCircle2 className="size-10 text-primary" />
-                             <p className="text-xs font-black uppercase italic text-primary">Documento Sincronizado</p>
+                           <div className="flex flex-col items-center gap-4 animate-in zoom-in-95">
+                             <CheckCircle2 className="size-16 text-primary" />
+                             <p className="text-lg font-black uppercase italic text-primary tracking-tighter">DIRETRIZ SINCRONIZADA</p>
+                             <p className="text-[10px] text-muted-foreground uppercase italic tracking-widest">O Coach Gemini usará este arquivo como base para seu próximo ciclo.</p>
                            </div>
                          ) : (
-                           <div className="flex flex-col items-center gap-2">
-                             <Upload className="size-10 text-muted-foreground opacity-30" />
-                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground italic">Arraste seu plano anterior ou orientações técnicas</p>
+                           <div className="flex flex-col items-center gap-4 opacity-40 hover:opacity-100 transition-opacity">
+                             <Upload className="size-16 text-muted-foreground" />
+                             <div className="space-y-1">
+                               <p className="text-xs font-black uppercase italic tracking-[0.2em] text-white">Upload de Plano ou Orientações</p>
+                               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground italic">Arraste seu PDF ou Print do Treinador anterior</p>
+                             </div>
                            </div>
                          )}
                        </div>
@@ -471,24 +496,25 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="alimentacao" className="mt-6 space-y-6">
-                  <Card className="bg-card/50 border-border/50 rounded-2xl overflow-hidden">
-                    <CardHeader className="bg-orange-500/5 border-b border-border/50">
-                      <CardTitle className="font-headline text-2xl uppercase italic text-orange-500 font-black flex items-center gap-3">
-                        <Utensils size={28}/> Nutrição IA
+                {/* --- ABA ALIMENTAÇÃO --- */}
+                <TabsContent value="alimentacao" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                  <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
+                    <CardHeader className="bg-orange-500/10 border-b border-border/10 py-8 px-8">
+                      <CardTitle className="font-headline text-3xl md:text-4xl uppercase italic text-orange-500 font-black flex items-center gap-4 tracking-tighter">
+                        <Utensils size={32}/> ESTRATÉGIA NUTRICIONAL
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-8 pt-8">
+                    <CardContent className="space-y-8 p-8 md:p-12">
                        <FormField control={form.control} name="aestheticGoal" render={({field}) => (
-                         <FormItem>
-                           <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Meta Principal</FormLabel>
+                         <FormItem className="space-y-3">
+                           <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">OBJETIVO CORPORAL PRINCIPAL</FormLabel>
                            <Select onValueChange={field.onChange} value={field.value}>
-                             <FormControl><SelectTrigger className="bg-black/30 h-14 font-black rounded-xl border-border/40"><SelectValue/></SelectTrigger></FormControl>
-                             <SelectContent>
-                               <SelectItem value="performance">Performance Pura</SelectItem>
-                               <SelectItem value="cutting">Definição (Cutting)</SelectItem>
-                               <SelectItem value="bulking">Ganho de Massa (Bulking)</SelectItem>
-                               <SelectItem value="recomp">Recomposição Corporal</SelectItem>
+                             <FormControl><SelectTrigger className="bg-black/30 h-16 font-black text-xl rounded-2xl border-border/40 px-6"><SelectValue placeholder="Selecione sua meta..." /></SelectTrigger></FormControl>
+                             <SelectContent className="bg-card border-border">
+                               <SelectItem value="performance" className="font-black italic uppercase">PERFORMANCE PURA</SelectItem>
+                               <SelectItem value="cutting" className="font-black italic uppercase">DEFINIÇÃO (CUTTING)</SelectItem>
+                               <SelectItem value="bulking" className="font-black italic uppercase">GANHO DE MASSA (BULKING)</SelectItem>
+                               <SelectItem value="recomp" className="font-black italic uppercase">RECOMPOSIÇÃO CORPORAL</SelectItem>
                              </SelectContent>
                            </Select>
                          </FormItem>
@@ -497,21 +523,25 @@ export default function ProfilePage() {
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="musculacao" className="mt-6 space-y-6">
-                  <Card className="bg-card/50 border-border/50 rounded-2xl overflow-hidden">
-                    <CardHeader className="bg-purple-500/5 border-b border-border/50">
-                      <CardTitle className="font-headline text-2xl uppercase italic text-purple-500 font-black flex items-center gap-3">
-                        <Dumbbell size={28}/> Suporte de Força
+                {/* --- ABA MUSCULAÇÃO --- */}
+                <TabsContent value="musculacao" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                  <Card className="bg-card/40 border-border/50 rounded-3xl overflow-hidden shadow-2xl">
+                    <CardHeader className="bg-purple-500/10 border-b border-border/10 py-8 px-8">
+                      <CardTitle className="font-headline text-3xl md:text-4xl uppercase italic text-purple-500 font-black flex items-center gap-4 tracking-tighter">
+                        <Dumbbell size={32}/> SUPORTE MECÂNICO (FORÇA)
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-8 pt-8">
+                    <CardContent className="space-y-10 p-8 md:p-12">
                       <FormField control={form.control} name="legDay" render={({field}) => (
-                        <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Dia de Treino de Perna (Evitar Tiros no Dia Seguinte)</FormLabel>
+                        <FormItem className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <FormLabel className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">DIA DE TREINO DE PERNA (LEG DAY)</FormLabel>
+                            <Tooltip><TooltipTrigger asChild><Info className="size-3 text-muted-foreground cursor-help"/></TooltipTrigger><TooltipContent><p className="text-[10px]">A IA evitará tiros ou longões no dia seguinte ao seu Leg Day.</p></TooltipContent></Tooltip>
+                          </div>
                           <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="bg-black/30 h-14 font-black rounded-xl border-border/40"><SelectValue/></SelectTrigger></FormControl>
-                            <SelectContent>
-                              {weekDays.map(d => <SelectItem key={d.id} value={d.id}>{d.id}</SelectItem>)}
+                            <FormControl><SelectTrigger className="bg-black/30 h-16 font-black text-xl rounded-2xl border-border/40 px-6"><SelectValue placeholder="Escolha o dia da musculação de perna..." /></SelectTrigger></FormControl>
+                            <SelectContent className="bg-card border-border">
+                              {weekDays.map(d => <SelectItem key={d.id} value={d.id} className="font-black italic uppercase">{d.id}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </FormItem>
@@ -521,25 +551,26 @@ export default function ProfilePage() {
                 </TabsContent>
               </Tabs>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border/50 px-2 pb-10">
+              {/* Botões de Ação Final */}
+              <div className="flex flex-col sm:flex-row gap-6 pt-10 border-t border-border/20 px-2 pb-20">
                 <Button 
                   type="submit" 
                   size="lg" 
                   disabled={isSaving} 
-                  className="flex-1 h-16 font-black uppercase tracking-[0.2em] italic bg-white text-black hover:bg-white/90 shadow-2xl rounded-2xl"
+                  className="flex-1 h-20 font-black uppercase tracking-[0.3em] italic bg-white text-black hover:bg-primary transition-all duration-300 rounded-[2rem] shadow-2xl hover:scale-[1.02]"
                 >
-                  {isSaving ? <Loader2 className="animate-spin mr-3 size-6" /> : <CheckCircle2 className="mr-3 size-6" />}
+                  {isSaving ? <Loader2 className="animate-spin mr-3 size-7" /> : <CheckCircle2 className="mr-3 size-7" />}
                   SALVAR PERFIL
                 </Button>
                 
                 <Button 
                   type="button" 
                   size="lg" 
-                  className="flex-1 h-16 font-black uppercase tracking-[0.2em] italic bg-primary text-black shadow-2xl rounded-2xl transition-transform hover:scale-[1.02]"
+                  className="flex-1 h-20 font-black uppercase tracking-[0.3em] italic bg-primary text-black shadow-2xl rounded-[2rem] transition-all hover:scale-[1.02] hover:bg-white"
                   onClick={handleGenerate}
                   disabled={isProcessing || !context.activeProfile}
                 >
-                  {isProcessing ? <Loader2 className="animate-spin mr-3 size-6" /> : <Zap className="mr-3 size-6" />} 
+                  {isProcessing ? <Loader2 className="animate-spin mr-3 size-7" /> : <Zap className="mr-3 size-7" />} 
                   GERAR CICLO IA
                 </Button>
               </div>
