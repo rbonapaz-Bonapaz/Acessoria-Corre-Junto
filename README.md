@@ -1,19 +1,27 @@
 
-# 🏃‍♂️ CorreJunto - Performance Atlética
+# 🏃‍♂️ CORRE JUNTO - Performance Atlética
 
 Laboratório de performance para atletas, operando em arquitetura **Local-First**.
 
-## 🚀 Como sincronizar alterações
+## 🚀 Como sincronizar alterações e atualizar a Vercel
 
-Se você encontrar o erro `fatal: Need to specify how to reconcile divergent branches` no terminal:
+Se o seu GitHub atualizou mas a Vercel não:
 
-1. Abra o **Terminal** no Firebase Studio.
-2. Execute o comando: `git config pull.rebase false`
-3. Execute o comando: `git pull origin main`
-4. Use o botão **"Sync Changes"** novamente.
+1. **Ajuste de Erros de Build:** Verifique se há erros no painel da Vercel. O erro "Module not found" geralmente impede o deploy.
+2. **Confirme a Branch na Vercel:** Vá no painel da Vercel em `Settings > Git` e verifique se a **Production Branch** está definida como `principal`.
+3. **Reconciliar Conflitos:** Se encontrar o erro `fatal: Need to specify how to reconcile divergent branches` no terminal:
+   - Abra o **Terminal** no Firebase Studio.
+   - Execute: `git config pull.rebase false`
+   - Execute: `git pull origin principal`
+   - Use o botão **"Sync Changes"** novamente.
 
 ## 📱 Funcionalidades
 - **Arquitetura Local-First:** Privacidade total, dados salvos no seu navegador.
-- **Coach IA:** Feedback técnico baseado em biomecânica (necessita API Key Gemini).
+- **Modelo de Assessoria:** Treinador gerencia múltiplos atletas; Atletas acessam via vínculo de e-mail.
+- **Coach IA Gemini:** Feedback técnico baseado em biomecânica e suporte a arquivos PDF.
 - **Calculadoras de Elite:** Pace, VDOT, Estratégia de Prova e Nutrição.
-- **Gestão de Atletas:** Treinador cria perfis e atletas vinculados acessam via e-mail.
+- **Calendário Profissional:** Semana começando no Domingo em todas as funções.
+
+## 🎨 Branding
+- **CORRE:** Branco
+- **JUNTO:** Verde (Primary)

@@ -130,18 +130,6 @@ export default function Home() {
                 </div>
               </div>
             )}
-
-            {profiles.length === 0 && !user && (
-              <div className="flex flex-col items-center gap-6 pt-10">
-                <div className="p-8 rounded-full bg-secondary/20 border-2 border-dashed border-border">
-                  <Users className="size-12 text-muted-foreground" />
-                </div>
-                <div className="text-center space-y-2">
-                  <h4 className="font-headline font-black uppercase italic text-white">Nenhum perfil disponível</h4>
-                  <p className="text-xs text-muted-foreground max-w-xs italic">Crie seu perfil local ou entre com o Google para ver perfis vinculados pelo seu treinador.</p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
