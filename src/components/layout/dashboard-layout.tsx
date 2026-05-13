@@ -31,7 +31,8 @@ import {
   SidebarMenuButton, 
   SidebarMenuItem, 
   SidebarProvider,
-  SidebarTrigger 
+  SidebarTrigger,
+  useSidebar
 } from "@/components/ui/sidebar";
 import { TrainingContext } from "@/contexts/TrainingContext";
 import { useUser } from "@/firebase";
@@ -203,6 +204,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 }
 
 function LogoDisplay() {
+  const { state } = useSidebar();
+  
+  if (state === "collapsed") {
+    return (
+      <div className="font-headline font-black text-2xl italic tracking-tighter flex flex-col items-center leading-none">
+        <span className="text-white">C</span>
+        <span className="text-primary">J</span>
+      </div>
+    );
+  }
+
   return (
     <div className="font-headline font-black text-3xl italic tracking-tighter flex flex-col items-center leading-none">
       <span className="text-white">CORRE</span>
