@@ -65,8 +65,11 @@ export default function Home() {
   const activeProfile = context?.activeProfile;
   const profiles = context?.profiles || [];
 
+  // Perfis que EU criei (Sou o Treinador/Dono)
   const myAthletes = profiles.filter(p => p.ownerUid === user?.uid);
-  const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid);
+  
+  // Perfis onde meu e-mail foi vinculado por OUTRO treinador (Sou o Atleta)
+  const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid && p.athleteEmail === user?.email);
 
   if (!context?.isHydrated) {
     return (
@@ -87,41 +90,42 @@ export default function Home() {
         <div className="max-w-5xl w-full space-y-12">
           <div className="text-center space-y-4">
             <h1 className="text-5xl md:text-7xl font-headline font-black uppercase italic tracking-tighter text-white">
-              SISTEMA DE <span className="text-primary">ASSESSORIA</span>
+              LABORATÓRIO <span className="text-primary">CORREJUNTO</span>
             </h1>
             <p className="text-muted-foreground text-sm md:text-xl font-medium max-w-2xl mx-auto italic">
-              Selecione o atleta para gerenciar ou visualizar o ciclo de performance.
+              Selecione um perfil para gerenciar sua assessoria ou visualizar seu plano de atleta.
             </p>
           </div>
 
-          <div className="space-y-10">
-            {/* Seção: Meus Atletas (Visão do Treinador) */}
-            {myAthletes.length > 0 && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 px-2">
+          <div className="space-y-12">
+            {/* Seção: Gestão de Atletas (Visão do Treinador) */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
                   <ShieldCheck className="text-primary size-5" />
-                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Meus Atletas (Gestão)</h3>
+                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Minha Gestão (Treinador)</h3>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
-                  {myAthletes.map((profile) => (
-                    <ProfileCard key={profile.id} profile={profile} onSwitch={() => context.switchProfile(profile.id)} />
-                  ))}
-                  <Link href="/profile" onClick={() => context.switchProfile(null)} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
-                    <div className="size-24 md:size-32 rounded-3xl bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
-                      <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                    <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white">Novo Atleta</span>
-                  </Link>
-                </div>
+                {myAthletes.length > 0 && <Badge variant="outline" className="text-[10px] uppercase font-black">{myAthletes.length} Atletas</Badge>}
               </div>
-            )}
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                {myAthletes.map((profile) => (
+                  <ProfileCard key={profile.id} profile={profile} onSwitch={() => context.switchProfile(profile.id)} />
+                ))}
+                <Link href="/profile" onClick={() => context.switchProfile(null)} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
+                  <div className="size-24 md:size-32 rounded-3xl bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
+                    <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white">Novo Perfil</span>
+                </Link>
+              </div>
+            </div>
 
-            {/* Seção: Treinos Vinculados (Visão do Atleta) */}
+            {/* Seção: Planilhas Vinculadas (Visão do Atleta) */}
             {linkedProfiles.length > 0 && (
-              <div className="space-y-6">
+              <div className="space-y-6 pt-6 border-t border-border/20">
                 <div className="flex items-center gap-2 px-2">
                   <UserIcon className="text-accent size-5" />
-                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Meus Treinos (Vinculado)</h3>
+                  <h3 className="text-xs font-black uppercase italic tracking-widest text-muted-foreground">Meus Treinos (Vinculado por Treinador)</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
                   {linkedProfiles.map((profile) => (
@@ -136,8 +140,12 @@ export default function Home() {
                 <div className="p-8 rounded-full bg-secondary/20 border-2 border-dashed border-border">
                   <Users className="size-12 text-muted-foreground" />
                 </div>
-                <Button asChild size="lg" className="bg-primary text-black font-black uppercase">
-                   <Link href="/profile">CRIAR MEU PRIMEIRO ATLETA</Link>
+                <div className="text-center space-y-2">
+                  <h4 className="font-headline font-black uppercase italic text-white">Nenhum perfil encontrado</h4>
+                  <p className="text-xs text-muted-foreground max-w-xs italic">Crie seu próprio perfil de atleta ou peça para seu treinador vincular seu e-mail.</p>
+                </div>
+                <Button asChild size="lg" className="bg-primary text-black font-black uppercase shadow-xl shadow-primary/20">
+                   <Link href="/profile">CRIAR MEU PRIMEIRO PERFIL</Link>
                 </Button>
               </div>
             )}
@@ -241,7 +249,7 @@ function ProfileCard({ profile, onSwitch, isLinked = false }: { profile: any, on
           isLinked ? "border-accent/40 group-hover:border-accent" : "border-transparent group-hover:border-primary"
         )}>
           <AvatarImage src={profile.avatarUrl} className="object-cover" />
-          <AvatarFallback className="bg-secondary text-3xl font-black">{profile.name[0]}</AvatarFallback>
+          <AvatarFallback className="bg-secondary text-3xl font-black italic">{profile.name[0]}</AvatarFallback>
         </Avatar>
         <div className={cn(
           "absolute inset-0 opacity-0 group-hover:opacity-100 rounded-3xl transition-opacity flex items-center justify-center",
@@ -250,14 +258,19 @@ function ProfileCard({ profile, onSwitch, isLinked = false }: { profile: any, on
           <ChevronRight className="size-8 text-white" />
         </div>
         {isLinked && (
-          <div className="absolute -top-2 -right-2 bg-accent text-black p-1.5 rounded-full shadow-lg">
+          <div className="absolute -top-2 -right-2 bg-accent text-black p-1.5 rounded-full shadow-lg border-2 border-background">
             <UserIcon size={12} />
           </div>
         )}
       </div>
-      <span className="font-headline font-black text-[10px] md:text-sm uppercase italic tracking-widest text-muted-foreground group-hover:text-white transition-colors truncate max-w-[120px]">
-        {profile.name}
-      </span>
+      <div className="text-center space-y-1">
+        <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white transition-colors truncate max-w-[120px] block">
+          {profile.name}
+        </span>
+        <span className="text-[8px] font-bold uppercase tracking-tighter opacity-50 block">
+          {isLinked ? 'Atleta Vinculado' : 'Meu Atleta'}
+        </span>
+      </div>
     </button>
   );
 }
