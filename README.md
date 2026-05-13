@@ -1,4 +1,3 @@
-
 # 🏃‍♂️ CORRE JUNTO - Performance Atlética
 
 Laboratório de performance para atletas operando em arquitetura **Cloud-First** via Firebase Firestore.
@@ -12,7 +11,11 @@ Se você ver o erro "Identity Toolkit API has not been used", siga estes passos:
 3. Ative o provedor **Google**.
 4. **IMPORTANTE:** Se o erro persistir, acesse o [Google Cloud Console](https://console.cloud.google.com/), selecione seu projeto e procure por **"Identity Toolkit API"** no campo de busca. Certifique-se de que ela está **ATIVA**.
 
-### 2. Sincronização Vercel
+### 2. Domínios Autorizados
+Certifique-se de que o domínio que você vê no navegador está listado em:
+**Firebase Console > Authentication > Settings > Authorized Domains**.
+
+### 3. Sincronização Vercel
 Se o seu GitHub atualizou mas a Vercel não:
 - Confirme se a **Production Branch** na Vercel está definida como `principal`.
 - Execute um novo "Sync Changes" para disparar o build.

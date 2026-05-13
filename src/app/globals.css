@@ -10,8 +10,8 @@
     --card-foreground: 0 0% 100%;
     --popover: 160 15% 8%;
     --popover-foreground: 0 0% 100%;
-    --primary: 161 94% 30%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 145 72% 56%; /* Verde JUNTO */
+    --primary-foreground: 160 15% 5%;
     --secondary: 160 15% 15%;
     --secondary-foreground: 0 0% 100%;
     --muted: 160 15% 15%;
@@ -26,8 +26,8 @@
     --radius: 1rem;
     --sidebar-background: 160 15% 4%;
     --sidebar-foreground: 160 10% 90%;
-    --sidebar-primary: 161 94% 30%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 145 72% 56%;
+    --sidebar-primary-foreground: 160 15% 5%;
     --sidebar-accent: 160 15% 12%;
     --sidebar-accent-foreground: 145 72% 56%;
     --sidebar-border: 160 15% 12%;
@@ -44,25 +44,5 @@
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline tracking-tight;
-  }
-}
-
-.shimmer {
-  background: linear-gradient(
-    90deg,
-    hsl(var(--muted)) 25%,
-    hsl(var(--secondary)) 50%,
-    hsl(var(--muted)) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
   }
 }

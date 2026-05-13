@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -77,7 +76,7 @@ export default function Home() {
       toast({ title: "Sincronização Ativa!", description: "Acessando seu laboratório de performance." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      toast({ variant: "destructive", title: "Falha na Autenticação", description: "Verifique a configuração do seu projeto Firebase." });
+      toast({ variant: "destructive", title: "Falha na Autenticação", description: "Certifique-se de que a API Identity Toolkit está ATIVA no console do Google e que o domínio está autorizado." });
     }
   };
 
