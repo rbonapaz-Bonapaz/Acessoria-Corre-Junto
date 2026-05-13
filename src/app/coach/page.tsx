@@ -14,7 +14,6 @@ import {
   Send, 
   Bot, 
   User, 
-  Sparkles, 
   Loader2, 
   MessageSquare,
   History,
@@ -22,7 +21,6 @@ import {
   Check,
   Paperclip,
   X,
-  Image as ImageIcon,
   Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, fileToDataURI } from "@/lib/utils";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, addDoc, query, orderBy, serverTimestamp, deleteDoc, getDocs } from "firebase/firestore";
+import { Badge } from "@/components/ui/badge";
 
 type Message = {
   id?: string;
@@ -62,7 +61,8 @@ export default function CoachPage() {
     );
   }, [db, profile]);
 
-  const { data: messages = [] } = useCollection<Message>(chatHistoryQuery);
+  const { data: fetchedMessages, loading: messagesLoading } = useCollection<Message>(chatHistoryQuery);
+  const messages = fetchedMessages || [];
 
   React.useEffect(() => {
     if (scrollRef.current) {
@@ -181,7 +181,7 @@ export default function CoachPage() {
           <TabsContent value="conversar" className="mt-0 animate-in slide-in-from-bottom-4 duration-500">
             <Card className="bg-card/40 border-border/50 flex flex-col h-[600px] overflow-hidden rounded-3xl shadow-2xl relative">
               <CardContent className="flex-1 p-0 overflow-hidden relative">
-                {messages.length === 0 ? (
+                {messages.length === 0 && !messagesLoading ? (
                   <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
                     <div className="size-16 rounded-3xl bg-secondary/50 flex items-center justify-center border border-border/50 text-muted-foreground">
                       <MessageSquare className="size-8" />
@@ -239,7 +239,7 @@ export default function CoachPage() {
                           </div>
                         </div>
                       ))}
-                      {loading && (
+                      {(loading || messagesLoading) && (
                         <div className="flex items-start gap-4 animate-pulse">
                           <Avatar className="size-10 border-2 border-primary bg-primary">
                             <AvatarFallback><Bot className="size-6 text-black" /></AvatarFallback>
@@ -280,7 +280,7 @@ export default function CoachPage() {
                     <div className="absolute right-3 top-3 flex gap-2">
                       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
                       <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="size-10 text-muted-foreground hover:text-primary rounded-xl"><Paperclip className="size-5" /></Button>
-                      <Button onClick={handleSend} disabled={loading || (!input.trim() && !attachedImage)} size="icon" className="size-10 bg-primary hover:bg-primary/90 rounded-xl text-black"><Send className="size-5" /></Button>
+                      <Button onClick={handleSend} disabled={loading || messagesLoading || (!input.trim() && !attachedImage)} size="icon" className="size-10 bg-primary hover:bg-primary/90 rounded-xl text-black"><Send className="size-5" /></Button>
                     </div>
                   </div>
                 </div>
@@ -292,7 +292,7 @@ export default function CoachPage() {
             <Card className="bg-card/40 border-border/50 rounded-3xl p-8 space-y-6">
               <h3 className="font-headline font-black text-xl uppercase italic text-white tracking-widest">LINHA DO TEMPO</h3>
               <div className="space-y-4">
-                {messages.length === 0 ? (
+                {messages.length === 0 && !messagesLoading ? (
                   <p className="text-sm text-muted-foreground italic">Nenhum histórico disponível para este atleta.</p>
                 ) : (
                   messages.filter(m => m.role === 'model').map((msg, idx) => (
@@ -306,6 +306,12 @@ export default function CoachPage() {
                       <p className="text-xs text-muted-foreground italic line-clamp-3">{msg.parts}</p>
                     </div>
                   ))
+                )}
+                {messagesLoading && (
+                   <div className="flex items-center gap-3 p-4">
+                      <Loader2 className="size-4 animate-spin text-primary" />
+                      <span className="text-xs text-muted-foreground">Carregando histórico...</span>
+                   </div>
                 )}
               </div>
             </Card>
