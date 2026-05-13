@@ -52,33 +52,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
 
-  // 1. Chave de API persistida no Firestore
+  // 1. Chave de API do usuário logado
   const userConfigRef = useMemo(() => user ? doc(db, 'user_data', user.uid) : null, [db, user]);
   const { data: userConfig, loading: loadingConfig } = useDoc<any>(userConfigRef);
-  const apiKey = userConfig?.apiKey || null;
+  const userApiKey = userConfig?.apiKey || null;
 
-  const setApiKey = (key: string | null) => {
-    if (!user || !userConfigRef) {
-      toast({ variant: "destructive", title: "Erro", description: "Faça login para salvar a chave." });
-      return;
-    }
-    setDoc(userConfigRef, { apiKey: key }, { merge: true }).catch(err => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: userConfigRef.path,
-        operation: 'update',
-        requestResourceData: { apiKey: key }
-      }));
-    });
-  };
+  // 2. Chave de API do Treinador (Fallback se o usuário for um atleta vinculado e não tiver chave própria)
+  const [trainerApiKey, setTrainerApiKey] = useState<string | null>(null);
 
-  // 2. Perfis onde sou o Treinador (Dono)
+  // Monitorar perfis onde sou o Treinador (Dono)
   const coachProfilesQuery = useMemo(() => {
     if (!user) return null;
     return query(collection(db, 'athletes'), where('ownerUid', '==', user.uid));
   }, [db, user]);
   const { data: coachProfiles } = useCollection<AthleteProfile>(coachProfilesQuery);
 
-  // 3. Perfis onde sou o Atleta (Vinculado)
+  // Monitorar perfis onde sou o Atleta (Vinculado)
   const athleteProfilesQuery = useMemo(() => {
     if (!user?.email) return null;
     return query(collection(db, 'athletes'), where('athleteEmail', '==', user.email));
@@ -94,6 +83,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [coachProfiles, athleteProfiles]);
 
   const activeProfile = useMemo(() => profiles.find(p => p.id === activeProfileId) || null, [profiles, activeProfileId]);
+
+  // Efeito para buscar a chave do treinador se necessário
+  useEffect(() => {
+    if (activeProfile && user && activeProfile.ownerUid !== user.uid && !userApiKey) {
+      const trainerRef = doc(db, 'user_data', activeProfile.ownerUid);
+      // Tentativa de leitura da chave do treinador
+      // Nota: As regras de segurança devem permitir esta leitura para e-mails vinculados
+      const unsubscribe = onSnapshot(trainerRef, (snap) => {
+        if (snap.exists()) setTrainerApiKey(snap.data().apiKey || null);
+      }, () => setTrainerApiKey(null));
+      return () => unsubscribe();
+    } else {
+      setTrainerApiKey(null);
+    }
+  }, [activeProfile, user, userApiKey, db]);
+
+  // Chave efetiva que será usada pelo motor de IA
+  const apiKey = userApiKey || trainerApiKey;
+
+  const setApiKey = (key: string | null) => {
+    if (!user || !userConfigRef) {
+      toast({ variant: "destructive", title: "Erro", description: "Faça login para salvar a chave." });
+      return;
+    }
+    setDoc(userConfigRef, { apiKey: key }, { merge: true }).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: userConfigRef.path,
+        operation: 'update',
+        requestResourceData: { apiKey: key }
+      }));
+    });
+  };
 
   const switchProfile = (id: string | null) => setActiveProfileId(id);
 
@@ -160,7 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
     if (!apiKey) {
-      toast({ variant: "destructive", title: "Configuração Pendente", description: "Insira sua Gemini API Key no menu lateral." });
+      toast({ variant: "destructive", title: "Configuração Pendente", description: "Insira sua Gemini API Key no menu lateral ou peça ao seu treinador." });
       return;
     }
 
@@ -207,6 +228,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast({ variant: "destructive", title: "Erro no Motor de IA", description: error.message });
     }
   };
+
+  // Helper para observar mudanças no documento do treinador
+  function onSnapshot(ref: any, onNext: (snap: any) => void, onError: (err: any) => void) {
+    const { onSnapshot: firestoreOnSnapshot } = require('firebase/firestore');
+    return firestoreOnSnapshot(ref, onNext, onError);
+  }
 
   return (
     <AppContext.Provider value={{

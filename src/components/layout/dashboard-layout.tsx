@@ -103,7 +103,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       toast({ 
         variant: "destructive", 
         title: "Erro de Autenticação", 
-        description: "Certifique-se de autorizar este domínio no Firebase Console (Authentication > Settings > Authorized Domains)."
+        description: "Certifique-se de autorizar este domínio no Firebase Console."
       });
     }
   };
@@ -112,7 +112,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     try {
       await signOut(auth);
       context?.switchProfile(null);
-      toast({ title: "Sessão Encerrada", description: "Você está no Modo Local." });
+      toast({ title: "Sessão Encerrada", description: "Até logo, campeão." });
       router.push('/');
     } catch (error) {
       toast({ variant: "destructive", title: "Erro ao sair" });
@@ -168,7 +168,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               >
                 <Key className="size-4" />
                 <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">
-                  {context?.apiKey ? "IA Ativa" : "Configurar IA"}
+                  {context?.apiKey ? "IA ATIVA" : "Configurar IA"}
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -197,12 +197,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <div className="text-right hidden md:block leading-none">
                       <div className="flex items-center justify-end gap-2">
                         <p className="text-[10px] font-black text-white tracking-widest uppercase italic truncate max-w-[150px]">
-                          {context?.activeProfile?.name || 'USUÁRIO LOCAL'}
+                          {context?.activeProfile?.name || 'MODO LOCAL'}
                         </p>
                         <ChevronDown size={12} className="text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
                       </div>
-                      <p className="text-[9px] font-bold uppercase tracking-tighter text-accent">
-                        {user ? 'Sincronizado' : 'Modo Local'}
+                      <p className="text-[9px] font-bold uppercase tracking-tighter text-primary">
+                        {user ? 'Sincronizado' : 'Offline'}
                       </p>
                     </div>
                     <div className="size-9 rounded-full flex items-center justify-center font-headline font-black text-black bg-primary shadow-lg shadow-primary/20 shrink-0">
@@ -212,7 +212,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 bg-card border-border p-2 rounded-2xl shadow-2xl mt-2">
                   <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    {user ? user.email : 'Local Browser'}
+                    {user ? user.email : 'Sessão Local'}
                   </DropdownMenuLabel>
                   
                   <DropdownMenuItem asChild className="p-3 focus:bg-primary/10 focus:text-primary cursor-pointer rounded-xl group transition-all">
@@ -269,8 +269,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <DialogContent className="sm:max-w-[425px] bg-card border-border rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-primary font-headline italic font-black uppercase">Sua Chave Gemini</DialogTitle>
-            <DialogDescription>
-              Insira sua API Key do Google para processar seus treinos localmente.
+            <DialogDescription className="text-xs">
+              Insira sua API Key do Google para processar seus treinos. Caso você seja um atleta e não possua uma chave, o sistema tentará usar a chave do seu treinador.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -278,7 +278,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 flex gap-3 items-start">
                 <AlertCircle className="size-4 text-primary shrink-0 mt-0.5" />
                 <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                  Obtenha sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-primary underline font-bold">Google AI Studio</a>. Seus dados permanecem apenas neste navegador.
+                  Obtenha sua chave gratuita no <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-primary underline font-bold">Google AI Studio</a>.
                 </p>
               </div>
               <Input

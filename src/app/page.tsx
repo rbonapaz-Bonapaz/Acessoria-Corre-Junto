@@ -55,9 +55,9 @@ const chartData = [
 
 const stats = [
   { label: "Volume Semanal", value: "86.7 km", change: "+4.2%", icon: Milestone, info: "Distância total percorrida nos últimos 7 dias." },
-  { label: "VDOT Atual", value: "54.2", change: "+0.8", icon: Zap, info: "Índice que define seus ritmos de treino baseado em performance." },
-  { label: "FC Média", value: "142 bpm", change: "-2.1%", icon: Activity, info: "Frequência cardíaca média durante a semana." },
-  { label: "Recuperação", value: "88%", change: "Ideal", icon: Clock, info: "Indicador para evitar overtraining." },
+  { label: "VDOT Atual", value: "54.2", change: "+0.8", icon: Zap, info: "Índice que define seus ritmos de treino baseado em performance recente." },
+  { label: "FC Média", value: "142 bpm", change: "-2.1%", icon: Activity, info: "Frequência cardíaca média durante a semana de treinos." },
+  { label: "Recuperação", value: "88%", change: "Ideal", icon: Clock, info: "Indicador de prontidão para evitar o overtraining." },
 ];
 
 export default function Home() {
@@ -109,7 +109,7 @@ export default function Home() {
           <div className="text-center space-y-4">
             <h1 className="text-4xl md:text-6xl font-headline font-black uppercase italic tracking-tighter leading-none">
               <span className="text-white">LABORATÓRIO</span> <br/>
-              <span className="text-white">CORRE</span><span className="text-primary">JUNTO</span>
+              <span className="text-white">CORRE</span> <span className="text-primary">JUNTO</span>
             </h1>
             <p className="text-muted-foreground text-sm md:text-lg font-medium max-w-2xl mx-auto italic">
               Bem-vindo, <span className="text-white">{user.displayName}</span>. Escolha um perfil para gerenciar ou visualizar seu plano.
@@ -129,12 +129,16 @@ export default function Home() {
                 {myAthletes.map((profile) => (
                   <ProfileCard key={profile.id} profile={profile} onSwitch={() => context.switchProfile(profile.id)} />
                 ))}
-                <Link href="/profile" onClick={() => context.switchProfile(null)} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
-                  <div className="size-24 md:size-32 rounded-3xl bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
-                    <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                  <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white">Novo Atleta</span>
-                </Link>
+                
+                {/* Atletas vinculados não podem criar novos perfis */}
+                {(myAthletes.length > 0 || profiles.length === 0) && (
+                  <Link href="/profile" onClick={() => context.switchProfile(null)} className="group flex flex-col items-center gap-4 transition-all hover:scale-105">
+                    <div className="size-24 md:size-32 rounded-3xl bg-secondary/30 border-2 border-dashed border-border group-hover:border-primary group-hover:bg-primary/5 flex items-center justify-center transition-all">
+                      <Plus className="size-10 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white">Novo Atleta</span>
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -217,7 +221,7 @@ export default function Home() {
           <Card className="bg-card border-border shadow-md">
             <CardHeader>
               <CardTitle className="font-headline">Próxima Sessão</CardTitle>
-              <CardDescription>Sincronizada do seu plano</CardDescription>
+              <CardDescription>Sincronizada do seu plano de elite</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="p-4 rounded-xl bg-secondary/50 border border-border space-y-3">
@@ -225,10 +229,10 @@ export default function Home() {
                   <Calendar className="size-4" /><span>{new Date().toLocaleDateString('pt-BR', { weekday: 'long' })}</span>
                 </div>
                 <h3 className="font-headline text-lg font-bold">Rodagem de Base</h3>
-                <p className="text-sm text-muted-foreground italic">"Treino leve para recuperação e base aeróbica."</p>
+                <p className="text-sm text-muted-foreground italic">"Treino leve para recuperação e fortalecimento da base aeróbica."</p>
                 <div className="pt-2"><Badge variant="secondary">Fase Ativa</Badge></div>
               </div>
-              <Button asChild className="w-full bg-primary hover:bg-primary/90 text-black font-black uppercase h-12 rounded-xl">
+              <Button asChild className="w-full bg-primary text-black font-black uppercase h-12 rounded-xl">
                 <Link href="/training">Ver Planilha</Link>
               </Button>
             </CardContent>
@@ -269,7 +273,7 @@ function ProfileCard({ profile, onSwitch, isLinked = false }: { profile: any, on
         <span className="font-headline font-black text-[10px] md:text-xs uppercase italic tracking-widest text-muted-foreground group-hover:text-white transition-colors truncate max-w-[120px] block">
           {profile.name}
         </span>
-        <span className="text-[8px] font-bold uppercase tracking-tighter opacity-50 block">
+        <span className="text-[8px] font-bold uppercase tracking-tighter opacity-50 block text-primary">
           {isLinked ? 'Meu Treino' : 'Gestão Atleta'}
         </span>
       </div>
