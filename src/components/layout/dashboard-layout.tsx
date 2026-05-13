@@ -152,9 +152,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-6 sticky top-0 bg-background/80 backdrop-blur-md z-30 justify-between">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="text-muted-foreground hover:text-white" />
-              <div className="font-headline font-black text-lg uppercase italic tracking-tighter flex items-center gap-3">
-                <span className="text-white">C</span><span className="text-primary">J</span>
-                <span className="text-white ml-2 text-sm">
+              <div className="font-headline font-black text-sm uppercase italic tracking-tighter">
+                <span className="text-white">
                    {items.find(i => i.url === pathname)?.title || "PORTAL"}
                 </span>
               </div>
