@@ -57,6 +57,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useSidebar } from "@/components/ui/sidebar";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { useAuth } from "@/firebase";
 
 const items = [
   { title: "DASHBOARD", url: "/", icon: LayoutDashboard },
@@ -75,6 +77,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const context = React.useContext(AppContext);
+  const auth = useAuth();
   const { toast } = useToast();
   const [showKeyModal, setShowKeyModal] = React.useState(false);
   const [tempKey, setTempKey] = React.useState("");
@@ -87,16 +90,35 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      toast({ title: "Sincronização Ativa!", description: "Baixando seus dados da nuvem..." });
+    } catch (error: any) {
+      console.error("Auth Error:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Erro de Autenticação", 
+        description: "Verifique o suporte de e-mail e os domínios autorizados no Firebase Console."
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      context?.switchProfile(null);
+      toast({ title: "Sessão Encerrada", description: "Você está agora no Modo Local." });
+      router.push('/');
+    } catch (error) {
+      toast({ variant: "destructive", title: "Erro ao sair" });
+    }
+  };
+
   const handleSwitchProfile = () => {
     context?.switchProfile(null); 
     router.push('/');
-  };
-
-  const handleLogout = () => {
-    // No modo local, apenas limpa a sessão visual
-    context?.switchProfile(null);
-    router.push('/');
-    toast({ title: "Sessão encerrada" });
   };
 
   return (
@@ -153,7 +175,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-6 sticky top-0 bg-background/80 backdrop-blur-md z-30 justify-between">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="text-muted-foreground hover:text-white" />
-              <div className="font-headline font-black text-sm uppercase italic tracking-tighter">
+              <div className="font-headline font-black text-lg uppercase italic tracking-tighter flex items-center gap-3">
                 <span className="text-white">
                    {items.find(i => i.url === pathname)?.title || "PORTAL"}
                 </span>
