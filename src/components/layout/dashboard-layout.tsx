@@ -169,11 +169,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {!user && (
-              <Button onClick={handleLogin} variant="outline" className="w-full h-12 font-headline font-black text-[10px] uppercase italic border-primary/30 text-primary hover:bg-primary hover:text-black rounded-xl">
-                Entrar com Google
-              </Button>
-            )}
           </SidebarFooter>
         </Sidebar>
         <SidebarInset className="flex-1 flex flex-col min-w-0">

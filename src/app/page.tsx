@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -76,14 +77,18 @@ export default function Home() {
       toast({ title: "Sincronização Ativa!", description: "Acessando seu laboratório de performance." });
     } catch (error: any) {
       console.error("Auth Error:", error);
-      toast({ variant: "destructive", title: "Falha na Autenticação", description: "Certifique-se de que a API Identity Toolkit está ATIVA no console do Google e que o domínio está autorizado." });
+      toast({ 
+        variant: "destructive", 
+        title: "Falha na Autenticação", 
+        description: "Certifique-se de que a API Identity Toolkit está ATIVA e o domínio está autorizado." 
+      });
     }
   };
 
   const myAthletes = profiles.filter(p => p.ownerUid === user?.uid);
   const linkedProfiles = profiles.filter(p => p.ownerUid !== user?.uid && p.athleteEmail === user?.email);
 
-  if (authLoading || (user && !context?.isHydrated)) {
+  if (authLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-8 animate-pulse">
@@ -96,7 +101,6 @@ export default function Home() {
     );
   }
 
-  // TELA DE LOGIN (LANDING PAGE)
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center space-y-12 animate-in fade-in duration-700">
@@ -135,7 +139,6 @@ export default function Home() {
     );
   }
 
-  // SELETOR DE ATLETA
   if (!activeProfile) {
     return (
       <DashboardLayout>
@@ -161,8 +164,8 @@ export default function Home() {
                 <Badge variant="outline" className="text-[10px] uppercase font-black px-3 py-1">{myAthletes.length} Atletas Ativos</Badge>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10">
-                {myAthletes.map((profile) => (
-                  <ProfileCard key={profile.id} profile={profile} onSwitch={() => context.switchProfile(profile.id)} />
+                {myAthletes.map((p) => (
+                  <ProfileCard key={p.id} profile={p} onSwitch={() => context.switchProfile(p.id)} />
                 ))}
                 
                 <Link href="/profile" onClick={() => context.switchProfile(null)} className="group flex flex-col items-center gap-6 transition-all hover:scale-105">
@@ -181,8 +184,8 @@ export default function Home() {
                   <h3 className="text-sm font-black uppercase italic tracking-widest text-white">Meus Treinos (Atleta)</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10">
-                  {linkedProfiles.map((profile) => (
-                    <ProfileCard key={profile.id} profile={profile} onSwitch={() => context.switchProfile(profile.id)} isLinked />
+                  {linkedProfiles.map((p) => (
+                    <ProfileCard key={p.id} profile={p} onSwitch={() => context.switchProfile(p.id)} isLinked />
                   ))}
                 </div>
               </div>
@@ -193,7 +196,6 @@ export default function Home() {
     );
   }
 
-  // DASHBOARD PRINCIPAL
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto">

@@ -92,7 +92,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setTrainerApiKey(null);
         }
       }, (err) => {
-        console.error("Erro ao buscar chave do treinador:", err);
         setTrainerApiKey(null);
       });
       return () => unsubscribe();
