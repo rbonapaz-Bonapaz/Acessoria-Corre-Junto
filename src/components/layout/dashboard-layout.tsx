@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -17,7 +18,8 @@ import {
   Link2,
   Info,
   Users,
-  AlertCircle
+  AlertCircle,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -54,6 +56,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const items = [
   { title: "DASHBOARD", url: "/", icon: LayoutDashboard },
@@ -89,16 +92,19 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     router.push('/');
   };
 
+  const handleLogout = () => {
+    // No modo local, apenas limpa a sessão visual
+    context?.switchProfile(null);
+    router.push('/');
+    toast({ title: "Sessão encerrada" });
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-background w-full">
         <Sidebar collapsible="icon" className="border-r border-border/50">
           <SidebarHeader className="py-8 px-4 flex items-center justify-center overflow-hidden">
-            <div className="flex items-center gap-2">
-              <span className="font-headline font-black text-2xl tracking-tighter italic group-data-[state=expanded]:block group-data-[state=collapsed]:hidden transition-all text-white">
-                CORREJUNTO
-              </span>
-            </div>
+            <LogoDisplay />
           </SidebarHeader>
           <SidebarContent>
             <SidebarGroup>
@@ -197,12 +203,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuSeparator className="bg-border/20" />
                   
                   <DropdownMenuItem 
-                    className="p-3 focus:bg-primary/10 text-primary cursor-pointer rounded-xl group transition-all"
-                    onClick={() => setShowKeyModal(true)}
+                    className="p-3 focus:bg-destructive/10 text-destructive cursor-pointer rounded-xl group transition-all"
+                    onClick={handleLogout}
                   >
                     <div className="flex items-center gap-3">
-                      <Key size={18} className="text-muted-foreground group-focus:text-primary" />
-                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Configurar IA</span>
+                      <LogOut size={18} className="text-destructive" />
+                      <span className="font-headline font-black text-xs uppercase italic tracking-wider">Sair</span>
                     </div>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -245,5 +251,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </DialogContent>
       </Dialog>
     </SidebarProvider>
+  );
+}
+
+function LogoDisplay() {
+  const { state } = useSidebar();
+  
+  if (state === "collapsed") {
+    return (
+      <div className="font-headline font-black text-2xl italic tracking-tighter">
+        <span className="text-white">C</span>
+        <span className="text-primary">J</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="font-headline font-black text-2xl italic tracking-tighter flex items-center gap-2">
+      <span className="text-white">CORREJUNTO</span>
+    </div>
   );
 }

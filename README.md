@@ -1,23 +1,19 @@
-# 🏃‍♂️ CorreJunto - Laboratório de Performance Atlética
 
-O **CorreJunto** é um laboratório de elite para corredores e treinadores, operando em arquitetura **Local-First** para máxima privacidade e performance.
+# 🏃‍♂️ CorreJunto - Performance Atlética
 
-## 🚀 Guia de Implantação (Vercel + GitHub)
+Laboratório de performance para atletas, operando em arquitetura **Local-First**.
 
-Este projeto está pronto para ser implantado na Vercel com integração contínua via GitHub.
+## 🚀 Como sincronizar alterações
 
-### 1. Preparar o Repositório
-1. Crie um novo repositório no seu GitHub.
-2. Siga as instruções para fazer o `push` do código local para o GitHub.
+Se você encontrar o erro `fatal: Need to specify how to reconcile divergent branches` no terminal:
 
-### 2. Conectar à Vercel
-1. No painel da Vercel, clique em **Add New...** > **Project**.
-2. Importe o repositório que você acabou de criar.
-3. Nas **Environment Variables**, você pode adicionar `GEMINI_API_KEY` se desejar usar uma chave global, caso contrário o app funcionará no modo Local-First usando as chaves inseridas pelos usuários no navegador.
-4. Clique em **Deploy**.
+1. Abra o **Terminal** no Firebase Studio.
+2. Execute o comando: `git config pull.rebase false`
+3. Execute o comando: `git pull origin main`
+4. Use o botão **"Sync Changes"** novamente.
 
-### 📱 Disponibilidade Mobile
-O CorreJunto foi construído com foco em **responsividade total**. A interface se adapta automaticamente a smartphones e tablets, oferecendo uma experiência de aplicativo nativo no navegador (PWA-ready).
-
----
-*Transformando dados brutos em recordes pessoais.*
+## 📱 Funcionalidades
+- **Arquitetura Local-First:** Privacidade total, dados salvos no seu navegador.
+- **Coach IA:** Feedback técnico baseado em biomecânica (necessita API Key Gemini).
+- **Calculadoras de Elite:** Pace, VDOT, Estratégia de Prova e Nutrição.
+- **Gestão de Atletas:** Treinador cria perfis e atletas vinculados acessam via e-mail.
