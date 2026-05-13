@@ -43,7 +43,8 @@ import {
     Info,
     FileText,
     Upload,
-    Activity
+    Activity,
+    User
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -196,7 +197,7 @@ export default function ProfilePage() {
   const handleGenerate = async () => {
     if (!context || !context.activeProfile) return;
     setIsProcessing(true);
-    await context.generateRunningPlanAsync(context.activeProfile);
+    await context.generateRunningPlanAsync(context.activeProfile as AthleteProfile);
     setIsProcessing(false);
   };
 
@@ -429,7 +430,6 @@ export default function ProfilePage() {
                                         ? [...field.value, day.id]
                                         : field.value?.filter((value) => value !== day.id);
                                       field.onChange(newVal);
-                                      // Se o dia do longão não estiver mais disponível, limpa ele
                                       if (!checked && form.getValues('longRunDay') === day.id) {
                                         setValue('longRunDay', '');
                                       }
