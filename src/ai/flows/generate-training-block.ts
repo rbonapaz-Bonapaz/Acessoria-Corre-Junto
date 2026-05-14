@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Utiliza o motor Gemini 1.5 Flash.
+ * Utiliza o motor Gemini 1.5 Flash na versão v1 estável.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -63,7 +63,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: `Você é um treinador de corrida de elite e especialista em performance.
+    system: `Você é um treinador de corrida de elite e especialista em performance operando na versão v1 estável.
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
     2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).

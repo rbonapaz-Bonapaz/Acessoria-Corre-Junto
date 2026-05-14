@@ -129,7 +129,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       const docRef = doc(firestore, 'user_data', user.uid);
       await setDoc(docRef, { profile: updatedProfile }, { merge: true });
     }
-    toast({ title: 'Dados Salvos', description: 'Informações sincronizadas via API v1.' });
+    toast({ title: 'Dados Salvos', description: 'Informações sincronizadas com sucesso.' });
   }, [user, firestore, activeProfile, toast]);
 
   const updateWorkout = useCallback(async (workoutId: string, updates: Partial<Workout>) => {
@@ -159,14 +159,14 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       const docRef = doc(firestore, 'user_data', user.uid);
       await setDoc(docRef, { apiKey: cleanKey }, { merge: true });
     }
-    toast({ title: "Chave Configurada", description: "O motor v1 de alta performance está ativo." });
+    toast({ title: "Chave Configurada", description: "O motor de performance está ativo." });
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
     const currentKey = apiKey || localStorage.getItem(STORAGE_KEYS.API_KEY) || undefined;
     
     setPlanGenerationStatus('pending');
-    toast({ title: "Gerando Ciclo v1...", description: "Processando biometria de alta performance." });
+    toast({ title: "Gerando Ciclo...", description: "Processando biometria de alta performance." });
 
     try {
       let weeklyMileageGoal = 30;
@@ -208,12 +208,12 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       }
       
       setPlanGenerationStatus('success');
-      toast({ title: "Plano Gerado!", description: "Sua planilha v1 está pronta." });
+      toast({ title: "Plano Gerado!", description: "Sua planilha está pronta para os 21.1 km." });
     } catch (error: any) {
-      console.error("Erro na geração v1:", error);
+      console.error("Erro na geração:", error);
       setPlanGenerationStatus('error');
-      const errorMessage = error.message || "Verifique sua cota no motor v1 estável.";
-      toast({ variant: "destructive", title: "Erro na Geração v1", description: errorMessage });
+      const errorMessage = error.message || "Verifique sua cota no AI Studio.";
+      toast({ variant: "destructive", title: "Erro na Geração", description: errorMessage });
     }
   };
 
