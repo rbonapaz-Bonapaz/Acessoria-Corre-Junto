@@ -43,8 +43,7 @@ import {
     Activity,
     User as UserIcon,
     Calendar as CalendarIcon,
-    Target,
-    Key
+    Target
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -75,7 +74,7 @@ const profileSchema = z.object({
   vo2Max: z.coerce.number().default(45),
   thresholdPace: z.string().default('4:50'),
   thresholdHr: z.coerce.number().default(165),
-  weeklyMileageGoal: z.coerce.number().default(60),
+  weeklyMileageGoal: z.coerce.number().default(30),
   raceName: z.string().default(''),
   raceDistance: z.string().default('10k'),
   raceDate: z.string().default(''),
@@ -120,7 +119,7 @@ export default function ProfilePage() {
       vo2Max: 45,
       thresholdPace: '4:50',
       thresholdHr: 165,
-      weeklyMileageGoal: 60,
+      weeklyMileageGoal: 30,
       raceName: '',
       raceDistance: '10k',
       raceDate: '',
@@ -155,7 +154,7 @@ export default function ProfilePage() {
         vo2Max: p.vo2Max || 45,
         thresholdPace: p.thresholdPace || '4:50',
         thresholdHr: p.thresholdHr || 165,
-        weeklyMileageGoal: p.weeklyMileageGoal || 60,
+        weeklyMileageGoal: p.weeklyMileageGoal || 30,
         raceName: p.raceName || '',
         raceDistance: p.raceDistance || '10k',
         raceDate: p.raceDate || '',
@@ -241,7 +240,6 @@ export default function ProfilePage() {
     setIsProcessing(true);
 
     try {
-      // Primeiro salvamos os dados atuais
       await onSave(formData);
       
       const tempProfile: AthleteProfile = {
@@ -294,10 +292,10 @@ export default function ProfilePage() {
             <form onSubmit={form.handleSubmit(onSave)} className="space-y-8">
               <Tabs defaultValue="perfil" value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-4 h-auto bg-secondary/20 p-1.5 rounded-2xl gap-2 shadow-inner">
-                  <TabsTrigger value="perfil" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl uppercase">PERFIL</TabsTrigger>
-                  <TabsTrigger value="corrida" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl uppercase">CORRIDA</TabsTrigger>
-                  <TabsTrigger value="alimentacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl uppercase">DIETA</TabsTrigger>
-                  <TabsTrigger value="musculacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl uppercase">FORÇA</TabsTrigger>
+                  <TabsTrigger value="perfil" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">PERFIL</TabsTrigger>
+                  <TabsTrigger value="corrida" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">CORRIDA</TabsTrigger>
+                  <TabsTrigger value="alimentacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">DIETA</TabsTrigger>
+                  <TabsTrigger value="musculacao" className="py-3 font-headline font-black text-[10px] md:text-xs uppercase italic tracking-wider data-[state=active]:bg-primary data-[state=active]:text-black transition-all rounded-xl">FORÇA</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="perfil" className="mt-8 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
@@ -443,23 +441,16 @@ export default function ProfilePage() {
                         <div className="space-y-4">
                           <FormField control={form.control} name="experienceLevel" render={({field}) => (
                             <FormItem className="space-y-2">
-                              <FormLabel className="text-[10px] font-black uppercase text-white italic">EXPERIÊNCIA</FormLabel>
+                              <FormLabel className="text-[10px] font-black uppercase text-white italic">EXPERIÊNCIA (O QUANTO JÁ CORRE)</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value || 'beginner'}>
                                 <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue/></SelectTrigger></FormControl>
                                 <SelectContent className="bg-card border-border">
-                                  <SelectItem value="run_walk" className="font-bold italic uppercase">Começando</SelectItem>
-                                  <SelectItem value="beginner" className="font-bold italic uppercase">Iniciante</SelectItem>
-                                  <SelectItem value="intermediate" className="font-bold italic uppercase">Intermediário</SelectItem>
-                                  <SelectItem value="advanced" className="font-bold italic uppercase">Avançado / Elite</SelectItem>
+                                  <SelectItem value="run_walk" className="font-bold italic uppercase">Começando (< 15 km/semana)</SelectItem>
+                                  <SelectItem value="beginner" className="font-bold italic uppercase">Iniciante (15-30 km/semana)</SelectItem>
+                                  <SelectItem value="intermediate" className="font-bold italic uppercase">Intermediário (30-60 km/semana)</SelectItem>
+                                  <SelectItem value="advanced" className="font-bold italic uppercase">Avançado / Elite (> 60 km/semana)</SelectItem>
                                 </SelectContent>
                               </Select>
-                            </FormItem>
-                          )} />
-
-                          <FormField control={form.control} name="weeklyMileageGoal" render={({field}) => (
-                            <FormItem className="space-y-2">
-                              <FormLabel className="text-[10px] font-black uppercase text-white italic">DISTÂNCIA SEMANAL (KM)</FormLabel>
-                              <FormControl><Input type="number" {...field} value={field.value ?? 0} className="bg-black/40 border-border/40 h-10 text-center font-bold rounded-xl text-sm" /></FormControl>
                             </FormItem>
                           )} />
                         </div>

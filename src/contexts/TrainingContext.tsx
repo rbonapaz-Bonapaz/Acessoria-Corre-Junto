@@ -174,6 +174,13 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     toast({ title: "Gerando Ciclo IA...", description: "Construindo sua planilha de performance." });
 
     try {
+      // Cálculo dinâmico do volume baseado na experiência
+      let weeklyMileageGoal = 30;
+      if (profile.experienceLevel === 'run_walk') weeklyMileageGoal = 15;
+      else if (profile.experienceLevel === 'beginner') weeklyMileageGoal = 25;
+      else if (profile.experienceLevel === 'intermediate') weeklyMileageGoal = 45;
+      else if (profile.experienceLevel === 'advanced') weeklyMileageGoal = 75;
+
       const result = await generateTrainingBlock({
         apiKey: currentKey,
         raceName: profile.raceName,
@@ -186,7 +193,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
         trainingBlockType: 'Construction',
         planGenerationType: profile.planGenerationType || 'blocks',
         raceDate: profile.raceDate || new Date().toISOString().split('T')[0],
-        weeklyMileageGoal: profile.weeklyMileageGoal || 60,
+        weeklyMileageGoal: weeklyMileageGoal,
         targetRaceDistance: profile.raceDistance || '10k',
         targetPace: profile.targetPace,
         targetTime: profile.targetTime,
