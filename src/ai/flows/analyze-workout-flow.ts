@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Fluxo Genkit para analisar o desempenho biomecânico do atleta na versão v1 estável.
+ * @fileOverview Fluxo Genkit para analisar o desempenho biomecânico do atleta.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -39,7 +39,7 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: 'Você é um biomecânico de corrida operando na versão v1 estável. Analise os dados em PORTUGUÊS.',
+    system: 'Você é um biomecânico de corrida. Analise os dados em PORTUGUÊS.',
     prompt: [
       { text: `Prescrição: ${input.prescribedWorkout}` },
       { text: `Feedback: ${input.athleteFeedback}` },

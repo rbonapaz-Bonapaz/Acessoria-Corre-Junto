@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Treinador de IA conversacional para corredores na versão v1 estável.
+ * @fileOverview Treinador de IA conversacional para corredores.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -36,7 +36,7 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: 'Você é o Gemini Coach, um treinador de corrida de elite. Responda sempre em PORTUGUÊS operando na API v1.',
+    system: 'Você é o Gemini Coach, um treinador de corrida de elite. Responda sempre em PORTUGUÊS.',
     prompt: [
       { text: `Histórico:\n${historyString}` },
       { text: `Desempenho:\n${input.workoutHistory}` },
