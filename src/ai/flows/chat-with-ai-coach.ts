@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview Treinador de IA conversacional para corredores.
+ * Operando na versão v1 estável com o modelo Gemini 1.5 Flash.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -36,13 +37,13 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: 'Você é o Gemini Coach, um treinador de corrida de elite. Responda sempre em PORTUGUÊS.',
     prompt: [
-      { text: `Histórico:\n${historyString}` },
-      { text: `Desempenho:\n${input.workoutHistory}` },
-      { text: `Plano:\n${input.trainingPlan}` },
+      { text: "INSTRUÇÃO DE SISTEMA: Você é o Gemini Coach, um treinador de corrida de elite operando na API v1 estável. Responda sempre em PORTUGUÊS (Brasil). Use seu conhecimento técnico para ajustar treinos com base em biometria e biomecânica." },
+      { text: `Histórico da Conversa:\n${historyString}` },
+      { text: `Desempenho Recente:\n${input.workoutHistory}` },
+      { text: `Plano de Treino Atual:\n${input.trainingPlan}` },
       ...(input.imageDataUri ? [{ media: { url: input.imageDataUri } }] : []),
-      { text: 'Com base nos dados fornecidos, dê seu feedback técnico.' }
+      { text: 'Com base nos dados fornecidos, dê seu feedback técnico e motivacional.' }
     ],
     output: { schema: ChatWithAICoachOutputSchema },
     config: {
@@ -50,6 +51,6 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
     }
   });
 
-  if (!output) throw new Error('Falha ao obter resposta do treinador.');
+  if (!output) throw new Error('Falha ao obter resposta do treinador na API v1.');
   return output;
 }

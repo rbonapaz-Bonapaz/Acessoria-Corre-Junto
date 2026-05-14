@@ -21,8 +21,7 @@ const getEffectiveKey = (userKey?: string) => {
 };
 
 /**
- * Retorna uma instância configurada do Genkit.
- * Utilizamos a configuração padrão do plugin que é otimizada para Genkit 1.x.
+ * Retorna uma instância configurada do Genkit operando na versão v1 estável.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -30,7 +29,8 @@ export const getAiWithKey = (userApiKey?: string) => {
   return genkit({
     plugins: [
       googleAI({ 
-        apiKey
+        apiKey,
+        apiVersion: 'v1'
       })
     ],
   });

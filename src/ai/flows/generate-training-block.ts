@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
+ * Operando na versão v1 estável com o modelo Gemini 1.5 Flash.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -12,7 +13,7 @@ const GenerateTrainingBlockInputSchema = z.object({
   currentVDOT: z.number().describe('Score VDOT/VO2 atual do atleta.'),
   hrZone1End: z.number().describe('Limite superior da Zona 1.'),
   hrZone2End: z.number().describe('Limite superior da Zona 2.'),
-  hrZone3End: z.number().describe('Limite superior da Zona 2.'),
+  hrZone3End: z.number().describe('Limite superior da Zona 3.'),
   hrZone4End: z.number().describe('Limite superior da Zona 4.'),
   hrMax: z.number().describe('Frequência cardíaca máxima.'),
   trainingBlockType: z.enum(['Base', 'Construction', 'Polishing']).describe('Fase atual do bloco de treinamento.'),
@@ -62,27 +63,30 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: `Você é um treinador de corrida de elite e especialista em performance.
-    REGRAS CRÍTICAS:
-    1. A semana começa SEMPRE no DOMINGO.
-    2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
-    3. Use o esquema JSON fornecido.
-    4. Se houver um arquivo de referência, PRIORIZE as informações contidas nele.
-    5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
-    prompt: `Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
+    prompt: [
+      { text: `INSTRUÇÃO DE SISTEMA: Você é um treinador de corrida de elite e especialista em performance operando na versão v1 estável.
+      REGRAS CRÍTICAS:
+      1. A semana começa SEMPRE no DOMINGO.
+      2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
+      3. Use o esquema JSON fornecido.
+      4. Se houver um arquivo de referência, PRIORIZE as informações contidas nele.
+      5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.` },
+      { text: `Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
     
-    Contexto Fisiológico:
-    - VDOT: ${input.currentVDOT}.
-    - Volume: ${input.weeklyMileageGoal}km.
-    - Disponibilidade: ${input.weeklyAvailability}.
-    - Zonas FC: Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}.`,
+      Contexto Fisiológico:
+      - VDOT: ${input.currentVDOT}.
+      - Volume: ${input.weeklyMileageGoal}km.
+      - Disponibilidade: ${input.weeklyAvailability}.
+      - Zonas FC: Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}.
+      - Leg Day: ${input.legDay || 'Não informado'}.` }
+    ],
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {
       temperature: 0.3,
     }
   });
 
-  if (!output) throw new Error('Falha ao gerar o plano de treinamento.');
+  if (!output) throw new Error('Falha ao gerar o plano de treinamento na API v1.');
   
   const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {

@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para analisar o desempenho biomecânico do atleta.
+ * Operando na versão v1 estável com o modelo Gemini 1.5 Flash.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -39,13 +40,13 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: 'Você é um biomecânico de corrida. Analise os dados em PORTUGUÊS.',
     prompt: [
-      { text: `Prescrição: ${input.prescribedWorkout}` },
-      { text: `Feedback: ${input.athleteFeedback}` },
-      { text: `Perfil: ${input.athleteProfile}` },
+      { text: "INSTRUÇÃO DE SISTEMA: Você é um biomecânico de corrida de elite operando na API v1 estável. Analise os dados em PORTUGUÊS (Brasil) com foco em eficiência de movimento e economia de corrida." },
+      { text: `Treino Prescrito: ${input.prescribedWorkout}` },
+      { text: `Relato do Atleta: ${input.athleteFeedback}` },
+      { text: `Perfil do Atleta: ${input.athleteProfile}` },
       ...(input.fileDataUri ? [{ media: { url: input.fileDataUri } }] : []),
-      { text: 'Forneça uma análise biomecânica profunda.' }
+      { text: 'Analise os dados biomecânicos fornecidos e sugira melhorias técnicas.' }
     ],
     output: { schema: AnalyzeWorkoutOutputSchema },
     config: {
@@ -53,6 +54,6 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
     }
   });
 
-  if (!output) throw new Error('Falha ao analisar o treino.');
+  if (!output) throw new Error('Falha ao analisar o treino na API v1.');
   return output;
 }
