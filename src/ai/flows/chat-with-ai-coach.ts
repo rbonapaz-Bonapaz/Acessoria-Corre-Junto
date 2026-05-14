@@ -47,6 +47,9 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
     output: { schema: ChatWithAICoachOutputSchema },
     config: {
       temperature: 0.7,
+      safetySettings: [
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+      ]
     }
   });
 

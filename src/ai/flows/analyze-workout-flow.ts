@@ -50,6 +50,9 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
     output: { schema: AnalyzeWorkoutOutputSchema },
     config: {
       temperature: 0.7,
+      safetySettings: [
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+      ]
     }
   });
 
