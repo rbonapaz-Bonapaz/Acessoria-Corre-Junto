@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Um treinador de IA conversacional que fornece feedback personalizado e recomendações para corredores.
@@ -35,6 +36,7 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
     .join('\n');
 
   const { output } = await aiInstance.generate({
+    model: 'googleai/gemini-1.5-flash',
     system: 'Você é um treinador de corrida especialista chamado Gemini. Forneça feedback personalizado em PORTUGUÊS (Brasil). Seja encorajador e técnico.',
     prompt: [
       { text: `Histórico da Conversa:\n${historyString}` },
