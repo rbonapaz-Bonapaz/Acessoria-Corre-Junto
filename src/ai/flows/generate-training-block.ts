@@ -66,7 +66,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-1.5-pro',
     system: `Você é um treinador de corrida de elite especialista em fisiologia do exercício e periodização.
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
@@ -93,7 +93,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     ],
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {
-      maxOutputTokens: 4096,
+      maxOutputTokens: 8192,
       temperature: 0.7,
       safetySettings: [
         { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },

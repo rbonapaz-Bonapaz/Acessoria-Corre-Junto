@@ -4,7 +4,7 @@
  * @fileOverview Fluxo Genkit para analisar o desempenho do atleta e fornecer feedback biomecânico ou interpretar orientações.
  */
 
-import { ai, getAiWithKey } from '@/ai/genkit';
+import { getAiWithKey } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const AnalyzeWorkoutInputSchema = z.object({

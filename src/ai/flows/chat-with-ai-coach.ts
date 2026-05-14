@@ -4,7 +4,7 @@
  * @fileOverview Um treinador de IA conversacional que fornece feedback personalizado e recomendações para corredores.
  */
 
-import { ai, getAiWithKey } from '@/ai/genkit';
+import { getAiWithKey } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const ChatWithAICoachInputSchema = z.object({
