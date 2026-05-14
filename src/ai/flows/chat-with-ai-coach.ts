@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Um treinador de IA conversacional para corredores.
- * Utiliza o Gemini 2.0 Flash para feedback contextual e técnico.
+ * Utiliza o Gemini 1.5 Flash para feedback contextual e técnico.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -37,7 +37,7 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
     .join('\n');
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-2.0-flash',
+    model: 'googleai/gemini-1.5-flash',
     system: 'Você é o Gemini Coach, um treinador de corrida de elite. Responda em PORTUGUÊS.',
     prompt: [
       { text: `Histórico:\n${historyString}` },
@@ -55,6 +55,6 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
     }
   });
 
-  if (!output) throw new Error('Falha ao obter resposta do Coach Gemini 2.0.');
+  if (!output) throw new Error('Falha ao obter resposta do Coach Gemini 1.5.');
   return output;
 }
