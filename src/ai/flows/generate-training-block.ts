@@ -60,14 +60,15 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   const { text } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
     prompt: [
-      { text: `SISTEMA: Você é um treinador de elite. Responda APENAS com um objeto JSON válido, sem markdown ou explicações.
+      { text: `SISTEMA: Você é um treinador de corrida de elite operando na versão v1 estável. Responda APENAS com um objeto JSON válido.
       
       Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
       Contexto: VDOT ${input.currentVDOT}, Volume ${input.weeklyMileageGoal}km, Disponibilidade: ${input.weeklyAvailability}.
       Zonas: Z1<${input.hrZone1End}, Z2<${input.hrZone2End}, Z3<${input.hrZone3End}, Z4<${input.hrZone4End}.
       Regra: Semana começa no DOMINGO.
       
-      Formato esperado: { "blockType": string, "durationWeeks": number, "weeklyPlans": [ { "weekNumber": number, "focus": string, "runs": [ { "day": string, "type": string, "distance": string, "paceZone": string, "description": string } ], "strength": string, "notes": string } ] }` }
+      Formato esperado (JSON PURO): { "blockType": string, "durationWeeks": number, "weeklyPlans": [ { "weekNumber": number, "focus": string, "runs": [ { "day": string, "type": string, "distance": string, "paceZone": string, "description": string } ], "strength": string, "notes": string } ] }` },
+      ...(input.referenceFileDataUri ? [{ media: { url: input.referenceFileDataUri } }] : [])
     ],
     config: { temperature: 0.3 }
   });
@@ -86,6 +87,6 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     return output;
   } catch (e) {
     console.error("Erro ao processar JSON da IA:", text);
-    throw new Error('Falha na estrutura de dados da IA.');
+    throw new Error('Falha na estrutura de dados da IA. Tente novamente.');
   }
 }

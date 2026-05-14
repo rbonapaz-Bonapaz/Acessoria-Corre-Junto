@@ -29,7 +29,7 @@ export const getAiWithKey = (userApiKey?: string) => {
     plugins: [
       googleAI({ 
         apiKey,
-        apiVersion: 'v1' // Forçando versão estável v1
+        apiVersion: 'v1' // Forçando versão estável v1 em todo o projeto
       })
     ],
   });

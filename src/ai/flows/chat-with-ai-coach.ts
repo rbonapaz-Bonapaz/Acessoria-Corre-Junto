@@ -32,10 +32,10 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<{ fe
   const { text } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
     prompt: [
-      { text: "SISTEMA: Você é o Gemini Coach. Responda sempre em PORTUGUÊS (Brasil). Seja técnico e motivador." },
+      { text: "SISTEMA: Você é o Gemini Coach operando em versão v1 estável. Responda em PORTUGUÊS (Brasil). Seja técnico e motivador." },
       { text: `Histórico:\n${historyString}\n\nDesempenho:\n${input.workoutHistory}\n\nPlano:\n${input.trainingPlan}` },
       ...(input.imageDataUri ? [{ media: { url: input.imageDataUri } }] : []),
-      { text: "Com base nos dados, dê seu feedback." }
+      { text: "Com base nos dados, dê seu feedback técnico." }
     ],
     config: { temperature: 0.7 }
   });

@@ -41,10 +41,10 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
   const { text } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
     prompt: [
-      { text: "SISTEMA: Analise os dados em PORTUGUÊS (Brasil). Responda APENAS com JSON válido. Foco em biomecânica e eficiência." },
+      { text: "SISTEMA: Analise os dados em PORTUGUÊS (Brasil). Responda APENAS com JSON válido. Operando em versão v1 estável." },
       { text: `Treino: ${input.prescribedWorkout}. Feedback: ${input.athleteFeedback}. Perfil: ${input.athleteProfile}.` },
       ...(input.fileDataUri ? [{ media: { url: input.fileDataUri } }] : []),
-      { text: "Gere análise no formato: { \"actualMetrics\": { \"averagePace\": string, \"averageCadence\": string, \"strideRatio\": number }, \"analysisSummary\": { \"summary\": string, \"technicalReview\": string }, \"recommendations\": string, \"areasOfImprovement\": string[] }" }
+      { text: "Gere análise no formato JSON: { \"actualMetrics\": { \"averagePace\": string, \"averageCadence\": string, \"strideRatio\": number }, \"analysisSummary\": { \"summary\": string, \"technicalReview\": string }, \"recommendations\": string, \"areasOfImprovement\": string[] }" }
     ],
     config: { temperature: 0.4 }
   });
