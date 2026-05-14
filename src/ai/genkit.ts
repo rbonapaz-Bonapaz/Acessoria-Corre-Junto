@@ -23,7 +23,7 @@ const getEffectiveKey = (userKey?: string) => {
 
 /**
  * Retorna uma instância configurada do Genkit.
- * Utilizamos o Gemini 1.5 Flash por sua estabilidade de cota e performance em produção.
+ * Utilizamos o Gemini 2.0 Flash por ser a versão mais moderna e estável para processamento de elite.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
