@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Fluxo Genkit para analisar o desempenho biomecânico do atleta.
- * Utiliza o Gemini 1.5 Flash para análise técnica profunda.
+ * Utiliza o Gemini 1.5 Flash Latest para máxima estabilidade e cota.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -40,7 +39,7 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-1.5-flash-latest',
     system: 'Você é um biomecânico de corrida de elite. Analise os dados em PORTUGUÊS.',
     prompt: [
       { text: `Prescrição: ${input.prescribedWorkout}` },
@@ -58,6 +57,6 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
     }
   });
 
-  if (!output) throw new Error('Falha ao analisar o treino com o Gemini 1.5 Flash.');
+  if (!output) throw new Error('Falha ao analisar o treino com o motor de IA.');
   return output;
 }

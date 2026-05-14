@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Utiliza o Gemini 1.5 Flash para cálculos de VDOT e zonas de FC.
+ * Utiliza o Gemini 1.5 Flash Latest para cálculos de VDOT e zonas de FC.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -63,7 +62,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-1.5-flash-latest',
     system: `Você é um treinador de corrida de elite e especialista em performance.
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
@@ -87,7 +86,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     }
   });
 
-  if (!output) throw new Error('Falha ao gerar o plano com o Gemini 1.5 Flash.');
+  if (!output) throw new Error('Falha ao gerar o plano com o motor de IA.');
   
   const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {
