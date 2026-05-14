@@ -23,7 +23,7 @@ const getEffectiveKey = (userKey?: string) => {
 
 /**
  * Retorna uma instância configurada do Genkit utilizando o motor de alta performance estável.
- * Este motor é calibrado para a versão v1 da API do Google Generative AI.
+ * Força o uso da API v1 para evitar erros de 'model not found' na versão v1beta.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -31,7 +31,8 @@ export const getAiWithKey = (userApiKey?: string) => {
   return genkit({
     plugins: [
       googleAI({ 
-        apiKey 
+        apiKey,
+        apiVersion: 'v1' // Força a utilização da API v1 estável
       })
     ],
   });
