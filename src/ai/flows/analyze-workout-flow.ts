@@ -1,7 +1,6 @@
 'use server';
 /**
- * @fileOverview Fluxo Genkit para analisar o desempenho biomecânico do atleta.
- * Operando na versão v1 estável com o modelo Gemini 1.5 Flash.
+ * @fileOverview Fluxo Genkit para analisar o desempenho biomecânico do atleta na API v1.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -41,10 +40,29 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
   const { text } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
     prompt: [
-      { text: "SISTEMA: Analise os dados em PORTUGUÊS (Brasil). Responda APENAS com JSON válido. Operando em versão v1 estável." },
-      { text: `Treino: ${input.prescribedWorkout}. Feedback: ${input.athleteFeedback}. Perfil: ${input.athleteProfile}.` },
+      { text: `SISTEMA: Analise biomecânica em PORTUGUÊS (Brasil) operando na versão v1 estável.
+      Responda APENAS com JSON válido.
+      
+      DADOS:
+      Treino: ${input.prescribedWorkout}
+      Feedback: ${input.athleteFeedback}
+      Perfil: ${input.athleteProfile}
+      
+      FORMATO JSON:
+      {
+        "actualMetrics": {
+          "averagePace": "string",
+          "averageCadence": "string",
+          "strideRatio": number
+        },
+        "analysisSummary": {
+          "summary": "string",
+          "technicalReview": "string"
+        },
+        "recommendations": "string",
+        "areasOfImprovement": ["string"]
+      }` },
       ...(input.fileDataUri ? [{ media: { url: input.fileDataUri } }] : []),
-      { text: "Gere análise no formato JSON: { \"actualMetrics\": { \"averagePace\": string, \"averageCadence\": string, \"strideRatio\": number }, \"analysisSummary\": { \"summary\": string, \"technicalReview\": string }, \"recommendations\": string, \"areasOfImprovement\": string[] }" }
     ],
     config: { temperature: 0.4 }
   });
@@ -53,6 +71,6 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleanText) as AnalyzeWorkoutOutput;
   } catch (e) {
-    throw new Error('Erro ao processar análise biomecânica.');
+    throw new Error('Erro ao processar análise biomecânica (API v1).');
   }
 }

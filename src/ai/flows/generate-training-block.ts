@@ -57,17 +57,41 @@ export type GenerateTrainingBlockOutput = z.infer<typeof GenerateTrainingBlockOu
 export async function generateTrainingBlock(input: GenerateTrainingBlockInput): Promise<GenerateTrainingBlockOutput> {
   const aiInstance = getAiWithKey(input.apiKey);
 
+  // Na API v1 estável, evitamos o campo systemInstruction e output.schema automático
+  // para prevenir erros deBad Request (responseMimeType). Usamos o prompt direto.
   const { text } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
     prompt: [
-      { text: `SISTEMA: Você é um treinador de corrida de elite operando na versão v1 estável. Responda APENAS com um objeto JSON válido.
+      { text: `SISTEMA: Você é um treinador de corrida de elite e especialista em performance operando na versão v1 estável. 
+      Responda APENAS com um objeto JSON válido, sem comentários ou texto adicional.
       
-      Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
-      Contexto: VDOT ${input.currentVDOT}, Volume ${input.weeklyMileageGoal}km, Disponibilidade: ${input.weeklyAvailability}.
-      Zonas: Z1<${input.hrZone1End}, Z2<${input.hrZone2End}, Z3<${input.hrZone3End}, Z4<${input.hrZone4End}.
-      Regra: Semana começa no DOMINGO.
+      REGRAS TÉCNICAS:
+      1. Use VDOT ${input.currentVDOT} para prescrever ritmos.
+      2. Meta: ${input.weeklyMileageGoal}km semanais.
+      3. Prova: ${input.raceName || 'Objetivo'} (${input.targetRaceDistance}) em ${input.raceDate}.
+      4. Disponibilidade: ${input.weeklyAvailability}.
+      5. Zonas de FC: Z1<${input.hrZone1End}, Z2<${input.hrZone2End}, Z3<${input.hrZone3End}, Z4<${input.hrZone4End}.
+      6. Evite treinos intensos após o Leg Day (${input.legDay || 'Não definido'}).
+      7. Semana começa no DOMINGO.
       
-      Formato esperado (JSON PURO): { "blockType": string, "durationWeeks": number, "weeklyPlans": [ { "weekNumber": number, "focus": string, "runs": [ { "day": string, "type": string, "distance": string, "paceZone": string, "description": string } ], "strength": string, "notes": string } ] }` },
+      ESTRUTURA JSON OBRIGATÓRIA:
+      {
+        "blockType": "string",
+        "durationWeeks": number,
+        "weeklyPlans": [
+          {
+            "weekNumber": number,
+            "focus": "string",
+            "runs": [
+              { "day": "string", "type": "string", "distance": "string", "paceZone": "string", "description": "string" }
+            ],
+            "strength": "string",
+            "notes": "string"
+          }
+        ]
+      }
+      
+      Gere agora o plano completo baseado nos dados acima.` },
       ...(input.referenceFileDataUri ? [{ media: { url: input.referenceFileDataUri } }] : [])
     ],
     config: { temperature: 0.3 }
@@ -86,7 +110,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     });
     return output;
   } catch (e) {
-    console.error("Erro ao processar JSON da IA:", text);
-    throw new Error('Falha na estrutura de dados da IA. Tente novamente.');
+    console.error("Erro ao processar JSON da IA v1:", text);
+    throw new Error('Falha na estrutura de dados da IA (API v1). Tente novamente.');
   }
 }
