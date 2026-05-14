@@ -3,13 +3,13 @@ import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 /**
- * Chave de API fornecida pelo usuário para testes e fallback definitivo.
+ * Chave de API de fallback para o laboratório CorreJunto.
+ * Recomenda-se que o atleta use sua própria chave para evitar limites de cota.
  */
 const DEFAULT_KEY = "AIzaSyDPO6BpCQC9jHhuavasgY2OhkJvleHL8v0";
 
 /**
- * Determina a chave de API mais apropriada a ser usada.
- * Prioridade: Chave do usuário > Variável de ambiente > Chave de fallback.
+ * Resolve a chave de API com base na prioridade: Chave do usuário > ENV > Fallback.
  */
 const getEffectiveKey = (userKey?: string) => {
   if (userKey && userKey.trim() !== "" && userKey.startsWith("AIza")) {
@@ -22,8 +22,8 @@ const getEffectiveKey = (userKey?: string) => {
 };
 
 /**
- * Retorna uma instância do Genkit configurada com a chave de API resolvida.
- * Utiliza o modelo Gemini 2.0 Flash como padrão para máxima estabilidade e performance.
+ * Retorna uma instância configurada do Genkit.
+ * Utilizamos o Gemini 1.5 Flash por sua estabilidade de cota e performance em produção.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -38,6 +38,6 @@ export const getAiWithKey = (userApiKey?: string) => {
 };
 
 /**
- * Instância padrão do Genkit.
+ * Instância padrão do Genkit para o sistema.
  */
 export const ai = getAiWithKey();

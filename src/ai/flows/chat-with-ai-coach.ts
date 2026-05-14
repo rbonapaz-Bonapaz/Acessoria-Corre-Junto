@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview Um treinador de IA conversacional que fornece feedback personalizado e recomendações para corredores.
+ * @fileOverview Um treinador de IA conversacional para corredores.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -17,7 +17,7 @@ const ChatWithAICoachInputSchema = z.object({
   ).describe('O histórico da conversa.'),
   workoutHistory: z.string().describe('Desempenho recente.'),
   trainingPlan: z.string().describe('Plano atual.'),
-  imageDataUri: z.string().optional().describe('Imagem anexada (Print do Strava, foto do relógio, etc).'),
+  imageDataUri: z.string().optional().describe('Imagem anexada.'),
 });
 
 export type ChatWithAICoachInput = z.infer<typeof ChatWithAICoachInputSchema>;
@@ -37,13 +37,13 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: 'Você é o Gemini Coach, um treinador de corrida de elite com visão computacional. Analise textos e imagens em PORTUGUÊS.',
+    system: 'Você é o Gemini Coach, um treinador de corrida de elite. Responda em PORTUGUÊS.',
     prompt: [
-      { text: `Histórico da Conversa:\n${historyString}` },
-      { text: `Desempenho Recente:\n${input.workoutHistory}` },
-      { text: `Plano Atual:\n${input.trainingPlan}` },
+      { text: `Histórico:\n${historyString}` },
+      { text: `Desempenho:\n${input.workoutHistory}` },
+      { text: `Plano:\n${input.trainingPlan}` },
       ...(input.imageDataUri ? [{ media: { url: input.imageDataUri } }] : []),
-      { text: 'Com base nestas informações e nas imagens enviadas (se houver), forneça seu feedback técnico e recomendações.' }
+      { text: 'Com base nas informações, forneça seu feedback técnico.' }
     ],
     output: { schema: ChatWithAICoachOutputSchema },
     config: {

@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Suporta a tradução de planos físicos/fotos para o formato digital.
+ * Gera planos técnicos baseados em VDOT e zonas de frequência cardíaca.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -64,29 +64,20 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: `Você é um treinador de corrida de elite e especialista em OCR (Reconhecimento de Visão).
+    system: `Você é um treinador de corrida de elite e especialista em OCR.
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
     2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
     3. Use o esquema JSON fornecido.
-    4. Se houver um arquivo de referência (Foto ou PDF), PRIORIZE as informações contidas nele para "traduzir" o plano para o formato digital.
-    5. Se houver "Leg Day", o dia seguinte deve ser OFF ou Leve.
-    6. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
-    prompt: [
-      { text: `Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
-          
-          Contexto do Atleta:
-          - VDOT/VO2: ${input.currentVDOT}.
-          - Volume semanal alvo: ${input.weeklyMileageGoal}km.
-          - Disponibilidade: ${input.weeklyAvailability}.
-          - Dias intensos preferidos: ${input.preferredWorkoutDays}.
-          - Leg Day: ${input.legDay || 'Não informado'}.
-          
-          Fisiologia (Zonas FC):
-          - Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}.` },
-      ...(input.referenceFileDataUri ? [{ media: { url: input.referenceFileDataUri } }] : []),
-      { text: 'Se você recebeu uma imagem de uma planilha física ou relógio, extraia os treinos dela e formate-os. Caso contrário, gere um plano novo do zero com base no perfil.' }
-    ],
+    4. Se houver um arquivo de referência, PRIORIZE as informações contidas nele.
+    5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
+    prompt: `Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
+    
+    Contexto:
+    - VDOT: ${input.currentVDOT}.
+    - Volume: ${input.weeklyMileageGoal}km.
+    - Disponibilidade: ${input.weeklyAvailability}.
+    - Fisiologia (Zonas FC): Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}.`,
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {
       temperature: 0.7,
