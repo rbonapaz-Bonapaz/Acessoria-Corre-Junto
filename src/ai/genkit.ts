@@ -10,6 +10,7 @@ const DEFAULT_KEY = "AIzaSyDPO6BpCQC9jHhuavasgY2OhkJvleHL8v0";
 
 /**
  * Resolve a chave de API com base na prioridade: Chave do usuário > ENV > Fallback.
+ * Configurado para utilizar a versão estável da API v1.
  */
 const getEffectiveKey = (userKey?: string) => {
   if (userKey && userKey.trim() !== "" && userKey.startsWith("AIza")) {
@@ -22,8 +23,8 @@ const getEffectiveKey = (userKey?: string) => {
 };
 
 /**
- * Retorna uma instância configurada do Genkit.
- * Utilizamos o Gemini 1.5 Flash Latest por ser a versão de produção mais estável e com maiores cotas.
+ * Retorna uma instância configurada do Genkit utilizando o modelo Gemini 1.5 Flash.
+ * Este modelo é o padrão ouro de performance estável para a API v1.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
