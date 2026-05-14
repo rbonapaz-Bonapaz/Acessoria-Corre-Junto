@@ -1,3 +1,4 @@
+
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
@@ -22,7 +23,7 @@ const getEffectiveKey = (userKey?: string) => {
 
 /**
  * Retorna uma instância do Genkit configurada com a chave de API resolvida.
- * Utiliza referências de modelo estáveis para evitar erros 404.
+ * Utiliza o modelo Gemini 2.0 Flash como padrão para máxima estabilidade e performance.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -33,11 +34,10 @@ export const getAiWithKey = (userApiKey?: string) => {
         apiKey 
       })
     ],
-    model: 'googleai/gemini-1.5-flash',
   });
 };
 
 /**
- * Instância padrão do Genkit (utiliza fallback ou ambiente).
+ * Instância padrão do Genkit.
  */
 export const ai = getAiWithKey();

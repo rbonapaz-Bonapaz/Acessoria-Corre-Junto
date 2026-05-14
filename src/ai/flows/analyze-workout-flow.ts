@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Fluxo Genkit para analisar o desempenho do atleta e fornecer feedback biomecânico.
@@ -19,7 +20,7 @@ export type AnalyzeWorkoutInput = z.infer<typeof AnalyzeWorkoutInputSchema>;
 const AnalyzeWorkoutOutputSchema = z.object({
   actualMetrics: z.object({
     averagePace: z.string().describe('Pace médio.'),
-    averageCadence: z.string().describe('Cadência média.'),
+    averageCadence: z.string().describe('Pace médio.'),
     strideRatio: z.number().describe('Razão da passada (%).'),
     groundContactTime: z.string().optional().describe('TCS em ms.'),
     verticalOscillation: z.string().optional().describe('Oscilação em cm.'),
@@ -38,7 +39,7 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-2.0-flash',
     system: 'Você é um biomecânico e treinador de corrida de elite. Analise os dados em PORTUGUÊS.',
     prompt: [
       { text: `Prescrição Atual: ${input.prescribedWorkout}` },
