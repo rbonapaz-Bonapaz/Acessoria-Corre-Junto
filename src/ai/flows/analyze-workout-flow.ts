@@ -47,7 +47,11 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
       ...(input.fileDataUri ? [{ media: { url: input.fileDataUri } }] : []),
       { text: 'Extraia métricas se for um arquivo de dados, ou interprete as orientações de texto se for um PDF/Print. Forneça uma análise técnica profunda comparando o realizado com o planejado.' }
     ],
-    output: { schema: AnalyzeWorkoutOutputSchema }
+    output: { schema: AnalyzeWorkoutOutputSchema },
+    config: {
+      temperature: 0.7,
+      topP: 0.7,
+    }
   });
 
   if (!output) throw new Error('Falha ao analisar o treino.');

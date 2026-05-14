@@ -37,7 +37,7 @@ const GenerateTrainingBlockInputSchema = z.object({
 export type GenerateTrainingBlockInput = z.infer<typeof GenerateTrainingBlockInputSchema>;
 
 const WorkoutSchema = z.object({
-  id: z.string().optional().describe('ID único (pode ser deixado em branco)'),
+  id: z.string().optional().describe('ID único (será gerado internamente)'),
   day: z.string().describe('Dia da semana (Domingo, Segunda, Terça, Quarta, Quinta, Sexta, Sábado)'),
   type: z.string().describe('Tipo de treino (Rodagem, Intervalado, Longão, Tempo Run, OFF)'),
   distance: z.string().describe('Volume do treino (ex: 10km ou 45min)'),
@@ -94,6 +94,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     config: {
       maxOutputTokens: 8192,
       temperature: 0.7,
+      topP: 0.7,
       safetySettings: [
         { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
         { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -107,7 +108,9 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   
   const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {
+    // Garante a ordenação rigorosa começando no Domingo
     week.runs.sort((a, b) => order.indexOf(a.day) - order.indexOf(b.day));
+    // Gera IDs únicos para cada treino
     week.runs.forEach(run => {
       run.id = Math.random().toString(36).substring(2, 11);
     });

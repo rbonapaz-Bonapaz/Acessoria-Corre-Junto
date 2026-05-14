@@ -23,6 +23,7 @@ const getEffectiveKey = (userKey?: string) => {
 /**
  * Retorna uma instância do Genkit configurada com a chave de API resolvida.
  * Garante que o motor de IA sempre tenha uma credencial funcional.
+ * Utiliza o modelo gemini-1.5-flash como padrão para máxima compatibilidade.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);

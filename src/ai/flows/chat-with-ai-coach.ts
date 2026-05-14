@@ -44,7 +44,11 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
       ...(input.imageDataUri ? [{ media: { url: input.imageDataUri } }] : []),
       { text: 'Com base nestas informações, forneça seu feedback e recomendações.' }
     ],
-    output: { schema: ChatWithAICoachOutputSchema }
+    output: { schema: ChatWithAICoachOutputSchema },
+    config: {
+      temperature: 0.7,
+      topP: 0.7,
+    }
   });
 
   if (!output) throw new Error('Falha ao obter resposta do Coach.');
