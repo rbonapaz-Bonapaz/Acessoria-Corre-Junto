@@ -9,7 +9,6 @@ const DEFAULT_KEY = "AIzaSyDPO6BpCQC9jHhuavasgY2OhkJvleHL8v0";
 
 /**
  * Resolve a chave de API com base na prioridade: Chave do usuário > ENV > Fallback.
- * Configurado para utilizar estritamente a versão estável da API v1.
  */
 const getEffectiveKey = (userKey?: string) => {
   if (userKey && userKey.trim() !== "" && userKey.startsWith("AIza")) {
@@ -22,8 +21,8 @@ const getEffectiveKey = (userKey?: string) => {
 };
 
 /**
- * Retorna uma instância configurada do Genkit utilizando o motor de alta performance estável.
- * Força o uso da API v1 para evitar erros de 'model not found' na versão v1beta.
+ * Retorna uma instância configurada do Genkit.
+ * Utilizamos a v1beta por padrão para suporte total a esquemas de saída e instruções de sistema.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -31,14 +30,13 @@ export const getAiWithKey = (userApiKey?: string) => {
   return genkit({
     plugins: [
       googleAI({ 
-        apiKey,
-        apiVersion: 'v1' // Força a utilização da API v1 estável
+        apiKey
       })
     ],
   });
 };
 
 /**
- * Instância padrão do Genkit para o sistema utilizando a versão estável v1.
+ * Instância padrão do Genkit para o sistema.
  */
 export const ai = getAiWithKey();

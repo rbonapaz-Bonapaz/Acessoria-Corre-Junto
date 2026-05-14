@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Utiliza o motor de alta performance Gemini 1.5 Flash na API v1 estável.
+ * Utiliza o motor Gemini 1.5 Flash.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -63,14 +63,14 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: `Você é um treinador de corrida de elite e especialista em performance operando na versão v1 estável.
+    system: `Você é um treinador de corrida de elite e especialista em performance.
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
     2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
     3. Use o esquema JSON fornecido.
     4. Se houver um arquivo de referência, PRIORIZE as informações contidas nele.
     5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
-    prompt: `Gere um plano de performance de alta intensidade para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
+    prompt: `Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
     
     Contexto Fisiológico:
     - VDOT: ${input.currentVDOT}.
@@ -80,13 +80,10 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {
       temperature: 0.3,
-      safetySettings: [
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
-      ]
     }
   });
 
-  if (!output) throw new Error('Falha ao gerar o plano com o motor de performance v1.');
+  if (!output) throw new Error('Falha ao gerar o plano de treinamento.');
   
   const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {
