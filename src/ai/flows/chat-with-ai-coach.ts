@@ -2,6 +2,7 @@
 'use server';
 /**
  * @fileOverview Um treinador de IA conversacional para corredores.
+ * Utiliza o Gemini 2.0 Flash para feedback contextual e técnico.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -43,7 +44,7 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
       { text: `Desempenho:\n${input.workoutHistory}` },
       { text: `Plano:\n${input.trainingPlan}` },
       ...(input.imageDataUri ? [{ media: { url: input.imageDataUri } }] : []),
-      { text: 'Com base nas informações, forneça seu feedback técnico.' }
+      { text: 'Com base nas informações, forneça seu feedback técnico e motivacional de alto nível.' }
     ],
     output: { schema: ChatWithAICoachOutputSchema },
     config: {
@@ -54,6 +55,6 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
     }
   });
 
-  if (!output) throw new Error('Falha ao obter resposta do Coach.');
+  if (!output) throw new Error('Falha ao obter resposta do Coach Gemini 2.0.');
   return output;
 }

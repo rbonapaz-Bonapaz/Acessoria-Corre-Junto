@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Gera planos técnicos baseados em VDOT e zonas de frequência cardíaca.
+ * Utiliza o Gemini 2.0 Flash para cálculos de VDOT e zonas de FC.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -64,7 +64,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-2.0-flash',
-    system: `Você é um treinador de corrida de elite e especialista em OCR.
+    system: `Você é um treinador de corrida de elite e especialista em performance.
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
     2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
@@ -87,7 +87,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     }
   });
 
-  if (!output) throw new Error('Falha ao gerar o plano de treinamento.');
+  if (!output) throw new Error('Falha ao gerar o plano com o Gemini 2.0 Flash.');
   
   const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {

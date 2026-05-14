@@ -2,6 +2,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para analisar o desempenho biomecânico do atleta.
+ * Utiliza o Gemini 2.0 Flash para análise técnica profunda.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -46,7 +47,7 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
       { text: `Feedback: ${input.athleteFeedback}` },
       { text: `Perfil: ${input.athleteProfile}` },
       ...(input.fileDataUri ? [{ media: { url: input.fileDataUri } }] : []),
-      { text: 'Forneça uma análise técnica profunda.' }
+      { text: 'Forneça uma análise técnica profunda focada em performance de elite.' }
     ],
     output: { schema: AnalyzeWorkoutOutputSchema },
     config: {
@@ -57,6 +58,6 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
     }
   });
 
-  if (!output) throw new Error('Falha ao analisar o treino.');
+  if (!output) throw new Error('Falha ao analisar o treino com o Gemini 2.0 Flash.');
   return output;
 }

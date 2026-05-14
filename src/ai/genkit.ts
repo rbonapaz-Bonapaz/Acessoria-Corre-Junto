@@ -4,7 +4,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * Chave de API de fallback para o laboratório CorreJunto.
- * Recomenda-se que o atleta use sua própria chave para evitar limites de cota.
+ * Recomenda-se que o atleta use sua própria chave configurada no menu lateral.
  */
 const DEFAULT_KEY = "AIzaSyDPO6BpCQC9jHhuavasgY2OhkJvleHL8v0";
 
@@ -23,7 +23,7 @@ const getEffectiveKey = (userKey?: string) => {
 
 /**
  * Retorna uma instância configurada do Genkit.
- * Utilizamos o Gemini 2.0 Flash por ser a versão mais moderna e estável para processamento de elite.
+ * Utilizamos o Gemini 2.0 Flash por ser a versão de nova geração mais estável e potente.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
