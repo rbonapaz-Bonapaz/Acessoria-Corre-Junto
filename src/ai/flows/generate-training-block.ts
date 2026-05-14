@@ -1,10 +1,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * 
- * - generateTrainingBlock - Função principal para gerar o plano.
- * - GenerateTrainingBlockInput - Esquema de entrada.
- * - GenerateTrainingBlockOutput - Esquema de saída.
+ * Suporta a tradução de planos físicos/fotos para o formato digital.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -31,7 +28,7 @@ const GenerateTrainingBlockInputSchema = z.object({
   injuryHistory: z.string().describe('Histórico de lesões para moderação de carga.'),
   preferredWorkoutDays: z.string().describe('Dias preferidos para treinos de qualidade/tiros.'),
   legDay: z.string().optional().describe('Dia da semana reservado para treino de pernas na musculação.'),
-  referenceFileDataUri: z.string().optional().describe('URI de dados de arquivo de referência (PDF/Imagem).'),
+  referenceFileDataUri: z.string().optional().describe('URI de dados de arquivo de referência (Foto de planilha física ou PDF).'),
 });
 
 export type GenerateTrainingBlockInput = z.infer<typeof GenerateTrainingBlockInputSchema>;
@@ -66,13 +63,14 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-2.0-flash',
-    system: `Você é um treinador de corrida de elite.
+    system: `Você é um treinador de corrida de elite e especialista em OCR (Reconhecimento de Visão).
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
     2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
     3. Use o esquema JSON fornecido.
-    4. Se houver "Leg Day", o dia seguinte deve ser OFF ou Leve.
-    5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
+    4. Se houver um arquivo de referência (Foto ou PDF), PRIORIZE as informações contidas nele para "traduzir" o plano para o formato digital.
+    5. Se houver "Leg Day", o dia seguinte deve ser OFF ou Leve.
+    6. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
     prompt: [
       { text: `Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
           
@@ -86,7 +84,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
           Fisiologia (Zonas FC):
           - Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}.` },
       ...(input.referenceFileDataUri ? [{ media: { url: input.referenceFileDataUri } }] : []),
-      { text: 'Gere o plano garantindo que a lista de treinos comece no Domingo.' }
+      { text: 'Se você recebeu uma imagem de uma planilha física ou relógio, extraia os treinos dela e formate-os. Caso contrário, gere um plano novo do zero com base no perfil.' }
     ],
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {

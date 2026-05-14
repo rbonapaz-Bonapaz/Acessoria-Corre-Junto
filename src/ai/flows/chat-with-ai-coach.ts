@@ -16,7 +16,7 @@ const ChatWithAICoachInputSchema = z.object({
   ).describe('O histórico da conversa.'),
   workoutHistory: z.string().describe('Desempenho recente.'),
   trainingPlan: z.string().describe('Plano atual.'),
-  imageDataUri: z.string().optional().describe('Imagem anexada.'),
+  imageDataUri: z.string().optional().describe('Imagem anexada (Print do Strava, foto do relógio, etc).'),
 });
 
 export type ChatWithAICoachInput = z.infer<typeof ChatWithAICoachInputSchema>;
@@ -36,13 +36,13 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-2.0-flash',
-    system: 'Você é o Gemini Coach, um treinador de corrida de elite. Responda em PORTUGUÊS.',
+    system: 'Você é o Gemini Coach, um treinador de corrida de elite com visão computacional. Analise textos e imagens em PORTUGUÊS.',
     prompt: [
       { text: `Histórico da Conversa:\n${historyString}` },
       { text: `Desempenho Recente:\n${input.workoutHistory}` },
       { text: `Plano Atual:\n${input.trainingPlan}` },
       ...(input.imageDataUri ? [{ media: { url: input.imageDataUri } }] : []),
-      { text: 'Com base nestas informações, forneça seu feedback e recomendações técnicas.' }
+      { text: 'Com base nestas informações e nas imagens enviadas (se houver), forneça seu feedback técnico e recomendações.' }
     ],
     output: { schema: ChatWithAICoachOutputSchema },
     config: {

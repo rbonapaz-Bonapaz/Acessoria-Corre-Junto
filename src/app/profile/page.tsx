@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useContext, useState, useEffect, useRef, useMemo } from 'react';
@@ -43,7 +42,11 @@ import {
     Activity,
     User as UserIcon,
     Calendar as CalendarIcon,
-    Target
+    Target,
+    Upload,
+    FileText,
+    ImageIcon,
+    X
 } from 'lucide-react';
 import { 
     Tooltip,
@@ -102,6 +105,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("perfil");
   const avatarFileRef = useRef<HTMLInputElement>(null);
+  const planFileRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [targetType, setTargetType] = useState<'pace' | 'time'>('pace');
@@ -178,6 +182,7 @@ export default function ProfilePage() {
 
   const watchAvatarUrl = watch('avatarUrl');
   const watchTrainingDays = watch('trainingDays');
+  const watchReferenceDocumentUri = watch('referenceDocumentUri');
 
   const availableLongRunDays = useMemo(() => {
     return weekDays.filter(day => watchTrainingDays.includes(day.id));
@@ -187,6 +192,14 @@ export default function ProfilePage() {
     if (e.target.files?.[0]) {
       const uri = await fileToDataURI(e.target.files[0]);
       setValue('avatarUrl', uri);
+    }
+  };
+
+  const handlePlanFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      const uri = await fileToDataURI(e.target.files[0]);
+      setValue('referenceDocumentUri', uri);
+      toast({ title: "Referência Carregada", description: "O Gemini Coach usará esta imagem para traduzir seu plano." });
     }
   };
 
@@ -486,6 +499,45 @@ export default function ProfilePage() {
 
                       <div className="pt-8 border-t border-border/20 space-y-6">
                         <div className="flex items-center gap-2">
+                           <ImageIcon className="text-primary size-5" />
+                           <h3 className="text-lg font-black uppercase italic text-white tracking-tighter">TRADUÇÃO DE PLANILHA (WILDCARD)</h3>
+                        </div>
+
+                        <div className="space-y-4">
+                          <p className="text-[10px] text-muted-foreground leading-relaxed italic uppercase font-bold tracking-tight">
+                            Tire uma foto da sua planilha física ou do seu relógio e o Gemini 2.0 Flash traduzirá isso automaticamente para o formato digital.
+                          </p>
+                          <div 
+                            className={cn(
+                              "border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all",
+                              watchReferenceDocumentUri ? "border-primary bg-primary/5" : "border-border/40 hover:border-primary/50"
+                            )}
+                            onClick={() => planFileRef.current?.click()}
+                          >
+                            <input type="file" ref={planFileRef} className="sr-only" onChange={handlePlanFileChange} accept="image/*,.pdf" />
+                            {watchReferenceDocumentUri ? (
+                              <div className="flex items-center justify-center gap-3">
+                                <div className="p-2 rounded-lg bg-primary text-black"><CheckCircle2 size={18} /></div>
+                                <div className="text-left">
+                                  <p className="text-[10px] font-black uppercase text-primary italic">Documento Carregado</p>
+                                  <p className="text-[9px] text-muted-foreground italic">Pronto para ser traduzido pela IA.</p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="ml-auto" onClick={(e) => { e.stopPropagation(); setValue('referenceDocumentUri', ''); }}>
+                                  <X size={14} />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <Upload className="size-6 text-muted-foreground mx-auto" />
+                                <p className="text-[10px] font-black uppercase italic tracking-widest">Anexar Foto da Planilha</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-8 border-t border-border/20 space-y-6">
+                        <div className="flex items-center gap-2">
                            <Trophy className="text-primary size-5" />
                            <h3 className="text-lg font-black uppercase italic text-white tracking-tighter">PROVA ALVO</h3>
                         </div>
@@ -626,7 +678,7 @@ export default function ProfilePage() {
                   disabled={isProcessing}
                 >
                   {isProcessing ? <Loader2 className="animate-spin mr-3 size-5" /> : <Zap className="mr-3 size-5" />} 
-                  GERAR CICLO IA
+                  {watchReferenceDocumentUri ? "TRADUZIR PLANILHA" : "GERAR CICLO IA"}
                 </Button>
               </div>
             </form>
@@ -636,4 +688,3 @@ export default function ProfilePage() {
     </DashboardLayout>
   );
 }
-
