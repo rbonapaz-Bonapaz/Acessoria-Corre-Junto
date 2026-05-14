@@ -35,19 +35,18 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<Chat
     .join('\n');
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-flash',
-    system: 'Você é um treinador de corrida especialista chamado Gemini. Forneça feedback personalizado em PORTUGUÊS (Brasil). Seja encorajador e técnico.',
+    model: 'googleai/gemini-2.0-flash',
+    system: 'Você é o Gemini Coach, um treinador de corrida de elite. Responda em PORTUGUÊS.',
     prompt: [
       { text: `Histórico da Conversa:\n${historyString}` },
       { text: `Desempenho Recente:\n${input.workoutHistory}` },
       { text: `Plano Atual:\n${input.trainingPlan}` },
       ...(input.imageDataUri ? [{ media: { url: input.imageDataUri } }] : []),
-      { text: 'Com base nestas informações, forneça seu feedback e recomendações.' }
+      { text: 'Com base nestas informações, forneça seu feedback e recomendações técnicas.' }
     ],
     output: { schema: ChatWithAICoachOutputSchema },
     config: {
       temperature: 0.7,
-      topP: 0.7,
     }
   });
 

@@ -37,7 +37,7 @@ const GenerateTrainingBlockInputSchema = z.object({
 export type GenerateTrainingBlockInput = z.infer<typeof GenerateTrainingBlockInputSchema>;
 
 const WorkoutSchema = z.object({
-  id: z.string().optional().describe('ID único (será gerado internamente)'),
+  id: z.string().optional().describe('ID único'),
   day: z.string().describe('Dia da semana (Domingo, Segunda, Terça, Quarta, Quinta, Sexta, Sábado)'),
   type: z.string().describe('Tipo de treino (Rodagem, Intervalado, Longão, Tempo Run, OFF)'),
   distance: z.string().describe('Volume do treino (ex: 10km ou 45min)'),
@@ -47,8 +47,8 @@ const WorkoutSchema = z.object({
 
 const WeeklyPlanSchema = z.object({
   weekNumber: z.number().describe('Número da semana no bloco.'),
-  focus: z.string().describe('Foco principal da semana (ex: Volume, Intensidade, Recuperação).'),
-  runs: z.array(WorkoutSchema).describe('Lista de treinos da semana iniciando obrigatoriamente no DOMINGO.'),
+  focus: z.string().describe('Foco principal da semana.'),
+  runs: z.array(WorkoutSchema).describe('Lista de treinos da semana iniciando no DOMINGO.'),
   strength: z.string().describe('Recomendações de fortalecimento específicas.'),
   notes: z.string().describe('Notas técnicas do treinador.'),
 });
@@ -65,54 +65,45 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-flash',
-    system: `Você é um treinador de corrida de elite especialista em fisiologia do exercício e periodização.
+    model: 'googleai/gemini-2.0-flash',
+    system: `Você é um treinador de corrida de elite.
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
     2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
     3. Use o esquema JSON fornecido.
-    4. Se o atleta tiver um "Leg Day", o dia seguinte deve ser obrigatoriamente OFF ou Rodagem Leve (Z1).
-    5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.
-    6. Gere exatamente ${input.planGenerationType === 'blocks' ? '4' : 'as'} semanas necessárias iniciando no DOMINGO.`,
+    4. Se houver "Leg Day", o dia seguinte deve ser OFF ou Leve.
+    5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
     prompt: [
-      { text: `Gere um plano de performance para a prova "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
+      { text: `Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
           
           Contexto do Atleta:
           - VDOT/VO2: ${input.currentVDOT}.
           - Volume semanal alvo: ${input.weeklyMileageGoal}km.
           - Disponibilidade: ${input.weeklyAvailability}.
           - Dias intensos preferidos: ${input.preferredWorkoutDays}.
-          - Musculação de pernas (Leg Day): ${input.legDay || 'Não informado'}.
-          - Objetivo de tempo/pace: ${input.targetPace || input.targetTime || 'Máxima performance'}.
+          - Leg Day: ${input.legDay || 'Não informado'}.
           
           Fisiologia (Zonas FC):
-          - Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}. Máx: ${input.hrMax}.` },
+          - Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}.` },
       ...(input.referenceFileDataUri ? [{ media: { url: input.referenceFileDataUri } }] : []),
-      { text: 'Gere o plano técnico garantindo que a lista de runs de cada semana comece no Domingo e termine no Sábado.' }
+      { text: 'Gere o plano garantindo que a lista de treinos comece no Domingo.' }
     ],
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {
-      maxOutputTokens: 8192,
       temperature: 0.7,
-      topP: 0.7,
       safetySettings: [
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' }
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
       ]
     }
   });
 
-  if (!output) throw new Error('A Inteligência Artificial não conseguiu processar o plano. Verifique os dados do perfil ou sua cota de API.');
+  if (!output) throw new Error('Falha ao gerar o plano de treinamento.');
   
   const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {
-    // Garante a ordenação rigorosa começando no Domingo
     week.runs.sort((a, b) => order.indexOf(a.day) - order.indexOf(b.day));
-    // Gera IDs únicos para cada treino
     week.runs.forEach(run => {
-      run.id = Math.random().toString(36).substring(2, 11);
+      if (!run.id) run.id = Math.random().toString(36).substring(2, 11);
     });
   });
 
