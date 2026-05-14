@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Utiliza o Gemini 1.5 Flash para cálculos biomecânicos precisos na API v1.
+ * Utiliza o motor de alta performance Gemini 1.5 Flash na API v1 estável.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -64,20 +63,20 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
 
   const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    system: `Você é um treinador de corrida de elite e especialista em performance.
+    system: `Você é um treinador de corrida de elite e especialista em performance operando na versão v1 estável.
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
     2. A resposta deve ser rigorosamente em PORTUGUÊS (Brasil).
     3. Use o esquema JSON fornecido.
     4. Se houver um arquivo de referência, PRIORIZE as informações contidas nele.
     5. Calcule ritmos baseados no VDOT de ${input.currentVDOT}.`,
-    prompt: `Gere um plano de performance para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
+    prompt: `Gere um plano de performance de alta intensidade para "${input.raceName || 'Objetivo Alvo'}" (${input.targetRaceDistance}) em ${input.raceDate}.
     
-    Contexto:
+    Contexto Fisiológico:
     - VDOT: ${input.currentVDOT}.
     - Volume: ${input.weeklyMileageGoal}km.
     - Disponibilidade: ${input.weeklyAvailability}.
-    - Fisiologia (Zonas FC): Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}.`,
+    - Zonas FC: Z1 até ${input.hrZone1End}, Z2 até ${input.hrZone2End}, Z3 até ${input.hrZone3End}, Z4 até ${input.hrZone4End}.`,
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {
       temperature: 0.3,
@@ -87,7 +86,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     }
   });
 
-  if (!output) throw new Error('Falha ao gerar o plano com o motor de performance estável.');
+  if (!output) throw new Error('Falha ao gerar o plano com o motor de performance v1.');
   
   const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {

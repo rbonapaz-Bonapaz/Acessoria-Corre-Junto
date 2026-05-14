@@ -1,4 +1,3 @@
-
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
@@ -10,7 +9,7 @@ const DEFAULT_KEY = "AIzaSyDPO6BpCQC9jHhuavasgY2OhkJvleHL8v0";
 
 /**
  * Resolve a chave de API com base na prioridade: Chave do usuário > ENV > Fallback.
- * Configurado para utilizar a versão estável da API v1.
+ * Configurado para utilizar estritamente a versão estável da API v1.
  */
 const getEffectiveKey = (userKey?: string) => {
   if (userKey && userKey.trim() !== "" && userKey.startsWith("AIza")) {
@@ -23,8 +22,8 @@ const getEffectiveKey = (userKey?: string) => {
 };
 
 /**
- * Retorna uma instância configurada do Genkit utilizando o modelo Gemini 1.5 Flash.
- * Este modelo é o padrão ouro de performance estável para a API v1.
+ * Retorna uma instância configurada do Genkit utilizando o motor de alta performance estável.
+ * Este motor é calibrado para a versão v1 da API do Google Generative AI.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -39,6 +38,6 @@ export const getAiWithKey = (userApiKey?: string) => {
 };
 
 /**
- * Instância padrão do Genkit para o sistema.
+ * Instância padrão do Genkit para o sistema utilizando a versão estável v1.
  */
 export const ai = getAiWithKey();

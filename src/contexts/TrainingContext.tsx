@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useState, useEffect, type ReactNode, useCallback } from 'react';
@@ -45,7 +44,6 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   const [planGenerationStatus, setPlanGenerationStatus] = useState<PlanGenerationStatus>('idle');
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // 1. Hidratação Inicial (Local Storage)
   useEffect(() => {
     const localProfile = localStorage.getItem(STORAGE_KEYS.PROFILE);
     const localPlan = localStorage.getItem(STORAGE_KEYS.PLAN);
@@ -58,10 +56,8 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true);
   }, []);
 
-  // 2. Sincronização Cloud
   useEffect(() => {
     if (authLoading || !isHydrated) return;
-
     if (!user) return;
 
     const docRef = doc(firestore, 'user_data', user.uid);
@@ -75,7 +71,6 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
           if (data.trainingPlan) setTrainingPlan(data.trainingPlan);
           if (data.apiKey) setApiKeyInternal(data.apiKey);
         } else {
-          // Migração Local -> Cloud se a conta cloud estiver vazia
           const migrationData: any = {};
           if (activeProfile) migrationData.profile = activeProfile;
           if (trainingPlan) migrationData.trainingPlan = trainingPlan;
@@ -134,7 +129,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       const docRef = doc(firestore, 'user_data', user.uid);
       await setDoc(docRef, { profile: updatedProfile }, { merge: true });
     }
-    toast({ title: 'Dados Salvos', description: 'Informações sincronizadas com sucesso.' });
+    toast({ title: 'Dados Salvos', description: 'Informações sincronizadas via API v1.' });
   }, [user, firestore, activeProfile, toast]);
 
   const updateWorkout = useCallback(async (workoutId: string, updates: Partial<Workout>) => {
@@ -164,17 +159,16 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       const docRef = doc(firestore, 'user_data', user.uid);
       await setDoc(docRef, { apiKey: cleanKey }, { merge: true });
     }
-    toast({ title: "Chave Configurada", description: "O Coach IA agora está ativo." });
+    toast({ title: "Chave Configurada", description: "O motor v1 de alta performance está ativo." });
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
     const currentKey = apiKey || localStorage.getItem(STORAGE_KEYS.API_KEY) || undefined;
     
     setPlanGenerationStatus('pending');
-    toast({ title: "Gerando Ciclo IA...", description: "Construindo sua planilha de performance." });
+    toast({ title: "Gerando Ciclo v1...", description: "Processando biometria de alta performance." });
 
     try {
-      // Cálculo dinâmico do volume baseado na experiência
       let weeklyMileageGoal = 30;
       if (profile.experienceLevel === 'run_walk') weeklyMileageGoal = 15;
       else if (profile.experienceLevel === 'beginner') weeklyMileageGoal = 25;
@@ -214,12 +208,12 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       }
       
       setPlanGenerationStatus('success');
-      toast({ title: "Plano Gerado!", description: "Sua planilha técnica está pronta." });
+      toast({ title: "Plano Gerado!", description: "Sua planilha v1 está pronta." });
     } catch (error: any) {
-      console.error("Erro na geração Genkit:", error);
+      console.error("Erro na geração v1:", error);
       setPlanGenerationStatus('error');
-      const errorMessage = error.message || "Verifique sua chave de API ou cota no Google AI Studio.";
-      toast({ variant: "destructive", title: "Erro na Geração", description: errorMessage });
+      const errorMessage = error.message || "Verifique sua cota no motor v1 estável.";
+      toast({ variant: "destructive", title: "Erro na Geração v1", description: errorMessage });
     }
   };
 
