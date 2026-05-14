@@ -1,4 +1,3 @@
-
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
@@ -29,7 +28,11 @@ export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
   
   return genkit({
-    plugins: [googleAI({ apiKey })],
+    plugins: [
+      googleAI({ 
+        apiKey 
+      })
+    ],
     model: 'googleai/gemini-1.5-flash',
   });
 };

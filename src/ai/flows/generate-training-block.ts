@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
@@ -66,7 +65,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-pro',
+    model: 'googleai/gemini-1.5-flash',
     system: `Você é um treinador de corrida de elite especialista em fisiologia do exercício e periodização.
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
@@ -106,7 +105,6 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
 
   if (!output) throw new Error('A Inteligência Artificial não conseguiu processar o plano. Verifique os dados do perfil ou sua cota de API.');
   
-  // Garantir IDs únicos e ordenação por dia começando no Domingo
   const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {
     week.runs.sort((a, b) => order.indexOf(a.day) - order.indexOf(b.day));
