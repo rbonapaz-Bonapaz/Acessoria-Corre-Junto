@@ -74,7 +74,6 @@ const profileSchema = z.object({
   vo2Max: z.coerce.number().default(45),
   thresholdPace: z.string().default('4:50'),
   thresholdHr: z.coerce.number().default(165),
-  weeklyMileageGoal: z.coerce.number().default(30),
   raceName: z.string().default(''),
   raceDistance: z.string().default('10k'),
   raceDate: z.string().default(''),
@@ -119,7 +118,6 @@ export default function ProfilePage() {
       vo2Max: 45,
       thresholdPace: '4:50',
       thresholdHr: 165,
-      weeklyMileageGoal: 30,
       raceName: '',
       raceDistance: '10k',
       raceDate: '',
@@ -154,7 +152,6 @@ export default function ProfilePage() {
         vo2Max: p.vo2Max || 45,
         thresholdPace: p.thresholdPace || '4:50',
         thresholdHr: p.thresholdHr || 165,
-        weeklyMileageGoal: p.weeklyMileageGoal || 30,
         raceName: p.raceName || '',
         raceDistance: p.raceDistance || '10k',
         raceDate: p.raceDate || '',
@@ -445,10 +442,10 @@ export default function ProfilePage() {
                               <Select onValueChange={field.onChange} value={field.value || 'beginner'}>
                                 <FormControl><SelectTrigger className="bg-black/40 border-border/40 h-10 font-bold italic rounded-xl px-4 text-sm"><SelectValue/></SelectTrigger></FormControl>
                                 <SelectContent className="bg-card border-border">
-                                  <SelectItem value="run_walk" className="font-bold italic uppercase">Começando (< 15 km/semana)</SelectItem>
+                                  <SelectItem value="run_walk" className="font-bold italic uppercase">Começando (&lt; 15 km/semana)</SelectItem>
                                   <SelectItem value="beginner" className="font-bold italic uppercase">Iniciante (15-30 km/semana)</SelectItem>
                                   <SelectItem value="intermediate" className="font-bold italic uppercase">Intermediário (30-60 km/semana)</SelectItem>
-                                  <SelectItem value="advanced" className="font-bold italic uppercase">Avançado / Elite (> 60 km/semana)</SelectItem>
+                                  <SelectItem value="advanced" className="font-bold italic uppercase">Avançado / Elite (&gt; 60 km/semana)</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormItem>
@@ -639,3 +636,4 @@ export default function ProfilePage() {
     </DashboardLayout>
   );
 }
+
