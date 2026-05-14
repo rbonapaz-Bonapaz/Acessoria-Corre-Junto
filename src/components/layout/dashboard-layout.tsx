@@ -19,9 +19,7 @@ import {
   Loader2,
   LogIn,
   LogOut,
-  ShieldCheck,
   ChevronDown,
-  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -82,7 +80,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (context?.apiKey) setTempKey(context.apiKey);
-    (window as any).showKeyModal = () => setShowKeyModal(true);
   }, [context?.apiKey]);
 
   const handleSaveKey = () => {
@@ -101,7 +98,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isIAActive = (context?.apiKey && context.apiKey.trim() !== "") || true; // Fallback ativo
+  const isIAActive = !!(context?.apiKey && context.apiKey.trim() !== "");
 
   return (
     <SidebarProvider>
@@ -152,24 +149,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            {!user ? (
+            {!user && (
                <SidebarMenuItem>
                 <SidebarMenuButton 
                   className="w-full h-12 bg-white text-black hover:bg-primary rounded-xl" 
                   onClick={() => context?.login()}
                 >
                   <LogIn className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Entrar</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ) : (
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  className="w-full h-12 text-muted-foreground border border-border/20 rounded-xl hover:bg-destructive/10 hover:text-destructive" 
-                  onClick={() => context?.logout()}
-                >
-                  <LogOut className="size-4" />
-                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Sair</span>
+                  <span className="group-data-[collapsible=icon]:hidden font-headline font-bold text-[11px] tracking-wider uppercase">Entrar / Salvar</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
@@ -262,7 +249,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <div className="grid gap-6 py-4">
             <div className="space-y-4">
               <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                Sua Gemini API Key é salva localmente e sincronizada ao entrar. Para gerar seu ciclo de performance, precisamos deste motor ativo.
+                Sua Gemini API Key garante o motor de geração de performance. Salva localmente e sincronizada na nuvem.
               </p>
               <Input
                 placeholder="Cole sua API Key aqui..."

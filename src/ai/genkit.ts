@@ -3,32 +3,38 @@ import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 /**
- * Chave de API padrão fornecida pelo usuário para testes e fallback.
+ * Chave de API fornecida pelo usuário para testes e fallback definitivo.
  */
 const DEFAULT_KEY = "AIzaSyDPO6BpCQC9jHhuavasgY2OhkJvleHL8v0";
 
 /**
- * Instância padrão do Genkit.
- * Utiliza a chave definida no .env ou a chave padrão de elite.
+ * Determina a chave de API mais apropriada a ser usada.
+ * Prioridade: Chave do usuário > Variável de ambiente > Chave de fallback.
  */
-export const ai = genkit({
-  plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY || DEFAULT_KEY })],
-  model: 'googleai/gemini-1.5-flash',
-});
+const getEffectiveKey = (userKey?: string) => {
+  if (userKey && userKey.trim() !== "" && userKey.startsWith("AIza")) {
+    return userKey.trim();
+  }
+  if (process.env.GOOGLE_GENAI_API_KEY && process.env.GOOGLE_GENAI_API_KEY.startsWith("AIza")) {
+    return process.env.GOOGLE_GENAI_API_KEY;
+  }
+  return DEFAULT_KEY;
+};
 
 /**
- * Retorna uma instância do Genkit configurada com uma chave de API específica.
- * Essencial para permitir que atletas usem suas próprias chaves ou a do servidor (fallback).
+ * Retorna uma instância do Genkit configurada com a chave de API resolvida.
+ * Garante que o motor de IA sempre tenha uma credencial funcional.
  */
 export const getAiWithKey = (userApiKey?: string) => {
-  // Se o usuário forneceu uma chave válida, usa ela.
-  if (userApiKey && userApiKey.trim() !== "" && userApiKey.startsWith("AIza")) {
-    return genkit({
-      plugins: [googleAI({ apiKey: userApiKey })],
-      model: 'googleai/gemini-1.5-flash',
-    });
-  }
+  const apiKey = getEffectiveKey(userApiKey);
   
-  // Caso contrário, retorna a instância padrão
-  return ai;
+  return genkit({
+    plugins: [googleAI({ apiKey })],
+    model: 'googleai/gemini-1.5-flash',
+  });
 };
+
+/**
+ * Instância padrão do Genkit (utiliza fallback ou ambiente).
+ */
+export const ai = getAiWithKey();

@@ -62,10 +62,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (authLoading || !isHydrated) return;
 
-    if (!user) {
-      // Se deslogado, os dados locais permanecem
-      return;
-    }
+    if (!user) return;
 
     const docRef = doc(firestore, 'user_data', user.uid);
     
@@ -86,7 +83,6 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
 
           if (Object.keys(migrationData).length > 0) {
             await setDoc(docRef, migrationData, { merge: true });
-            toast({ title: "Dados Sincronizados", description: "Seu progresso local foi salvo na nuvem." });
           }
         }
       } catch (e) {
@@ -106,21 +102,20 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [user, authLoading, isHydrated, firestore, toast]);
+  }, [user, authLoading, isHydrated, firestore]);
 
   const login = async () => {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (e) {
-      toast({ variant: 'destructive', title: "Erro no Login", description: "Verifique sua conexão e tente novamente." });
+      toast({ variant: 'destructive', title: "Erro no Login", description: "Verifique sua conexão." });
     }
   };
 
   const logout = async () => {
     try {
       await signOut(auth);
-      // Limpamos o estado para que o próximo usuário não veja dados do anterior se trocar no mesmo PC
       setActiveProfile(null);
       setTrainingPlan(null);
       toast({ title: "Sessão encerrada" });
@@ -139,7 +134,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       const docRef = doc(firestore, 'user_data', user.uid);
       await setDoc(docRef, { profile: updatedProfile }, { merge: true });
     }
-    toast({ title: 'Dados Salvos', description: 'Suas informações foram sincronizadas com sucesso.' });
+    toast({ title: 'Dados Salvos', description: 'Informações sincronizadas com sucesso.' });
   }, [user, firestore, activeProfile, toast]);
 
   const updateWorkout = useCallback(async (workoutId: string, updates: Partial<Workout>) => {
@@ -173,11 +168,10 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   };
 
   const generateRunningPlanAsync = async (profile: AthleteProfile) => {
-    // Chave do estado ou storage
     const currentKey = apiKey || localStorage.getItem(STORAGE_KEYS.API_KEY) || undefined;
     
     setPlanGenerationStatus('pending');
-    toast({ title: "Gerando Ciclo IA...", description: "Analisando seu perfil biométrico e prova alvo." });
+    toast({ title: "Gerando Ciclo IA...", description: "Construindo sua planilha de performance." });
 
     try {
       const result = await generateTrainingBlock({
@@ -213,11 +207,10 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       }
       
       setPlanGenerationStatus('success');
-      toast({ title: "Plano Gerado!", description: "Sua planilha técnica está pronta para visualização." });
+      toast({ title: "Plano Gerado!", description: "Sua planilha técnica está pronta." });
     } catch (error: any) {
       setPlanGenerationStatus('error');
-      console.error("ERRO IA:", error);
-      toast({ variant: "destructive", title: "Erro na Geração", description: error.message || "Falha na comunicação com o Gemini." });
+      toast({ variant: "destructive", title: "Erro na Geração", description: "Verifique sua chave de API ou conexão." });
     }
   };
 
