@@ -38,7 +38,7 @@ const GenerateTrainingBlockInputSchema = z.object({
 export type GenerateTrainingBlockInput = z.infer<typeof GenerateTrainingBlockInputSchema>;
 
 const WorkoutSchema = z.object({
-  id: z.string().describe('ID único (UUID)'),
+  id: z.string().optional().describe('ID único (pode ser deixado em branco)'),
   day: z.string().describe('Dia da semana (Domingo, Segunda, Terça, Quarta, Quinta, Sexta, Sábado)'),
   type: z.string().describe('Tipo de treino (Rodagem, Intervalado, Longão, Tempo Run, OFF)'),
   distance: z.string().describe('Volume do treino (ex: 10km ou 45min)'),
@@ -92,6 +92,8 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     ],
     output: { schema: GenerateTrainingBlockOutputSchema },
     config: {
+      maxOutputTokens: 4096,
+      temperature: 0.7,
       safetySettings: [
         { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
         { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -101,14 +103,14 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     }
   });
 
-  if (!output) throw new Error('A Inteligência Artificial falhou ao construir o plano. Verifique sua conexão ou API Key.');
+  if (!output) throw new Error('A Inteligência Artificial não conseguiu processar o plano. Verifique os dados do perfil ou sua cota de API.');
   
   // Garantir IDs únicos e ordenação por dia começando no Domingo
   const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   output.weeklyPlans.forEach(week => {
     week.runs.sort((a, b) => order.indexOf(a.day) - order.indexOf(b.day));
     week.runs.forEach(run => {
-      if (!run.id) run.id = Math.random().toString(36).substring(2, 11);
+      run.id = Math.random().toString(36).substring(2, 11);
     });
   });
 

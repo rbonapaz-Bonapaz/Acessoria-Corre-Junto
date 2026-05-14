@@ -216,8 +216,10 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
       setPlanGenerationStatus('success');
       toast({ title: "Plano Gerado!", description: "Sua planilha técnica está pronta." });
     } catch (error: any) {
+      console.error("Erro na geração Genkit:", error);
       setPlanGenerationStatus('error');
-      toast({ variant: "destructive", title: "Erro na Geração", description: "Verifique sua chave de API ou conexão." });
+      const errorMessage = error.message || "Verifique sua chave de API ou cota no Google AI Studio.";
+      toast({ variant: "destructive", title: "Erro na Geração", description: errorMessage });
     }
   };
 
