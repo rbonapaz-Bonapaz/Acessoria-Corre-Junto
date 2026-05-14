@@ -19,18 +19,18 @@ export type AnalyzeWorkoutInput = z.infer<typeof AnalyzeWorkoutInputSchema>;
 
 const AnalyzeWorkoutOutputSchema = z.object({
   actualMetrics: z.object({
-    averagePace: z.string().describe('Pace médio.'),
-    averageCadence: z.string().describe('Cadência média.'),
-    strideRatio: z.number().describe('Razão da passada (%).'),
-    groundContactTime: z.string().optional().describe('TCS em ms.'),
-    verticalOscillation: z.string().optional().describe('Oscilação em cm.'),
+    averagePace: z.string(),
+    averageCadence: z.string(),
+    strideRatio: z.number(),
+    groundContactTime: z.string().optional(),
+    verticalOscillation: z.string().optional(),
   }),
   analysisSummary: z.object({
-    summary: z.string().describe('Resumo.'),
-    technicalReview: z.string().describe('Análise técnica.'),
+    summary: z.string(),
+    technicalReview: z.string(),
   }),
-  recommendations: z.string().describe('Foco no próximo.'),
-  areasOfImprovement: z.array(z.string()).describe('Pontos de evolução.'),
+  recommendations: z.string(),
+  areasOfImprovement: z.array(z.string()),
 });
 
 export type AnalyzeWorkoutOutput = z.infer<typeof AnalyzeWorkoutOutputSchema>;
@@ -38,22 +38,21 @@ export type AnalyzeWorkoutOutput = z.infer<typeof AnalyzeWorkoutOutputSchema>;
 export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<AnalyzeWorkoutOutput> {
   const aiInstance = getAiWithKey(input.apiKey);
 
-  const { output } = await aiInstance.generate({
+  const { text } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
     prompt: [
-      { text: "INSTRUÇÃO DE SISTEMA: Você é um biomecânico de corrida de elite operando na API v1 estável. Analise os dados em PORTUGUÊS (Brasil) com foco em eficiência de movimento e economia de corrida." },
-      { text: `Treino Prescrito: ${input.prescribedWorkout}` },
-      { text: `Relato do Atleta: ${input.athleteFeedback}` },
-      { text: `Perfil do Atleta: ${input.athleteProfile}` },
+      { text: "SISTEMA: Analise os dados em PORTUGUÊS (Brasil). Responda APENAS com JSON válido. Foco em biomecânica e eficiência." },
+      { text: `Treino: ${input.prescribedWorkout}. Feedback: ${input.athleteFeedback}. Perfil: ${input.athleteProfile}.` },
       ...(input.fileDataUri ? [{ media: { url: input.fileDataUri } }] : []),
-      { text: 'Analise os dados biomecânicos fornecidos e sugira melhorias técnicas.' }
+      { text: "Gere análise no formato: { \"actualMetrics\": { \"averagePace\": string, \"averageCadence\": string, \"strideRatio\": number }, \"analysisSummary\": { \"summary\": string, \"technicalReview\": string }, \"recommendations\": string, \"areasOfImprovement\": string[] }" }
     ],
-    output: { schema: AnalyzeWorkoutOutputSchema },
-    config: {
-      temperature: 0.4,
-    }
+    config: { temperature: 0.4 }
   });
 
-  if (!output) throw new Error('Falha ao analisar o treino na API v1.');
-  return output;
+  try {
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleanText) as AnalyzeWorkoutOutput;
+  } catch (e) {
+    throw new Error('Erro ao processar análise biomecânica.');
+  }
 }

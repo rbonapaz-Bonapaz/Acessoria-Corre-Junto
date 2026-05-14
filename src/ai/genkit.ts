@@ -3,7 +3,6 @@ import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * Chave de API de fallback para o laboratório CorreJunto.
- * Recomenda-se que o atleta use sua própria chave configurada no menu lateral.
  */
 const DEFAULT_KEY = "AIzaSyDPO6BpCQC9jHhuavasgY2OhkJvleHL8v0";
 
@@ -21,7 +20,7 @@ const getEffectiveKey = (userKey?: string) => {
 };
 
 /**
- * Retorna uma instância configurada do Genkit operando na versão v1 estável.
+ * Retorna uma instância configurada do Genkit operando rigorosamente na versão v1 estável.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -30,7 +29,7 @@ export const getAiWithKey = (userApiKey?: string) => {
     plugins: [
       googleAI({ 
         apiKey,
-        apiVersion: 'v1'
+        apiVersion: 'v1' // Forçando versão estável v1
       })
     ],
   });
