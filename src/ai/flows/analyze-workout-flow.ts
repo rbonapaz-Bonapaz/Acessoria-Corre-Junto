@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para analisar o desempenho biomecânico do atleta.
- * Utiliza o Gemini 1.5 Flash para máxima estabilidade e alta performance.
+ * Utiliza o Gemini 1.5 Flash na API v1 para máxima estabilidade.
  */
 
 import { getAiWithKey } from '@/ai/genkit';

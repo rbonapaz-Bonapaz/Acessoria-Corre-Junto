@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Um treinador de IA conversacional para corredores.
- * Utiliza o Gemini 1.5 Flash para feedback técnico instantâneo e estável.
+ * Utiliza o Gemini 1.5 Flash para feedback técnico instantâneo na API v1.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
