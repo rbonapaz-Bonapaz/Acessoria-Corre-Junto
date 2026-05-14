@@ -63,7 +63,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-2.0-flash',
+    model: 'googleai/gemini-1.5-flash',
     system: `Você é um treinador de corrida de elite e especialista em OCR (Reconhecimento de Visão).
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.
