@@ -20,6 +20,7 @@ import {
   LogIn,
   LogOut,
   ChevronDown,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -251,6 +252,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <p className="text-[10px] text-muted-foreground leading-relaxed italic">
                 Sua Gemini API Key garante o motor de geração de performance. Salva localmente e sincronizada na nuvem.
               </p>
+              <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
+                <p className="text-[9px] font-black uppercase text-primary italic">Não tem uma chave?</p>
+                <a 
+                  href="https://aistudio.google.com/app/apikey" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between text-[11px] font-bold text-white hover:text-primary transition-colors group"
+                >
+                  Obter Chave no Google AI Studio
+                  <ExternalLink size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                </a>
+              </div>
               <Input
                 placeholder="Cole sua API Key aqui..."
                 value={tempKey}
