@@ -13,7 +13,7 @@ const GenerateTrainingBlockInputSchema = z.object({
   currentVDOT: z.number().describe('Score VDOT/VO2 atual do atleta.'),
   hrZone1End: z.number().describe('Limite superior da Zona 1.'),
   hrZone2End: z.number().describe('Limite superior da Zona 2.'),
-  hrZone3End: z.number().describe('Limite superior da Zona 3.'),
+  hrZone3End: z.number().describe('Limite superior da Zona 2.'),
   hrZone4End: z.number().describe('Limite superior da Zona 4.'),
   hrMax: z.number().describe('Frequência cardíaca máxima.'),
   trainingBlockType: z.enum(['Base', 'Construction', 'Polishing']).describe('Fase atual do bloco de treinamento.'),
@@ -62,7 +62,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-2.0-flash',
+    model: 'googleai/gemini-3-flash',
     system: `Você é um treinador de corrida de elite e especialista em OCR (Reconhecimento de Visão).
     REGRAS CRÍTICAS:
     1. A semana começa SEMPRE no DOMINGO.

@@ -38,7 +38,7 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-2.0-flash',
+    model: 'googleai/gemini-3-flash',
     system: 'Você é um biomecânico e treinador de corrida de elite. Analise os dados em PORTUGUÊS.',
     prompt: [
       { text: `Prescrição Atual: ${input.prescribedWorkout}` },

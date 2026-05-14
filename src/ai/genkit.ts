@@ -22,7 +22,7 @@ const getEffectiveKey = (userKey?: string) => {
 
 /**
  * Retorna uma instância do Genkit configurada com a chave de API resolvida.
- * Utiliza o modelo gemini-2.0-flash para performance de próxima geração e estabilidade de cota.
+ * Utiliza o modelo gemini-3-flash para performance de próxima geração e estabilidade de cota.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -33,7 +33,7 @@ export const getAiWithKey = (userApiKey?: string) => {
         apiKey 
       })
     ],
-    model: 'googleai/gemini-2.0-flash',
+    model: 'googleai/gemini-3-flash',
   });
 };
 
