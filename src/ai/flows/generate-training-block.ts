@@ -57,8 +57,8 @@ export type GenerateTrainingBlockOutput = z.infer<typeof GenerateTrainingBlockOu
 export async function generateTrainingBlock(input: GenerateTrainingBlockInput): Promise<GenerateTrainingBlockOutput> {
   const aiInstance = getAiWithKey(input.apiKey);
 
-  // Na API v1 estável, evitamos o campo systemInstruction e output.schema automático
-  // para prevenir erros deBad Request (responseMimeType). Usamos o prompt direto.
+  // Na API v1 estável, evitamos campos automáticos que geram erros 400 (responseMimeType)
+  // Usamos prompt direto e parsing manual para máxima estabilidade.
   const { text } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
     prompt: [

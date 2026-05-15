@@ -166,7 +166,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     const currentKey = apiKey || localStorage.getItem(STORAGE_KEYS.API_KEY) || undefined;
     
     setPlanGenerationStatus('pending');
-    toast({ title: "Gerando Ciclo...", description: "Processando biometria de alta performance." });
+    toast({ title: "Gerando Ciclo...", description: "Processando biometria de alta performance (v1)." });
 
     try {
       let weeklyMileageGoal = 30;
@@ -212,7 +212,8 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error("Erro na geração:", error);
       setPlanGenerationStatus('error');
-      const errorMessage = error.message || "Verifique sua cota no AI Studio.";
+      // Limpa erro para não expor URL interna
+      const errorMessage = "Falha técnica na API v1. Verifique sua chave ou tente novamente em instantes.";
       toast({ variant: "destructive", title: "Erro na Geração", description: errorMessage });
     }
   };

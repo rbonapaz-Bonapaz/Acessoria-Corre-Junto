@@ -4,7 +4,7 @@
  */
 
 import { getAiWithKey } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 const AnalyzeWorkoutInputSchema = z.object({
   apiKey: z.string().optional().describe('A chave de API do usuário.'),
