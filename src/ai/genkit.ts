@@ -22,7 +22,7 @@ const getEffectiveKey = (userKey?: string) => {
 /**
  * Retorna uma instância configurada do Genkit.
  * Utilizamos v1beta para garantir suporte total a esquemas JSON e instruções de sistema,
- * evitando erros de compatibilidade da versão estável v1.
+ * evitando erros de compatibilidade da versão estável v1 (como Unknown name "responseMimeType").
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);

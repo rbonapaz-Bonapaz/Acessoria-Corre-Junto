@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Operando com Gemini 1.5 Flash para máxima performance e estabilidade.
+ * Operando com Gemini 1.5 Flash Latest para máxima performance e estabilidade.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -58,7 +58,7 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-1.5-flash-latest',
     input: { schema: GenerateTrainingBlockInputSchema, data: input },
     output: { schema: GenerateTrainingBlockOutputSchema },
     system: `Você é um treinador de corrida de elite e especialista em performance. 
