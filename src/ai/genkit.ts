@@ -20,7 +20,9 @@ const getEffectiveKey = (userKey?: string) => {
 };
 
 /**
- * Retorna uma instância configurada do Genkit operando rigorosamente na versão v1 estável.
+ * Retorna uma instância configurada do Genkit.
+ * Utilizamos v1beta para garantir suporte total a esquemas JSON e instruções de sistema,
+ * evitando erros de compatibilidade da versão estável v1.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -29,7 +31,7 @@ export const getAiWithKey = (userApiKey?: string) => {
     plugins: [
       googleAI({ 
         apiKey,
-        apiVersion: 'v1' // Forçando versão estável v1 para evitar 404 e instabilidades
+        apiVersion: 'v1beta' 
       })
     ],
   });

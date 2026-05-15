@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Operando na versão v1 estável com o modelo Gemini 1.5 Flash.
+ * Operando com Gemini 1.5 Flash para máxima performance e estabilidade.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -57,60 +57,30 @@ export type GenerateTrainingBlockOutput = z.infer<typeof GenerateTrainingBlockOu
 export async function generateTrainingBlock(input: GenerateTrainingBlockInput): Promise<GenerateTrainingBlockOutput> {
   const aiInstance = getAiWithKey(input.apiKey);
 
-  // Na API v1 estável, evitamos campos automáticos que geram erros 400 (responseMimeType)
-  // Usamos prompt direto e parsing manual para máxima estabilidade.
-  const { text } = await aiInstance.generate({
+  const { output } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
-    prompt: [
-      { text: `SISTEMA: Você é um treinador de corrida de elite e especialista em performance operando na versão v1 estável. 
-      Responda APENAS com um objeto JSON válido, sem comentários ou texto adicional.
-      
-      REGRAS TÉCNICAS:
-      1. Use VDOT ${input.currentVDOT} para prescrever ritmos.
-      2. Meta: ${input.weeklyMileageGoal}km semanais.
-      3. Prova: ${input.raceName || 'Objetivo'} (${input.targetRaceDistance}) em ${input.raceDate}.
-      4. Disponibilidade: ${input.weeklyAvailability}.
-      5. Zonas de FC: Z1<${input.hrZone1End}, Z2<${input.hrZone2End}, Z3<${input.hrZone3End}, Z4<${input.hrZone4End}.
-      6. Evite treinos intensos após o Leg Day (${input.legDay || 'Não definido'}).
-      7. Semana começa no DOMINGO.
-      
-      ESTRUTURA JSON OBRIGATÓRIA:
-      {
-        "blockType": "string",
-        "durationWeeks": number,
-        "weeklyPlans": [
-          {
-            "weekNumber": number,
-            "focus": "string",
-            "runs": [
-              { "day": "string", "type": "string", "distance": "string", "paceZone": "string", "description": "string" }
-            ],
-            "strength": "string",
-            "notes": "string"
-          }
-        ]
-      }
-      
-      Gere agora o plano completo baseado nos dados acima.` },
-      ...(input.referenceFileDataUri ? [{ media: { url: input.referenceFileDataUri } }] : [])
-    ],
-    config: { temperature: 0.3 }
+    input: { schema: GenerateTrainingBlockInputSchema, data: input },
+    output: { schema: GenerateTrainingBlockOutputSchema },
+    system: `Você é um treinador de corrida de elite e especialista em performance. 
+    REGRAS CRÍTICAS:
+    1. Use VDOT ${input.currentVDOT} para prescrever ritmos exatos.
+    2. Meta de Volume: ${input.weeklyMileageGoal}km semanais.
+    3. Prova Alvo: ${input.raceName || 'Objetivo'} em ${input.raceDate}.
+    4. Disponibilidade: ${input.weeklyAvailability}.
+    5. Zonas de FC: Z1<${input.hrZone1End}, Z2<${input.hrZone2End}, Z3<${input.hrZone3End}, Z4<${input.hrZone4End}.
+    6. Jamais prescreva treinos de alta intensidade no dia seguinte ao Leg Day (${input.legDay || 'Não definido'}).
+    7. A semana deve começar no DOMINGO.`,
+    prompt: `Gere um bloco de treinamento de performance para o atleta seguindo rigorosamente os dados fornecidos. Use o arquivo de referência se fornecido: {{media url=referenceFileDataUri}}`,
   });
 
-  try {
-    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    const output = JSON.parse(cleanText) as GenerateTrainingBlockOutput;
-    
-    const order = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-    output.weeklyPlans.forEach(week => {
-      week.runs.sort((a, b) => order.indexOf(a.day) - order.indexOf(b.day));
-      week.runs.forEach(run => {
-        if (!run.id) run.id = Math.random().toString(36).substring(2, 11);
-      });
+  if (!output) throw new Error('Falha na geração do plano de performance.');
+
+  // Garantir IDs únicos para os treinos
+  output.weeklyPlans.forEach(week => {
+    week.runs.forEach(run => {
+      if (!run.id) run.id = Math.random().toString(36).substring(2, 11);
     });
-    return output;
-  } catch (e) {
-    console.error("Erro ao processar JSON da IA v1:", text);
-    throw new Error('Falha na estrutura de dados da IA (API v1). Tente novamente.');
-  }
+  });
+
+  return output;
 }

@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Treinador de IA conversacional para corredores na API v1.
+ * @fileOverview Treinador de IA conversacional para corredores.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -13,10 +13,10 @@ const ChatWithAICoachInputSchema = z.object({
       role: z.enum(['user', 'model']),
       parts: z.string(),
     })
-  ).describe('Histórico.'),
-  workoutHistory: z.string().describe('Desempenho.'),
-  trainingPlan: z.string().describe('Plano.'),
-  imageDataUri: z.string().optional().describe('Imagem.'),
+  ).describe('Histórico da conversa.'),
+  workoutHistory: z.string().describe('Desempenho e histórico de treinos.'),
+  trainingPlan: z.string().describe('Plano de treinamento atual.'),
+  imageDataUri: z.string().optional().describe('Imagem anexada para análise visual.'),
 });
 
 export type ChatWithAICoachInput = z.infer<typeof ChatWithAICoachInputSchema>;
@@ -30,16 +30,13 @@ export async function chatWithAICoach(input: ChatWithAICoachInput): Promise<{ fe
 
   const { text } = await aiInstance.generate({
     model: 'googleai/gemini-1.5-flash',
+    system: `Você é o Gemini Coach, um treinador de elite especialista em biomecânica e fisiologia do exercício.
+    Responda em PORTUGUÊS (Brasil). Seja técnico, motivador e foque em dados de performance.
+    Contexto do Atleta: ${input.workoutHistory}
+    Plano Atual: ${input.trainingPlan}`,
     prompt: [
-      { text: `SISTEMA: Você é o Gemini Coach operando na versão v1 estável.
-      Responda em PORTUGUÊS (Brasil). Seja técnico, motivador e focado em performance.
-      
-      CONTEXTO DO ATLETA:
-      Histórico: ${historyString}
-      Desempenho Recente: ${input.workoutHistory}
-      Plano Atual: ${input.trainingPlan}` },
+      { text: `Histórico da conversa atual:\n${historyString}\n\nAnalise e forneça feedback sobre a última interação ou imagem enviada.` },
       ...(input.imageDataUri ? [{ media: { url: input.imageDataUri } }] : []),
-      { text: "Com base nos dados acima e no contexto da conversa, forneça seu feedback técnico agora." }
     ],
     config: { temperature: 0.7 }
   });
