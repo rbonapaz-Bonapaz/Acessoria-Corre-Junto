@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Operando com Gemini 1.5 Flash Latest para máxima performance e estabilidade.
+ * Operando com Gemini 1.5 Flash para máxima performance e estabilidade.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
@@ -57,11 +57,7 @@ export type GenerateTrainingBlockOutput = z.infer<typeof GenerateTrainingBlockOu
 export async function generateTrainingBlock(input: GenerateTrainingBlockInput): Promise<GenerateTrainingBlockOutput> {
   const aiInstance = getAiWithKey(input.apiKey);
 
-  const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-flash-latest',
-    input: { schema: GenerateTrainingBlockInputSchema, data: input },
-    output: { schema: GenerateTrainingBlockOutputSchema },
-    system: `Você é um treinador de corrida de elite e especialista em performance. 
+  const systemPrompt = `Você é um treinador de corrida de elite e especialista em performance. 
     REGRAS CRÍTICAS:
     1. Use VDOT ${input.currentVDOT} para prescrever ritmos exatos.
     2. Meta de Volume: ${input.weeklyMileageGoal}km semanais.
@@ -69,8 +65,16 @@ export async function generateTrainingBlock(input: GenerateTrainingBlockInput): 
     4. Disponibilidade: ${input.weeklyAvailability}.
     5. Zonas de FC: Z1<${input.hrZone1End}, Z2<${input.hrZone2End}, Z3<${input.hrZone3End}, Z4<${input.hrZone4End}.
     6. Jamais prescreva treinos de alta intensidade no dia seguinte ao Leg Day (${input.legDay || 'Não definido'}).
-    7. A semana deve começar no DOMINGO.`,
-    prompt: `Gere um bloco de treinamento de performance para o atleta seguindo rigorosamente os dados fornecidos. Use o arquivo de referência se fornecido: {{media url=referenceFileDataUri}}`,
+    7. A semana deve começar no DOMINGO.`;
+
+  const { output } = await aiInstance.generate({
+    model: 'googleai/gemini-1.5-flash',
+    system: systemPrompt,
+    prompt: `Gere um bloco de treinamento de performance para o atleta seguindo rigorosamente os dados fornecidos. 
+    Bloco: ${input.trainingBlockType}. 
+    Histórico: ${input.injuryHistory}.
+    Referência: ${input.referenceFileDataUri ? `Use este arquivo: ${input.referenceFileDataUri}` : 'Nenhuma'}`,
+    output: { schema: GenerateTrainingBlockOutputSchema },
   });
 
   if (!output) throw new Error('Falha na geração do plano de performance.');

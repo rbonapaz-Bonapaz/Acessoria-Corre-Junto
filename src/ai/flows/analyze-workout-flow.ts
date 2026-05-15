@@ -38,9 +38,7 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
   const aiInstance = getAiWithKey(input.apiKey);
 
   const { output } = await aiInstance.generate({
-    model: 'googleai/gemini-1.5-flash-latest',
-    input: { schema: AnalyzeWorkoutInputSchema, data: input },
-    output: { schema: AnalyzeWorkoutOutputSchema },
+    model: 'googleai/gemini-1.5-flash',
     system: `Você é um analista biomecânico de elite. Sua missão é extrair métricas de arquivos e feedbacks para avaliar a eficiência do atleta.
     Compare o que foi prescrito (${input.prescribedWorkout}) com o que foi realizado.
     Foque em métricas como Cadência e Razão de Passada para identificar desperdício de energia.
@@ -49,6 +47,7 @@ export async function analyzeWorkout(input: AnalyzeWorkoutInput): Promise<Analyz
       { text: `Analise o treino executado pelo atleta. Feedback: ${input.athleteFeedback}. Perfil: ${input.athleteProfile}.` },
       ...(input.fileDataUri ? [{ media: { url: input.fileDataUri } }] : []),
     ],
+    output: { schema: AnalyzeWorkoutOutputSchema },
     config: { temperature: 0.4 }
   });
 
