@@ -7,21 +7,22 @@ import { googleAI } from '@genkit-ai/google-genai';
 const DEFAULT_KEY = "AIzaSyDPO6BpCQC9jHhuavasgY2OhkJvleHL8v0";
 
 /**
- * Resolve a chave de API com base na prioridade: Chave do usuário > ENV > Fallback.
+ * Resolve a chave de API com base na prioridade: Chave do usuário > Vercel/ENV > Fallback.
  */
 const getEffectiveKey = (userKey?: string) => {
   if (userKey && userKey.trim() !== "" && userKey.startsWith("AIza")) {
     return userKey.trim();
   }
-  if (process.env.GOOGLE_GENAI_API_KEY && process.env.GOOGLE_GENAI_API_KEY.startsWith("AIza")) {
-    return process.env.GOOGLE_GENAI_API_KEY;
+  // Tenta as duas variáveis comuns: GEMINI_API_KEY (Vercel) e GOOGLE_GENAI_API_KEY
+  const envKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
+  if (envKey && envKey.startsWith("AIza")) {
+    return envKey;
   }
   return DEFAULT_KEY;
 };
 
 /**
  * Retorna uma instância configurada do Genkit.
- * Deixamos o apiVersion por conta do SDK para garantir compatibilidade com structured output e system instructions.
  */
 export const getAiWithKey = (userApiKey?: string) => {
   const apiKey = getEffectiveKey(userApiKey);
@@ -29,7 +30,8 @@ export const getAiWithKey = (userApiKey?: string) => {
   return genkit({
     plugins: [
       googleAI({ 
-        apiKey
+        apiKey,
+        apiVersion: 'v1beta' // v1beta é necessária para estruturação de dados no Genkit
       })
     ],
   });

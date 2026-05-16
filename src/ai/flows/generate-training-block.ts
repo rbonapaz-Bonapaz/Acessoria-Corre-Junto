@@ -1,7 +1,6 @@
 'use server';
 /**
  * @fileOverview Fluxo Genkit para gerar blocos de treinamento personalizados.
- * Operando com Gemini 1.5 Flash para máxima performance e estabilidade.
  */
 
 import { getAiWithKey } from '@/ai/genkit';
